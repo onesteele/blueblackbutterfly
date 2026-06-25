@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Customers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+            --sidebar-width: 60px;
+            --sidebar-expanded: 240px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           BACKGROUND ANIMATION
+           ============================================================ */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            /* filter blur removed for performance */
+            opacity: 0.3;
+            /* animation: floatOrb */ animation: none 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -100px; right: -100px;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, 30px) scale(1.05); }
+        }
+
+        /* ============================================================
+           SIDEBAR NAVIGATION
+           ============================================================ */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: #111111;
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        .sidebar:hover {
+            width: var(--sidebar-expanded);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 14px;
+            border-bottom: 1px solid var(--border);
+            min-height: 60px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+
+        .sidebar-logo-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;}
+
+        .sidebar:hover .sidebar-logo-text {
+            opacity: 1;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 12px 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 18px;
+            margin: 2px 8px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            position: relative;
+            border-left: 3px solid transparent;
+            margin-left: 0;
+            padding-left: 15px;
+        }
+
+        .nav-item:hover {
+            background: rgba(59, 109, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+
+        .nav-item.active .nav-icon svg {
+            color: var(--accent);
+        }
+
+        .nav-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .nav-icon svg {
+            width: 20px;
+            height: 20px;
+            color: currentColor;
+            transition: color 0.2s ease;
+        }
+
+        .nav-label {
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;
+        }
+
+        .sidebar:hover .nav-label {
+            opacity: 1;
+        }
+
+        .sidebar-bottom {
+            border-top: 1px solid var(--border);
+            padding: 12px 0;
+            flex-shrink: 0;
+        }
+
+        .nav-item.signout-item {
+            color: var(--text-muted);
+        }
+
+        .nav-item.signout-item:hover {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        /* ============================================================
+           HAMBURGER MENU (MOBILE)
+           ============================================================ */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 200;
+            width: 40px;
+            height: 40px;
+            background: #111111;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .hamburger-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            /* backdrop-filter removed for performance */
+            z-index: 90;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 10, 10, 0.8);
+            /* backdrop-filter removed for performance */
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-style: italic;}
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .admin-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.3);
+            padding: 5px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ============================================================
+           PAGE BODY
+           ============================================================ */
+        .page-body {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
+           ACTION BAR
+           ============================================================ */
+        .action-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 220px;
+            padding: 10px 16px 10px 42px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+            /* backdrop-filter removed for performance */
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 109, 255, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .search-wrapper svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+            min-width: 160px;
+            /* backdrop-filter removed for performance */
+            transition: border-color 0.2s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+
+        .filter-select:focus {
+            border-color: var(--accent);
+        }
+
+        .filter-select option {
+            background: #1a1a1a;
+            color: var(--text-primary);
+        }
+
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.25);
+            border-radius: 10px;
+            color: var(--accent);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .export-btn:hover {
+            background: rgba(59, 109, 255, 0.25);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(59, 109, 255, 0.15);
+        }
+
+        .export-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ============================================================
+           CUSTOMER TABLE
+           ============================================================ */
+        .table-card {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(59, 109, 255, 0.03);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .table-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .customers-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .customers-table thead {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .customers-table th {
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 500;
+            background: linear-gradient(135deg, rgba(59, 109, 255, 0.5) 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: opacity 0.2s ease;}
+
+        .customers-table th:hover {
+            opacity: 0.8;
+        }
+
+        .customers-table th .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 10px;
+            vertical-align: middle;
+            opacity: 0.5;
+            /* Reset gradient text for sort icon */
+            background: none;
+            -webkit-background-clip: unset;
+            -webkit-text-fill-color: var(--text-muted);
+            background-clip: unset;
+        }
+
+        .customers-table th.sorted .sort-icon {
+            opacity: 1;
+            -webkit-text-fill-color: var(--accent);
+        }
+
+        .customers-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .customers-table tbody tr {
+            transition: background 0.2s ease;
+            cursor: pointer;
+        }
+
+        .customers-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .customers-table tbody tr:hover {
+            background: rgba(59, 109, 255, 0.04);
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .customer-email {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-badge.onboarding {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .status-badge.member {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.verified_member {
+            background: rgba(59, 109, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .status-badge.active {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.inactive {
+            background: rgba(107, 114, 128, 0.15);
+            color: var(--text-muted);
+        }
+
+        .status-badge.churned {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .status-badge.free_trial {
+            background: rgba(168, 85, 247, 0.15);
+            color: #a855f7;
+        }
+
+        .status-badge.free_trial_expired {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Onboarding progress bar */
+        .progress-bar-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            min-width: 60px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+            transition: width 0.4s ease;
+        }
+
+        .progress-text {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            min-width: 32px;
+            text-align: right;
+        }
+
+        /* ============================================================
+           PAGINATION
+           ============================================================ */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: var(--accent-dim);
+            border-color: rgba(59, 109, 255, 0.3);
+            color: var(--accent);
+        }
+
+        .page-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ============================================================
+           LOADING / EMPTY STATES
+           ============================================================ */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           CREATE USER BUTTON
+           ============================================================ */
+        .create-user-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .create-user-btn:hover {
+            background: var(--accent-light);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 109, 255, 0.3);
+        }
+
+        .create-user-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Status change button in table */
+        .status-badge {
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+        .status-badge:hover {
+            opacity: 0.8;
+        }
+
+        .btn-delete-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-delete-row:hover {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--error);
+        }
+
+        .btn-delete-row svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ============================================================
+           MODALS
+           ============================================================ */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            /* backdrop-filter removed for performance */
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-card-sm {
+            max-width: 400px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 4px;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 109, 255, 0.1);
+        }
+
+        .form-group select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .btn-cancel {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            border-color: var(--text-muted);
+            color: var(--text-primary);
+        }
+
+        .btn-create {
+            padding: 10px 24px;
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-create:hover {
+            background: var(--accent-light);
+        }
+
+        .btn-create:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-note {
+            margin-top: 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .status-user-info {
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .status-user-info strong {
+            color: var(--text-primary);
+        }
+
+        /* ============================================================
+           TOAST NOTIFICATION
+           ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .toast.success svg {
+            color: var(--success);
+        }
+
+        .toast.error svg {
+            color: var(--error);
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-expanded);
+                z-index: 150;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar.mobile-open .nav-label,
+            .sidebar.mobile-open .sidebar-logo-text {
+                opacity: 1;
+            }
+
+            .hamburger-btn {
+                display: flex;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .top-bar {
+                padding: 16px 16px 16px 64px;
+            }
+
+            .page-body {
+                padding: 20px 16px;
+            }
+
+            .page-title {
+                font-size: 22px;
+            }
+
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-wrapper {
+                min-width: unset;
+            }
+
+            .filter-select {
+                min-width: unset;
+                width: 100%;
+            }
+
+            .export-btn {
+                justify-content: center;
+            }
+
+            .pagination {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-bar-right {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Mobile Hamburger Button -->
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="../logo.png" alt="VantageQuant">
+            <span class="sidebar-logo-text">VantageQuant</span>
+        </div>
+
+        <div class="sidebar-nav">
+            <!-- Dashboard -->
+            <a href="/admin/" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+
+            <!-- Customers (ACTIVE) -->
+            <a href="/admin/customers.html" class="nav-item active">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Customers</span>
+            </a>
+
+            <!-- Content -->
+            <a href="/admin/content.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Content</span>
+            </a>
+
+            <!-- Announcements -->
+            <a href="/admin/announcements.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Announcements</span>
+            </a>
+
+            <!-- Conversations -->
+            <a href="/admin/conversations.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Conversations</span>
+            </a>
+
+            <!-- Workflows -->
+            <a href="/admin/workflows.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Workflows</span>
+            </a>
+
+            <!-- Notifications -->
+            <a href="/admin/notifications.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                </span>
+                <span class="nav-label">Notifications</span>
+            </a>
+
+            <!-- Settings -->
+            <a href="/admin/settings.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Settings</span>
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a class="nav-item" onclick="window.toggleTheme()" style="cursor:pointer;">
+                <span class="nav-icon"><span class="theme-toggle-icon"></span></span>
+                <span class="nav-label theme-toggle-label"></span>
+            </a>
+            <a class="nav-item signout-item" onclick="window.signOut()" style="cursor:pointer;">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </span>
+                <span class="nav-label">Sign Out</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <h1 class="page-title">Customers</h1>
+            </div>
+            <div class="top-bar-right">
+                <span class="admin-name" id="admin-name">Loading...</span>
+                <span class="admin-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Admin
+                </span>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <div class="search-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" class="search-input" id="search-input" placeholder="Search by name, email, or phone...">
+                </div>
+                <select class="filter-select" id="status-filter">
+                    <option value="all">All Statuses</option>
+                    <option value="onboarding">Onboarding</option>
+                    <option value="free_trial">Free Trial</option>
+                    <option value="free_trial_expired">Trial Expired</option>
+                    <option value="member">Member</option>
+                    <option value="verified_member">Verified Member</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="churned">Churned</option>
+                </select>
+                <button class="create-user-btn" onclick="openCreateUserModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    Create User
+                </button>
+                <button class="export-btn" id="export-btn" onclick="exportEmails()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export Emails
+                </button>
+            </div>
+
+            <!-- Customer Table -->
+            <div class="table-card">
+                <div class="table-wrapper">
+                    <table class="customers-table" id="customers-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="full_name" onclick="handleSort('full_name')">Name <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="email" onclick="handleSort('email')">Email <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="phone" onclick="handleSort('phone')">Phone <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="status" onclick="handleSort('status')">Status <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="onboarding_progress" onclick="handleSort('onboarding_progress')">Onboarding <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="last_login" onclick="handleSort('last_login')">Last Login <span class="sort-icon">&#8597;</span></th>
+                                <th data-sort="created_at" onclick="handleSort('created_at')">Created <span class="sort-icon">&#8597;</span></th>
+                                <th style="width:50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="customers-tbody">
+                            <tr>
+                                <td colspan="8">
+                                    <div class="loading-spinner">
+                                        <div class="spinner"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div class="modal-overlay" id="create-user-modal" style="display:none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Create New User</h3>
+                <button class="modal-close" onclick="closeCreateUserModal()">&times;</button>
+            </div>
+            <form id="create-user-form" onsubmit="handleCreateUser(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" id="cu-first-name" required placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" id="cu-last-name" required placeholder="Doe">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="cu-email" required placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="cu-phone" placeholder="+1 (555) 123-4567">
+                </div>
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;">
+                        <input type="checkbox" id="cu-free-trial" onchange="toggleFreeTrialMode()" style="width:18px;height:18px;accent-color:#a855f7;cursor:pointer;">
+                        <span>Free Trial Customer</span>
+                        <span style="font-size:11px;font-weight:600;color:#a855f7;background:rgba(168,85,247,0.12);padding:2px 8px;border-radius:100px;">No Payment</span>
+                    </label>
+                </div>
+                <div id="cu-payment-section">
+                    <div class="form-group">
+                        <label>Payment Plan *</label>
+                        <select id="cu-payment-plan" required>
+                            <option value="">Select payment plan...</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Total Amount *</label>
+                            <input type="number" id="cu-payment-total" required step="0.01" min="0" placeholder="7500.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Amount Down *</label>
+                            <input type="number" id="cu-payment-down" required step="0.01" min="0" placeholder="1000.00">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeCreateUserModal()">Cancel</button>
+                    <button type="submit" class="btn-create" id="btn-create-user">Create User</button>
+                </div>
+                <p class="modal-note" id="cu-modal-note">User starts as "Pending Verification". Share the onboarding link with them to begin the process.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Status Modal -->
+    <div class="modal-overlay" id="change-status-modal" style="display:none;">
+        <div class="modal-card modal-card-sm">
+            <div class="modal-header">
+                <h3>Change User Status</h3>
+                <button class="modal-close" onclick="closeChangeStatusModal()">&times;</button>
+            </div>
+            <div class="status-user-info" id="status-user-info"></div>
+            <div class="form-group">
+                <label>New Status</label>
+                <select id="cs-status">
+                    <option value="pending_verification">Pending Verification</option>
+                    <option value="free_trial">Free Trial</option>
+                    <option value="onboarding">Onboarding</option>
+                    <option value="member">Member</option>
+                    <option value="verified_member">Verified Member</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="churned">Churned</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeChangeStatusModal()">Cancel</button>
+                <button type="button" class="btn-create" onclick="handleChangeStatus()">Update Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Customer Modal -->
+    <div class="modal-overlay" id="delete-customer-modal" style="display:none;">
+        <div class="modal-card modal-card-sm" style="text-align:center;">
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="var(--error)" stroke-width="2" style="width:28px;height:28px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <div class="modal-header" style="justify-content:center;">
+                <h3>Delete Customer</h3>
+            </div>
+            <p style="font-size:14px;color:var(--text-secondary);margin-bottom:24px;line-height:1.5;">
+                Are you sure you want to permanently delete <strong id="delete-customer-name" style="color:var(--text-primary);"></strong>? This cannot be undone.
+            </p>
+            <div class="modal-actions" style="justify-content:center;">
+                <button type="button" class="btn-cancel" onclick="closeDeleteCustomerModal()">Cancel</button>
+                <button type="button" class="btn-create" id="btn-delete-customer" style="background:var(--error);color:#fff;" onclick="confirmDeleteCustomer()">Delete Customer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Link Modal -->
+    <div class="modal-overlay" id="onboarding-link-modal" style="display:none;">
+        <div class="modal-card modal-card-sm" style="text-align:center;">
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(59, 109, 255,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="var(--accent)" stroke-width="2" style="width:28px;height:28px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="modal-header" style="justify-content:center;">
+                <h3>Customer Created Successfully</h3>
+            </div>
+            <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">
+                Share this onboarding link with <strong id="onboarding-link-name" style="color:var(--text-primary);"></strong> to begin their verification process.
+            </p>
+            <div style="display:flex;align-items:center;gap:8px;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:20px;">
+                <input type="text" id="onboarding-link-url" readonly style="flex:1;background:transparent;border:none;color:var(--text-primary);font-size:13px;font-family:monospace;outline:none;">
+                <button type="button" id="btn-copy-link" onclick="copyOnboardingLink()" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
+                    Copy Link
+                </button>
+            </div>
+            <div class="modal-actions" style="justify-content:center;">
+                <button type="button" class="btn-cancel" onclick="closeOnboardingLinkModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <span id="toast-msg"></span>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+
+    <script>
+        // ============================================================
+        // STATE
+        // ============================================================
+        let allCustomers = [];
+        let filteredCustomers = [];
+        let currentPage = 1;
+        const perPage = 20;
+        let sortColumn = 'created_at';
+        let sortDirection = 'desc';
+        let autoLogoutTimer = null;
+
+        // ============================================================
+        // AUTH CHECK + AUTO-LOGOUT
+        // ============================================================
+        async function initPage() {
+            const user = await window.getCurrentUser();
+            if (!user) {
+                window.location.href = '/auth';
+                return;
+            }
+
+            const profile = await window.getUserProfile(user.id);
+            if (!profile || !window.hasAdminAccess(profile)) {
+                window.location.href = '/auth';
+                return;
+            }
+
+            // Store profile globally for role checks
+            window._adminProfile = profile;
+
+            document.getElementById('admin-name').textContent = profile.full_name || profile.email;
+
+            // Load permissions and apply role-based sidebar
+            await window.loadRolePermissions();
+            window.applySidebarRole(profile, 'customers');
+
+            // Hide Create User button if not allowed
+            if (!window.canCreateUsers(profile)) {
+                const createBtn = document.querySelector('.create-user-btn');
+                if (createBtn) createBtn.style.display = 'none';
+            }
+
+            resetAutoLogout();
+            document.addEventListener('mousemove', resetAutoLogout);
+            document.addEventListener('keydown', resetAutoLogout);
+            document.addEventListener('click', resetAutoLogout);
+
+            await loadCustomers();
+        }
+
+        function resetAutoLogout() {
+            if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+            autoLogoutTimer = setTimeout(() => {
+                window.signOut();
+            }, 30 * 60 * 1000); // 30 minutes
+        }
+
+        // ============================================================
+        // LOAD CUSTOMERS
+        // ============================================================
+        async function loadCustomers() {
+            try {
+                // Try full query first (requires migration-v3 columns)
+                let data, error;
+                ({ data, error } = await window.supabaseClient
+                    .from('users')
+                    .select('id, full_name, first_name, last_name, email, phone, status, is_admin, last_login, created_at, onboarding_completed, onboarding_completed_at, ip_address, notes')
+                    .eq('is_admin', false)
+                    .order('created_at', { ascending: false }));
+
+                // If that fails (missing columns), fall back to basic query
+                if (error) {
+                    console.warn('Full query failed, trying basic columns:', error.message);
+                    ({ data, error } = await window.supabaseClient
+                        .from('users')
+                        .select('id, full_name, first_name, last_name, email, phone, is_admin, last_login, created_at, ip_address')
+                        .eq('is_admin', false)
+                        .order('created_at', { ascending: false }));
+                }
+
+                if (error) {
+                    console.error('Error loading customers:', error);
+                    showEmptyState('Failed to load customers: ' + (error.message || 'Unknown error'));
+                    return;
+                }
+
+                // Also fetch onboarding progress for each user
+                const { data: progressData, error: progressError } = await window.supabaseClient
+                    .from('onboarding_progress')
+                    .select('user_id, step_number, completed');
+
+                const progressMap = {};
+                if (progressData) {
+                    progressData.forEach(p => {
+                        if (!progressMap[p.user_id]) {
+                            progressMap[p.user_id] = { total: 0, completed: 0 };
+                        }
+                        progressMap[p.user_id].total++;
+                        if (p.completed) progressMap[p.user_id].completed++;
+                    });
+                }
+
+                allCustomers = (data || []).map(c => {
+                    const progress = progressMap[c.id];
+                    const totalSteps = 7;
+                    const completedSteps = progress ? progress.completed : 0;
+                    const onboardingPercent = Math.round((completedSteps / totalSteps) * 100);
+                    return { ...c, onboarding_progress: onboardingPercent };
+                });
+
+                applyFilters();
+            } catch (err) {
+                console.error('Error:', err);
+                showEmptyState('An error occurred while loading customers.');
+            }
+        }
+
+        // ============================================================
+        // FILTER + SORT
+        // ============================================================
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('status-filter').value;
+
+            filteredCustomers = allCustomers.filter(c => {
+                // Status filter
+                if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+
+                // Search filter
+                if (searchTerm) {
+                    const name = (c.full_name || '').toLowerCase();
+                    const email = (c.email || '').toLowerCase();
+                    const phone = (c.phone || '').toLowerCase();
+                    if (!name.includes(searchTerm) && !email.includes(searchTerm) && !phone.includes(searchTerm)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            // Sort
+            filteredCustomers.sort((a, b) => {
+                let valA = a[sortColumn];
+                let valB = b[sortColumn];
+
+                if (valA === null || valA === undefined) valA = '';
+                if (valB === null || valB === undefined) valB = '';
+
+                if (sortColumn === 'onboarding_progress') {
+                    valA = Number(valA);
+                    valB = Number(valB);
+                } else if (sortColumn === 'last_login' || sortColumn === 'created_at') {
+                    valA = valA ? new Date(valA).getTime() : 0;
+                    valB = valB ? new Date(valB).getTime() : 0;
+                } else {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                }
+
+                if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+            updateSortHeaders();
+        }
+
+        function handleSort(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+            applyFilters();
+        }
+
+        function updateSortHeaders() {
+            const ths = document.querySelectorAll('.customers-table th[data-sort]');
+            ths.forEach(th => {
+                const col = th.getAttribute('data-sort');
+                const icon = th.querySelector('.sort-icon');
+                th.classList.remove('sorted');
+                if (col === sortColumn) {
+                    th.classList.add('sorted');
+                    icon.innerHTML = sortDirection === 'asc' ? '&#8593;' : '&#8595;';
+                } else {
+                    icon.innerHTML = '&#8597;';
+                }
+            });
+        }
+
+        // ============================================================
+        // RENDER TABLE
+        // ============================================================
+        function renderTable() {
+            const tbody = document.getElementById('customers-tbody');
+            const start = (currentPage - 1) * perPage;
+            const end = start + perPage;
+            const pageCustomers = filteredCustomers.slice(start, end);
+
+            if (pageCustomers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                <p>No customers found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = pageCustomers.map(c => {
+                const statusClass = c.status || 'onboarding';
+                const statusLabel = c.status || 'onboarding';
+                const lastLogin = c.last_login ? window.formatRelativeTime(c.last_login) : 'Never';
+                const created = c.created_at ? window.formatRelativeTime(c.created_at) : 'N/A';
+                const progress = c.onboarding_progress || 0;
+
+                return `
+                    <tr onclick="navigateToCustomer('${c.id}')">
+                        <td><span class="customer-name">${escapeHtml(c.full_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || 'N/A')}</span></td>
+                        <td>${escapeHtml(c.email || 'N/A')}</td>
+                        <td>${escapeHtml(c.phone || 'N/A')}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}" onclick="event.stopPropagation(); openChangeStatusModal('${c.id}', '${escapeHtml(c.full_name || c.email || 'N/A')}', '${statusClass}')" title="Click to change status">
+                                <span class="status-dot"></span>
+                                ${statusLabel}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar">
+                                    <div class="progress-bar-fill" style="width: ${progress}%"></div>
+                                </div>
+                                <span class="progress-text">${progress}%</span>
+                            </div>
+                        </td>
+                        <td>${lastLogin}</td>
+                        <td>${created}</td>
+                        <td>
+                            ${window.canDeleteCustomers(window._adminProfile) ? `<button class="btn-delete-row" onclick="event.stopPropagation(); openDeleteCustomerModal('${c.id}', '${escapeHtml(c.full_name || c.email || 'N/A')}')" title="Delete customer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ============================================================
+        // PAGINATION
+        // ============================================================
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredCustomers.length / perPage);
+            const paginationEl = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                paginationEl.innerHTML = `
+                    <span class="pagination-info">${filteredCustomers.length} customer${filteredCustomers.length !== 1 ? 's' : ''}</span>
+                    <div></div>
+                `;
+                return;
+            }
+
+            const start = (currentPage - 1) * perPage + 1;
+            const end = Math.min(currentPage * perPage, filteredCustomers.length);
+
+            let pagesHtml = '';
+
+            // Previous button
+            pagesHtml += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>`;
+
+            // Page numbers
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            if (startPage > 1) {
+                pagesHtml += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) pagesHtml += `<span style="color:var(--text-muted);padding:0 4px;">...</span>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pagesHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) pagesHtml += `<span style="color:var(--text-muted);padding:0 4px;">...</span>`;
+                pagesHtml += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+
+            // Next button
+            pagesHtml += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>`;
+
+            paginationEl.innerHTML = `
+                <span class="pagination-info">Showing ${start}-${end} of ${filteredCustomers.length} customers</span>
+                <div class="pagination-controls">${pagesHtml}</div>
+            `;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredCustomers.length / perPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTable();
+            renderPagination();
+        }
+
+        // ============================================================
+        // EXPORT EMAILS CSV
+        // ============================================================
+        function exportEmails() {
+            if (filteredCustomers.length === 0) {
+                alert('No customers to export.');
+                return;
+            }
+
+            let csv = 'Name,Email,Status\n';
+            filteredCustomers.forEach(c => {
+                const name = (c.full_name || '').replace(/"/g, '""');
+                const email = (c.email || '').replace(/"/g, '""');
+                const status = (c.status || '').replace(/"/g, '""');
+                csv += `"${name}","${email}","${status}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `customer-emails-${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================================
+        // NAVIGATION
+        // ============================================================
+        function navigateToCustomer(id) {
+            window.location.href = `/admin/customer-detail.html?id=${id}`;
+        }
+
+        // ============================================================
+        // UTILITIES
+        // ============================================================
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function showEmptyState(msg) {
+            document.getElementById('customers-tbody').innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p>${msg}</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // ============================================================
+        // CREATE USER MODAL
+        // ============================================================
+        async function openCreateUserModal() {
+            document.getElementById('create-user-modal').style.display = 'flex';
+
+            // Load payment plan options into dropdown
+            const select = document.getElementById('cu-payment-plan');
+            const plans = await window.getPaymentPlans();
+            select.innerHTML = '<option value="">Select payment plan...</option>';
+            plans.forEach(function(plan) {
+                const opt = document.createElement('option');
+                opt.value = plan.id;
+                opt.textContent = plan.label;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('cu-first-name').focus();
+        }
+
+        function closeCreateUserModal() {
+            document.getElementById('create-user-modal').style.display = 'none';
+            document.getElementById('create-user-form').reset();
+            // Reset free trial toggle state
+            document.getElementById('cu-payment-section').style.display = '';
+            document.getElementById('cu-payment-plan').required = true;
+            document.getElementById('cu-payment-total').required = true;
+            document.getElementById('cu-payment-down').required = true;
+            document.getElementById('cu-modal-note').textContent = 'User starts as "Pending Verification". Share the onboarding link with them to begin the process.';
+        }
+
+        function toggleFreeTrialMode() {
+            var isFreeTrial = document.getElementById('cu-free-trial').checked;
+            var paymentSection = document.getElementById('cu-payment-section');
+            var note = document.getElementById('cu-modal-note');
+
+            if (isFreeTrial) {
+                paymentSection.style.display = 'none';
+                document.getElementById('cu-payment-plan').required = false;
+                document.getElementById('cu-payment-total').required = false;
+                document.getElementById('cu-payment-down').required = false;
+                note.innerHTML = 'User starts as <strong style="color:#a855f7;">Free Trial</strong>. They will go through the trial onboarding flow with no payment required.';
+            } else {
+                paymentSection.style.display = '';
+                document.getElementById('cu-payment-plan').required = true;
+                document.getElementById('cu-payment-total').required = true;
+                document.getElementById('cu-payment-down').required = true;
+                note.textContent = 'User starts as "Pending Verification". Share the onboarding link with them to begin the process.';
+            }
+        }
+
+        function showOnboardingLinkModal(customerName, isFreeTrial) {
+            const onboardingUrl = window.location.origin + '/onboarding/';
+            document.getElementById('onboarding-link-name').textContent = customerName;
+            document.getElementById('onboarding-link-url').value = onboardingUrl;
+            document.getElementById('btn-copy-link').textContent = 'Copy Link';
+            document.getElementById('onboarding-link-modal').style.display = 'flex';
+        }
+
+        function closeOnboardingLinkModal() {
+            document.getElementById('onboarding-link-modal').style.display = 'none';
+        }
+
+        function copyOnboardingLink() {
+            const urlInput = document.getElementById('onboarding-link-url');
+            navigator.clipboard.writeText(urlInput.value).then(function() {
+                var btn = document.getElementById('btn-copy-link');
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = 'Copy Link'; }, 2000);
+            });
+        }
+
+        async function handleCreateUser(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-create-user');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            const email = document.getElementById('cu-email').value.trim();
+            const firstName = document.getElementById('cu-first-name').value.trim();
+            const lastName = document.getElementById('cu-last-name').value.trim();
+            const phone = document.getElementById('cu-phone').value.trim();
+            const isFreeTrial = document.getElementById('cu-free-trial').checked;
+            const paymentPlan = isFreeTrial ? '' : document.getElementById('cu-payment-plan').value;
+            const paymentTotal = isFreeTrial ? 0 : (parseFloat(document.getElementById('cu-payment-total').value) || 0);
+            const paymentDown = isFreeTrial ? 0 : (parseFloat(document.getElementById('cu-payment-down').value) || 0);
+            const initialStatus = 'pending_verification';
+
+            // Generate temporary password (user will set their own during verification)
+            const tempPassword = 'TmpPw!' + crypto.randomUUID().slice(0, 12);
+
+            try {
+                // 1. Save admin session before signUp (signUp replaces the active session)
+                const { data: { session: adminSession } } = await window.supabaseClient.auth.getSession();
+                if (!adminSession) throw new Error('Admin session lost. Please log in again.');
+
+                // 2. Create auth user
+                const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
+                    email: email,
+                    password: tempPassword,
+                    options: {
+                        data: {
+                            first_name: firstName,
+                            last_name: lastName,
+                            phone: phone,
+                            initial_status: initialStatus,
+                            is_free_trial: isFreeTrial
+                        }
+                    }
+                });
+
+                if (authError) {
+                    // Restore admin session if signUp failed
+                    await window.supabaseClient.auth.setSession({
+                        access_token: adminSession.access_token,
+                        refresh_token: adminSession.refresh_token
+                    });
+                    throw authError;
+                }
+                if (!authData.user) {
+                    await window.supabaseClient.auth.setSession({
+                        access_token: adminSession.access_token,
+                        refresh_token: adminSession.refresh_token
+                    });
+                    throw new Error('User creation failed - no user returned');
+                }
+
+                const newUserId = authData.user.id;
+
+                // 3. Restore admin session immediately so subsequent calls have admin RLS
+                await window.supabaseClient.auth.setSession({
+                    access_token: adminSession.access_token,
+                    refresh_token: adminSession.refresh_token
+                });
+
+                // 4. Auto-confirm email (bypasses email verification)
+                try {
+                    await window.supabaseClient.rpc('admin_confirm_user_email', { target_user_id: newUserId });
+                } catch (confirmErr) {
+                    console.warn('admin_confirm_user_email not available:', confirmErr);
+                }
+
+                // 5. Update user profile with payment info and correct status
+                const profileUpdate = {
+                    first_name: firstName,
+                    last_name: lastName,
+                    full_name: firstName + ' ' + lastName,
+                    phone: phone,
+                    status: initialStatus,
+                    onboarding_completed: false
+                };
+                if (!isFreeTrial) {
+                    profileUpdate.payment_plan = paymentPlan;
+                    profileUpdate.payment_total = paymentTotal;
+                    profileUpdate.payment_down = paymentDown;
+                }
+                const { error: updateError } = await window.supabaseClient
+                    .from('users')
+                    .update(profileUpdate)
+                    .eq('id', newUserId);
+
+                if (updateError) {
+                    console.error('Error updating user profile:', updateError);
+                    showToast('User created but profile update failed. Check the user record.', 'error');
+                }
+
+                closeCreateUserModal();
+                showOnboardingLinkModal(firstName + ' ' + lastName, isFreeTrial);
+                await loadCustomers();
+
+            } catch (error) {
+                console.error('Error creating user:', error);
+                showToast(error.message || 'Failed to create user. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create User';
+            }
+        }
+
+        // ============================================================
+        // CHANGE STATUS MODAL
+        // ============================================================
+        let changeStatusUserId = null;
+
+        function openChangeStatusModal(userId, userName, currentStatus) {
+            changeStatusUserId = userId;
+            document.getElementById('status-user-info').innerHTML = `<strong>${userName}</strong> &mdash; Current: <em>${currentStatus}</em>`;
+            document.getElementById('cs-status').value = currentStatus;
+            document.getElementById('change-status-modal').style.display = 'flex';
+        }
+
+        function closeChangeStatusModal() {
+            document.getElementById('change-status-modal').style.display = 'none';
+            changeStatusUserId = null;
+        }
+
+        async function handleChangeStatus() {
+            if (!changeStatusUserId) return;
+
+            const newStatus = document.getElementById('cs-status').value;
+            const isOnboardingComplete = (newStatus === 'member' || newStatus === 'verified_member' || newStatus === 'active');
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('users')
+                    .update({
+                        status: newStatus,
+                        onboarding_completed: isOnboardingComplete,
+                        onboarding_completed_at: isOnboardingComplete ? new Date().toISOString() : null
+                    })
+                    .eq('id', changeStatusUserId);
+
+                if (error) throw error;
+
+                closeChangeStatusModal();
+                showToast('User status updated successfully.', 'success');
+                await loadCustomers();
+
+            } catch (error) {
+                console.error('Error updating status:', error);
+                showToast('Failed to update status.', 'error');
+            }
+        }
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toast-msg');
+            msg.textContent = message;
+            toast.className = 'toast ' + type;
+
+            if (type === 'success') {
+                toast.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />';
+            } else {
+                toast.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.832c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />';
+            }
+
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+
+        // ============================================================
+        // DELETE CUSTOMER
+        // ============================================================
+        let deleteTargetId = null;
+
+        function openDeleteCustomerModal(userId, userName) {
+            deleteTargetId = userId;
+            document.getElementById('delete-customer-name').textContent = userName;
+            document.getElementById('delete-customer-modal').style.display = 'flex';
+        }
+
+        function closeDeleteCustomerModal() {
+            deleteTargetId = null;
+            document.getElementById('delete-customer-modal').style.display = 'none';
+        }
+
+        async function confirmDeleteCustomer() {
+            if (!deleteTargetId) return;
+
+            const btn = document.getElementById('btn-delete-customer');
+            btn.disabled = true;
+            btn.textContent = 'Deleting...';
+
+            try {
+                const success = await window.deleteUser(deleteTargetId);
+                if (success) {
+                    closeDeleteCustomerModal();
+                    showToast('Customer deleted successfully.', 'success');
+                    await loadCustomers();
+                } else {
+                    showToast('Failed to delete customer.', 'error');
+                    closeDeleteCustomerModal();
+                }
+            } catch (error) {
+                console.error('Error deleting customer:', error);
+                showToast('Error: ' + (error.message || 'Failed to delete.'), 'error');
+                closeDeleteCustomerModal();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Delete Customer';
+            }
+        }
+
+        // ============================================================
+        // MOBILE SIDEBAR
+        // ============================================================
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('show');
+        }
+
+        // ============================================================
+        // EVENT LISTENERS
+        // ============================================================
+        let searchDebounce = null;
+        document.getElementById('search-input').addEventListener('input', () => {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(applyFilters, 300);
+        });
+
+        document.getElementById('status-filter').addEventListener('change', applyFilters);
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        initPage();
+    </script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Book Your Setup Call</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.12) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            /* filter blur removed for performance */
+            opacity: 0.4;
+            /* animation: floatOrb */ animation: none 20s ease-in-out infinite;
+        }
+        .orb-1 { width: 400px; height: 400px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); top: -100px; left: -100px; }
+        .orb-2 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(59, 109, 255,0.2) 0%, transparent 70%); bottom: 10%; right: -50px; animation-delay: -7s; }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 10px) scale(1.02); }
+        }
+
+        /* Layout */
+        .page-wrapper {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 10, 10, 0.9);
+            /* backdrop-filter removed for performance */
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .top-bar-logo {
+            width: 40px; height: 40px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 12px var(--accent-glow));
+        }
+
+        .top-bar-brand {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;}
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .top-bar-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .top-bar-badge svg { width: 14px; height: 14px; }
+
+        .portal-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .portal-link:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .portal-link svg { width: 16px; height: 16px; }
+
+        /* Header section */
+        .header-section {
+            text-align: center;
+            padding: 48px 24px 32px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .header-section h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(28px, 5vw, 42px);
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-section p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* Booking embed */
+        .booking-embed-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1100px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 24px 32px;
+            animation: fadeInUp 0.6s ease-out 0.1s both;
+        }
+
+        .booking-frame-card {
+            flex: 1;
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 650px;
+        }
+
+        .booking-frame-card iframe {
+            flex: 1;
+            width: 100%;
+            min-height: 650px;
+            border: none;
+            background: #fff;
+        }
+
+        /* Loading state for iframe */
+        .iframe-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            padding: 80px 24px;
+            text-align: center;
+        }
+
+        .iframe-loading .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .iframe-loading p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Bottom section */
+        .bottom-section {
+            max-width: 1100px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 24px 48px;
+        }
+
+        /* Tips grid */
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .tip-card {
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            transition: border-color 0.2s ease;
+        }
+
+        .tip-card:hover {
+            border-color: rgba(59, 109, 255, 0.3);
+        }
+
+        .tip-card-icon {
+            width: 44px; height: 44px;
+            background: var(--accent-dim);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .tip-card-icon svg {
+            width: 22px; height: 22px;
+            color: var(--accent);
+        }
+
+        .tip-card h4 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .tip-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Bookmark bar */
+        .bookmark-bar {
+            margin-top: 20px;
+            padding: 16px 24px;
+            background: rgba(59, 109, 255, 0.06);
+            border: 1px solid rgba(59, 109, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+        }
+
+        .bookmark-bar p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .bookmark-bar strong {
+            color: var(--accent);
+        }
+
+        .bookmark-bar .bookmark-url {
+            padding: 6px 14px;
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            user-select: all;
+        }
+
+        /* Fallback link */
+        .fallback-link {
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .fallback-link a {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .fallback-link a:hover { color: var(--accent); }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .top-bar { padding: 12px 16px; }
+            .top-bar-badge { display: none; }
+            .header-section { padding: 32px 16px 24px; }
+            .booking-embed-wrapper { padding: 0 16px 24px; }
+            .booking-frame-card { min-height: 550px; }
+            .booking-frame-card iframe { min-height: 550px; }
+            .tips-grid { grid-template-columns: 1fr; }
+            .bottom-section { padding: 0 16px 32px; }
+            .bookmark-bar { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <div class="page-wrapper">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <img src="../logo.png" alt="VantageQuant" class="top-bar-logo">
+                <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:26px;width:auto;max-width:100%;object-fit:contain;display:inline-block;vertical-align:middle;">
+            </div>
+            <div class="top-bar-right">
+                <span class="top-bar-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Onboarding Complete
+                </span>
+                <a href="/" class="portal-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Member Portal
+                </a>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="header-section">
+            <h1>Book Your Algorithm Setup Call</h1>
+            <p>Select a time below and our team will walk you through the full setup on a live call.</p>
+        </div>
+
+        <!-- Booking Embed -->
+        <div class="booking-embed-wrapper">
+            <div class="booking-frame-card">
+                <div class="iframe-loading" id="iframe-loading">
+                    <div class="spinner"></div>
+                    <p>Loading booking calendar...</p>
+                </div>
+                <iframe
+                    id="booking-iframe"
+                    src="about:blank"
+                    style="display:none;"
+                    allow="payment"
+                    loading="lazy"
+                ></iframe>
+            </div>
+            <div class="fallback-link">
+                <a href="#" id="fallback-link" target="_blank">Having trouble? Open booking page in a new window</a>
+            </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="bottom-section">
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <div class="tip-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <h4>Join on Laptop/Computer</h4>
+                    <p>The setup process requires screen sharing and cannot be completed on a phone.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                    </div>
+                    <h4>Have Credentials Ready</h4>
+                    <p>TradersPost login and your broker or funded account credentials (Tradovate, Apex, etc.)</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    </div>
+                    <h4>Know Your Risk Parameters</h4>
+                    <p>Max daily loss and max drawdown amounts for each account you want to connect.</p>
+                </div>
+            </div>
+
+            <div class="bookmark-bar">
+                <p><strong>Save your login link:</strong> Bookmark this URL for future access to your member portal</p>
+                <span class="bookmark-url" id="bookmark-url"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var BOOKING_URL = 'https://scheduling.vantagequant.com/book.html?slug=algorithm-alignment-call';
+
+        // Set bookmark URL
+        document.getElementById('bookmark-url').textContent = window.location.origin + '/auth/';
+
+        // Load booking URL from admin settings if available, otherwise use default
+        (async function initBooking() {
+            try {
+                // Try to load booking URL from admin settings
+                var result = await window.supabaseClient
+                    .from('admin_settings')
+                    .select('value')
+                    .eq('key', 'booking_config')
+                    .single();
+
+                if (result.data && result.data.value && result.data.value.booking_url) {
+                    BOOKING_URL = result.data.value.booking_url;
+                }
+            } catch (e) {
+                // Use default URL
+            }
+
+            // Set iframe source
+            var iframe = document.getElementById('booking-iframe');
+            var loading = document.getElementById('iframe-loading');
+            var fallback = document.getElementById('fallback-link');
+
+            fallback.href = BOOKING_URL;
+
+            iframe.src = BOOKING_URL;
+            iframe.onload = function() {
+                loading.style.display = 'none';
+                iframe.style.display = 'block';
+            };
+
+            // Fallback: if iframe doesn't load in 8 seconds, hide spinner
+            setTimeout(function() {
+                if (loading.style.display !== 'none') {
+                    loading.style.display = 'none';
+                    iframe.style.display = 'block';
+                }
+            }, 8000);
+        })();
+
+        // Mark onboarding as complete when user reaches booking page
+        (async function() {
+            try {
+                var user = await window.getCurrentUser();
+                if (user) {
+                    var profile = await window.getUserProfile(user.id);
+                    if (profile && !profile.onboarding_completed) {
+                        await window.markOnboardingComplete(user.id);
+                    }
+                }
+            } catch (e) {
+                console.error('Error marking onboarding complete:', e);
+            }
+        })();
+    </script>
+</body>
+</html>

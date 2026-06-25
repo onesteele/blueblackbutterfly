@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Summit Trial Onboarding</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+    <!-- Wistia player -->
+    <script src="https://fast.wistia.com/player.js" async></script>
+    <script src="https://fast.wistia.com/embed/hqlhtq3z3r.js" async type="module"></script>
+    <!-- STOP gate video -->
+    <script src="https://fast.wistia.com/embed/ddtv9g27j2.js" async type="module"></script>
+
+    <!-- Supabase (for Sign Out + best-effort completion; page is open-access) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Wistia placeholder before the component defines */
+        wistia-player[media-id='hqlhtq3z3r']:not(:defined) {
+            background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/hqlhtq3z3r/swatch');
+            display: block;
+            filter: blur(5px);
+            padding-top: 56.25%;
+        }
+        wistia-player[media-id='ddtv9g27j2']:not(:defined) {
+            background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/ddtv9g27j2/swatch');
+            display: block;
+            filter: blur(5px);
+            padding-top: 50.94%;
+        }
+
+        /* Background */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.5;
+        }
+        .orb-1 { width: 400px; height: 400px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); top: -100px; left: -100px; }
+        .orb-2 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(59, 109, 255, 0.25) 0%, transparent 70%); bottom: 20%; right: -50px; }
+        .orb-3 { width: 250px; height: 250px; background: radial-gradient(circle, rgba(59, 109, 255, 0.2) 0%, transparent 70%); top: 50%; left: 30%; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes vScreenFadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes checkPop { 0% { transform: scale(0); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+        /* Header */
+        .course-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+        }
+        .course-header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand img { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 0 12px var(--accent-glow)); }
+        .brand span {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px; font-weight: 500; letter-spacing: 0.04em;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;}
+        .course-signout {
+            font-size: 13px; color: var(--text-muted); text-decoration: none; cursor: pointer;
+            transition: color 0.2s ease; background: none; border: none; font-family: 'Inter', sans-serif;
+        }
+        .course-signout:hover { color: var(--accent); }
+
+        /* Loading */
+        .loading-screen {
+            position: fixed; inset: 0;
+            background: var(--bg-dark);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loading-spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .loading-text { margin-top: 16px; color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+
+        /* Stage */
+        .stage {
+            position: relative;
+            z-index: 10;
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 48px 24px 96px;
+        }
+
+        .screen { display: none; }
+        .screen.active { display: block; animation: vScreenFadeIn 0.5s ease-out; }
+
+        .eyebrow {
+            display: inline-block;
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+            color: var(--accent); text-transform: uppercase;
+            background: var(--accent-dim); padding: 6px 12px; border-radius: 100px; margin-bottom: 16px;
+        }
+        .screen-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 32px; font-weight: 400; line-height: 1.15; margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-style: italic;}
+        .screen-subtitle { color: var(--text-secondary); font-size: 16px; max-width: 640px; margin: 0 auto 28px; line-height: 1.6; }
+        .center { text-align: center; }
+
+        /* Inline (large) video mount */
+        .video-shell {
+            width: 100%;
+            max-width: 860px;
+            margin: 0 auto 28px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+            background: #000;
+        }
+        /* When the player is popped out, keep the inline shell's height so layout doesn't jump */
+        .video-shell.empty {
+            aspect-ratio: 16 / 9;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(20,20,20,0.6);
+            color: var(--text-muted); font-size: 14px; gap: 10px; text-align: center; padding: 16px;
+        }
+        .video-shell.empty .reattach-hint svg { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; }
+        #videoMount { display: block; width: 100%; }
+        #videoMount wistia-player { display: block; width: 100%; }
+
+        /* Primary button */
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 10px; justify-content: center;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: var(--bg-dark);
+            font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+            border: none; border-radius: 12px; cursor: pointer;
+            transition: all 0.3s ease; text-decoration: none;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
+        .btn-primary svg { width: 18px; height: 18px; }
+
+        .btn-ghost {
+            display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+            padding: 12px 22px; background: rgba(255,255,255,0.04);
+            color: var(--text-secondary); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+            border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.2s ease; text-decoration: none;
+        }
+        .btn-ghost:hover { color: var(--text-primary); border-color: var(--accent); }
+
+        .hint { font-size: 13px; color: var(--text-muted); margin-top: 14px; }
+
+        /* Setup screen (iframe) */
+        .setup-checkmark {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;
+            animation: checkPop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .setup-checkmark svg { width: 32px; height: 32px; color: #fff; }
+
+        .summit-iframe-card {
+            width: 100%; max-width: 960px; margin: 0 auto 24px;
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid var(--border); border-radius: 20px; padding: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.45), 0 0 40px var(--accent-dim);
+        }
+        .summit-iframe-card iframe {
+            display: block; width: 100%; max-width: 100%; height: 760px;
+            border: 0; border-radius: 14px; overflow: hidden; background: #0f0f0f;
+        }
+        /* iframe card inside a roadmap step is left-aligned, not centered */
+        .road-card .summit-iframe-card { margin: 16px 0 4px; }
+
+        /* ============================================ */
+        /* 3-STEP ROADMAP / TIMELINE                    */
+        /* ============================================ */
+        .roadmap {
+            max-width: 880px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .road-step {
+            position: relative;
+            display: grid;
+            grid-template-columns: 56px 1fr;
+            gap: 20px;
+            padding-bottom: 28px;
+        }
+        /* connecting vertical line between markers */
+        .road-step:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 27px; top: 56px; bottom: -4px;
+            width: 2px;
+            background: linear-gradient(var(--accent) 0%, var(--border) 100%);
+            opacity: 0.5;
+        }
+        .road-marker {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 24px; font-weight: 600;
+            color: var(--bg-dark);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            box-shadow: 0 0 24px var(--accent-dim);
+            flex-shrink: 0;
+            z-index: 1;
+        }
+        .road-card {
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 26px;
+            text-align: left;
+        }
+        .road-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);
+        }
+        .road-body { color: var(--text-secondary); font-size: 15px; margin-bottom: 18px; line-height: 1.6; }
+        .road-note { font-size: 12.5px; color: var(--text-muted); margin-top: 12px; }
+        .road-card .btn-primary { text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .road-step { grid-template-columns: 44px 1fr; gap: 14px; }
+            .road-marker { width: 44px; height: 44px; font-size: 19px; }
+            .road-step:not(:last-child)::before { left: 21px; top: 44px; }
+            .road-card { padding: 18px 18px; }
+        }
+
+        /* ============================================ */
+        /* FLOATING PICTURE-IN-PICTURE PLAYER           */
+        /* ============================================ */
+        .pip {
+            position: fixed;
+            z-index: 9000;
+            width: 500px;
+            top: auto; left: auto;
+            bottom: 20px; right: 20px;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 24px 70px rgba(0,0,0,0.65), 0 0 0 1px rgba(59, 109, 255,0.18), 0 0 30px var(--accent-dim);
+            display: none;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .pip.active { display: block; }
+        /* Smooth snap-to-corner; disabled mid-drag/resize via .dragging */
+        .pip.snapping { transition: top 0.28s cubic-bezier(0.4,0,0.2,1), left 0.28s cubic-bezier(0.4,0,0.2,1); }
+
+        .pip-header {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            height: 38px; padding: 0 6px 0 12px;
+            background: rgba(18,18,18,0.96);
+            border-bottom: 1px solid var(--border);
+            cursor: grab;
+        }
+        .pip.dragging .pip-header { cursor: grabbing; }
+        .pip-title {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 12px; font-weight: 700; letter-spacing: 0.02em; color: var(--accent);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .pip-title svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .pip-controls { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+        .pip-btn {
+            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+            background: transparent; border: none; border-radius: 7px; cursor: pointer;
+            color: var(--text-secondary); transition: all 0.15s ease;
+        }
+        .pip-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+        .pip-btn svg { width: 16px; height: 16px; }
+
+        /* Fixed 16:9 height so the window is fully sized the instant it appears
+           (prevents it from positioning off-screen before the video lays out). */
+        .pip-body { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+        .pip-body wistia-player { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+        .pip-resize {
+            position: absolute; right: 0; bottom: 0;
+            width: 22px; height: 22px;
+            cursor: nwse-resize;
+            z-index: 5;
+            display: flex; align-items: flex-end; justify-content: flex-end;
+            padding: 3px;
+            color: rgba(255,255,255,0.55);
+        }
+        .pip-resize svg { width: 12px; height: 12px; }
+        .pip-resize:hover { color: var(--accent); }
+
+        /* Floating "reopen" pill if user closes the PiP while in setup */
+        .pip-reopen {
+            position: fixed; bottom: 20px; right: 20px; z-index: 8000;
+            display: none; align-items: center; gap: 8px;
+            padding: 12px 18px; border-radius: 100px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: var(--bg-dark); font-weight: 700; font-size: 13px; border: none; cursor: pointer;
+            box-shadow: 0 10px 30px var(--accent-glow);
+        }
+        .pip-reopen.active { display: inline-flex; }
+        .pip-reopen svg { width: 16px; height: 16px; }
+
+        .toast {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(20,20,20,0.96); color: #fff;
+            padding: 12px 20px; border: 1px solid var(--border); border-radius: 12px;
+            font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 10px;
+            opacity: 0; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); z-index: 9500;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast svg { width: 18px; height: 18px; color: var(--accent); }
+
+        @media (max-width: 768px) {
+            .screen-title { font-size: 24px; }
+            .summit-iframe-card iframe { height: 720px; }
+            /* On small screens the floating player docks full-width at the bottom */
+            .pip {
+                width: auto !important;
+                left: 8px !important; right: 8px !important;
+                bottom: 8px !important; top: auto !important;
+            }
+            .pip-resize { display: none; }
+        }
+
+        /* ============================================ */
+        /* "STOP" MANDATORY VIDEO GATE                  */
+        /* (reuses the same bg-animation + dot-pattern  */
+        /*  already fixed on <body>, so the background  */
+        /*  is identical to the setup screen)           */
+        /* ============================================ */
+        .stop-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9800;
+            display: none;
+            overflow-y: auto;
+            background: rgba(10, 10, 10, 0.92);
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
+        }
+        .stop-overlay.active { display: block; animation: vScreenFadeIn 0.45s ease-out; }
+        .stop-inner {
+            position: relative;
+            z-index: 2;
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 64px 24px 96px;
+            text-align: center;
+        }
+        .stop-eyebrow {
+            display: inline-block;
+            font-size: 11px; font-weight: 700; letter-spacing: 2px;
+            color: var(--error); text-transform: uppercase;
+            background: rgba(239, 68, 68, 0.12); padding: 6px 14px; border-radius: 100px;
+            margin-bottom: 18px; border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+        .stop-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 64px; font-weight: 400; line-height: 1; letter-spacing: 0.02em;
+            margin-bottom: 14px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-style: italic;}
+        .stop-lead { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+        .stop-sub { font-size: 14.5px; color: var(--text-secondary); max-width: 600px; margin: 0 auto 30px; line-height: 1.6; }
+
+        /* Placeholder shown until the real Wistia embed is dropped in */
+        .stop-video-placeholder {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 12px;
+            background: repeating-linear-gradient(45deg, #0f0f0f, #0f0f0f 12px, #0e1016 12px, #0e1016 24px);
+            color: var(--text-muted); font-size: 14px; text-align: center; padding: 16px;
+        }
+        .stop-video-placeholder svg { width: 40px; height: 40px; color: var(--accent); opacity: 0.7; }
+        .stop-video-placeholder small { font-size: 12px; color: var(--text-muted); }
+
+        .stop-continue:disabled { opacity: 0.5; cursor: not-allowed; }
+        .stop-continue:disabled:hover { transform: none; box-shadow: none; }
+        .stop-hint { font-size: 13px; color: var(--text-muted); margin-top: 14px; }
+
+        @media (max-width: 768px) {
+            .stop-title { font-size: 44px; }
+            .stop-lead { font-size: 18px; }
+            .stop-inner { padding: 48px 20px 80px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Loading -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading your Summit trial...</div>
+    </div>
+
+    <!-- Header -->
+    <div class="course-header">
+        <div class="course-header-inner">
+            <div class="brand">
+                <img src="../logo.png" alt="VantageQuant">
+                <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:26px;width:auto;max-width:100%;object-fit:contain;display:inline-block;vertical-align:middle;">
+            </div>
+            <button class="course-signout" onclick="handleSignOut()">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="stage">
+        <!-- HERO + VIDEO -->
+        <div class="center" style="margin-bottom:40px;">
+            <span class="eyebrow">Summit Trial · No Payment Required</span>
+            <h1 class="screen-title">Set Up Your 100K Summit Demo Account</h1>
+            <p class="screen-subtitle">Watch the short video below — it walks you through every step. You can shrink the video, drag it, and pin it to any corner so it stays with you while you follow the 3 steps underneath it.</p>
+
+            <div class="video-shell" id="videoShell">
+                <div id="videoMount">
+                    <wistia-player id="wistiaPlayer" media-id="hqlhtq3z3r" aspect="1.7777777777777777"></wistia-player>
+                </div>
+            </div>
+
+            <button class="btn-primary" type="button" onclick="enterPip()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-5"/><rect x="3" y="12" width="9" height="7" rx="1.5"/></svg>
+                Shrink Video &amp; Keep It On Screen
+            </button>
+            <p class="hint">The video keeps playing in a floating window you can drag, resize, and snap to any corner while you do the steps below.</p>
+        </div>
+
+        <!-- 3-STEP ROADMAP -->
+        <div class="roadmap">
+            <!-- STEP 1 -->
+            <div class="road-step">
+                <div class="road-marker">1</div>
+                <div class="road-card">
+                    <h3 class="road-title">Create your Summit account</h3>
+                    <p class="road-body">First, you need a Summit account. The video shows you exactly how to sign up — just click the button, create your account, then come right back to this page.</p>
+                    <a class="btn-primary" href="https://dashboard.summit-securities.com/signin?tab=signup" target="_blank" rel="noopener noreferrer">
+                        Create My Summit Account
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-9 9M10 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-4"/></svg>
+                    </a>
+                    <p class="road-note">Opens in a new tab. Keep this page open — you'll come back here for Step 2.</p>
+                </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="road-step">
+                <div class="road-marker">2</div>
+                <div class="road-card">
+                    <h3 class="road-title">Link your Summit account to TradeLux</h3>
+                    <p class="road-body">Now connect the Summit account you just made to the algorithm. Do it right here — no need to leave this page. Just fill out the secure tool below and follow the video.</p>
+                    <div class="summit-iframe-card">
+                        <iframe
+                            src="https://tradelux.ai/embed/lead-trial/8A97B0EA"
+                            title="TradeLux Copy Trade Trial Signup"
+                            loading="lazy"
+                            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="road-step">
+                <div class="road-marker">3</div>
+                <div class="road-card">
+                    <h3 class="road-title">Open TradeLux &amp; bookmark it</h3>
+                    <p class="road-body">Last step: open TradeLux in a new window and bookmark it (Ctrl+D / Cmd+D). That's your home base — you'll use it to check on your account anytime in the future.</p>
+                    <a class="btn-primary" href="https://tradelux.ai/" target="_blank" rel="noopener noreferrer">
+                        Open TradeLux &amp; Bookmark It
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-9 9M10 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-4"/></svg>
+                    </a>
+                    <p class="road-note">Opens in a new tab. Bookmark it so you can always find your way back.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DONE -->
+        <div class="center" style="margin-top:40px;">
+            <button class="btn-primary" type="button" onclick="finishSummitSetup(this)">I'm Done — Continue to Dashboard</button>
+            <p class="hint">Finished all 3 steps? Head to your dashboard.</p>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- "STOP" MANDATORY VIDEO GATE                  -->
+    <!-- Shown after "I'm Done — Continue to Dashboard" -->
+    <!-- ============================================ -->
+    <div class="stop-overlay" id="stopOverlay">
+        <div class="stop-inner">
+            <span class="stop-eyebrow">One Last Thing</span>
+            <h1 class="stop-title">STOP!</h1>
+            <p class="stop-lead">Please watch this important video.</p>
+            <p class="stop-sub">This is how you can actively track and view your live results on TradeLux to verify your daily profits from the algorithm.</p>
+
+            <div class="video-shell" id="stopVideoShell">
+                <wistia-player media-id="ddtv9g27j2" aspect="1.9631901840490797"></wistia-player>
+            </div>
+
+            <button class="btn-primary stop-continue" id="stopContinueBtn" type="button" disabled onclick="continueToDashboard(this)">
+                <span id="stopContinueLabel">Please wait… 4:37</span>
+            </button>
+            <p class="stop-hint" id="stopContinueHint">The Continue button unlocks once the video is finished.</p>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- FLOATING PiP PLAYER (video reparented here)  -->
+    <!-- ============================================ -->
+    <div class="pip" id="pip">
+        <div class="pip-header" id="pipHeader">
+            <span class="pip-title">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Starter Video
+            </span>
+            <div class="pip-controls">
+                <button class="pip-btn" type="button" title="Snap to next corner" onclick="cycleCorner()" aria-label="Snap to corner">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="13" y="13" width="5" height="5" rx="1" fill="currentColor" stroke="none"/></svg>
+                </button>
+                <button class="pip-btn" type="button" title="Back to full video" onclick="exitPip()" aria-label="Expand">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="pip-body" id="pipBody">
+            <!-- wistia-player gets moved in here -->
+            <div class="pip-resize" id="pipResize" title="Drag to resize">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20h11M14 15h6M19 10h1"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reopen pill (if PiP closed while in setup) -->
+    <button class="pip-reopen" id="pipReopen" type="button" onclick="reopenPip()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        Show Video
+    </button>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span id="toast-message"></span>
+    </div>
+
+    <script>
+        // ============================================
+        // OPEN-ACCESS INIT (no gate; just reveal the page)
+        // ============================================
+        (function init() {
+            // Don't let the browser restore a previous scroll position.
+            try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+
+            // The embedded TradeLux iframe autofocuses a field, which makes the
+            // browser scroll down to it on load. Keep the page pinned to the top
+            // for the first moment — but release instantly if the user scrolls.
+            var pinUntil = Date.now() + 1500;
+            function releasePin() { pinUntil = 0; }
+            ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function(evt) {
+                window.addEventListener(evt, releasePin, { passive: true, once: true });
+            });
+            function pinTop() {
+                if (Date.now() > pinUntil) return;
+                window.scrollTo(0, 0);
+                requestAnimationFrame(pinTop);
+            }
+            window.scrollTo(0, 0);
+            pinTop();
+
+            // Best-effort: keep the funnel working but never block rendering.
+            // Reaching this page means signup is done, so mark trial onboarding
+            // complete now. That way the dashboard ("/") shows them the client
+            // dashboard instead of bouncing them to /trial/ — regardless of how
+            // they leave this page.
+            try {
+                if (window.supabaseClient && window.supabaseClient.auth) {
+                    window.supabaseClient.auth.getSession().then(function(res) {
+                        var session = res && res.data && res.data.session;
+                        if (session) {
+                            window._summitUserId = session.user.id;
+                            if (window.markTrialOnboardingComplete) {
+                                window.markTrialOnboardingComplete(session.user.id).catch(function(){});
+                            }
+                        }
+                    }).catch(function(){});
+                }
+            } catch (e) { /* non-fatal */ }
+
+            // Reveal immediately.
+            document.getElementById('loadingScreen').classList.add('hidden');
+        })();
+
+        window.handleSignOut = function() {
+            if (window.signOut) { window.signOut(); }
+            else { window.location.href = '/auth/'; }
+        };
+
+        // ============================================
+        // UI HELPERS
+        // ============================================
+        function showToast(msg) {
+            var t = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            t.classList.add('show');
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(function() { t.classList.remove('show'); }, 2600);
+        }
+
+        // Best-effort: try to start playback on the Wistia component.
+        function tryPlay() {
+            var p = document.getElementById('wistiaPlayer');
+            if (!p) return;
+            try { if (typeof p.play === 'function') { p.play(); return; } } catch (e) {}
+            // Fallback to the JS API if present
+            try {
+                if (window._wq) { window._wq.push({ id: 'hqlhtq3z3r', onReady: function(v){ try { v.play(); } catch(e){} } }); }
+            } catch (e) {}
+        }
+
+        // ============================================
+        // PICTURE-IN-PICTURE (custom floating player)
+        // ============================================
+        var pip = document.getElementById('pip');
+        var pipBody = document.getElementById('pipBody');
+        var pipResize = document.getElementById('pipResize');
+        var pipHeader = document.getElementById('pipHeader');
+        var videoMount = document.getElementById('videoMount');
+        var videoShell = document.getElementById('videoShell');
+
+        var MARGIN = 20;            // gap from viewport edges when snapped
+        var MIN_W = 240, MAX_W = 720;
+        var currentCorner = 'br';   // tl, tr, bl, br
+
+        // Move the <wistia-player> into the floating window (keeps it playing).
+        function enterPip() {
+            var player = document.getElementById('wistiaPlayer');
+            if (player && player.parentNode !== pipBody) {
+                // Keep the resize handle last so it stays on top.
+                pipBody.insertBefore(player, pipResize);
+            }
+            pip.classList.add('active');
+            document.getElementById('pipReopen').classList.remove('active');
+            // Leave a placeholder where the inline video was (videoMount is detached
+            // but kept in the `videoMount` variable so exitPip can restore it).
+            videoShell.classList.add('empty');
+            videoShell.innerHTML = '<span class="reattach-hint"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>Video is floating — drag it anywhere or snap it to a corner.</span>';
+            snapToCorner(currentCorner, false);
+            // Re-snap after layout settles so it lands fully visible in the corner.
+            requestAnimationFrame(function() { snapToCorner(currentCorner, false); });
+            setTimeout(function() { snapToCorner(currentCorner, false); }, 120);
+            tryPlay();
+            showToast('Drag, resize, or snap the video to any corner.');
+        }
+
+        // Return the video to the big inline player.
+        function exitPip() {
+            var player = document.getElementById('wistiaPlayer');
+            // Restore the inline mount (it was replaced with a hint while floating).
+            videoShell.classList.remove('empty');
+            if (!document.getElementById('videoMount')) {
+                videoShell.innerHTML = '';
+                videoShell.appendChild(videoMount);
+            }
+            if (player && player.parentNode !== videoMount) {
+                videoMount.appendChild(player);
+            }
+            pip.classList.remove('active');
+            document.getElementById('pipReopen').classList.remove('active');
+        }
+
+        // Close the floating window but stay on the setup screen; offer a reopen pill.
+        function reopenPip() {
+            pip.classList.add('active');
+            document.getElementById('pipReopen').classList.remove('active');
+            snapToCorner(currentCorner, false);
+            tryPlay();
+        }
+
+        // ---- Corner snapping ----
+        function snapToCorner(corner, animate) {
+            currentCorner = corner;
+            if (animate) pip.classList.add('snapping');
+            else pip.classList.remove('snapping');
+
+            var w = pip.offsetWidth;
+            var h = pip.offsetHeight;
+            var vw = window.innerWidth, vh = window.innerHeight;
+            var left = (corner === 'tl' || corner === 'bl') ? MARGIN : (vw - w - MARGIN);
+            var top  = (corner === 'tl' || corner === 'tr') ? MARGIN : (vh - h - MARGIN);
+
+            pip.style.left = Math.max(MARGIN, left) + 'px';
+            pip.style.top = Math.max(MARGIN, top) + 'px';
+            pip.style.right = 'auto';
+            pip.style.bottom = 'auto';
+
+            if (animate) {
+                setTimeout(function() { pip.classList.remove('snapping'); }, 320);
+            }
+        }
+
+        function cycleCorner() {
+            var order = ['br', 'bl', 'tl', 'tr'];
+            var idx = order.indexOf(currentCorner);
+            var next = order[(idx + 1) % order.length];
+            snapToCorner(next, true);
+        }
+
+        function nearestCorner() {
+            var r = pip.getBoundingClientRect();
+            var cx = r.left + r.width / 2;
+            var cy = r.top + r.height / 2;
+            var left = cx < window.innerWidth / 2;
+            var top = cy < window.innerHeight / 2;
+            return (top ? 't' : 'b') + (left ? 'l' : 'r');
+        }
+
+        // ---- Dragging (header) ----
+        var dragState = null;
+        pipHeader.addEventListener('pointerdown', function(e) {
+            if (e.target.closest('.pip-btn')) return; // let buttons work
+            var r = pip.getBoundingClientRect();
+            dragState = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+            pip.classList.add('dragging');
+            pip.classList.remove('snapping');
+            pip.style.right = 'auto';
+            pip.style.bottom = 'auto';
+            pipHeader.setPointerCapture(e.pointerId);
+            e.preventDefault();
+        });
+        pipHeader.addEventListener('pointermove', function(e) {
+            if (!dragState) return;
+            var w = pip.offsetWidth, h = pip.offsetHeight;
+            var left = e.clientX - dragState.dx;
+            var top = e.clientY - dragState.dy;
+            // Clamp inside the viewport.
+            left = Math.min(Math.max(0, left), window.innerWidth - w);
+            top = Math.min(Math.max(0, top), window.innerHeight - h);
+            pip.style.left = left + 'px';
+            pip.style.top = top + 'px';
+        });
+        function endDrag(e) {
+            if (!dragState) return;
+            dragState = null;
+            pip.classList.remove('dragging');
+            try { pipHeader.releasePointerCapture(e.pointerId); } catch (err) {}
+            snapToCorner(nearestCorner(), true);
+        }
+        pipHeader.addEventListener('pointerup', endDrag);
+        pipHeader.addEventListener('pointercancel', endDrag);
+
+        // ---- Resizing (corner handle) ----
+        var resizeState = null;
+        pipResize.addEventListener('pointerdown', function(e) {
+            var r = pip.getBoundingClientRect();
+            resizeState = { startX: e.clientX, startW: r.width, left: r.left, top: r.top };
+            pip.classList.add('dragging');
+            pip.classList.remove('snapping');
+            pip.style.right = 'auto';
+            pip.style.bottom = 'auto';
+            pip.style.left = r.left + 'px';
+            pip.style.top = r.top + 'px';
+            pipResize.setPointerCapture(e.pointerId);
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        pipResize.addEventListener('pointermove', function(e) {
+            if (!resizeState) return;
+            var w = resizeState.startW + (e.clientX - resizeState.startX);
+            w = Math.min(Math.max(MIN_W, w), Math.min(MAX_W, window.innerWidth - 2 * MARGIN));
+            pip.style.width = w + 'px';
+        });
+        function endResize(e) {
+            if (!resizeState) return;
+            resizeState = null;
+            pip.classList.remove('dragging');
+            try { pipResize.releasePointerCapture(e.pointerId); } catch (err) {}
+            snapToCorner(nearestCorner(), true);
+        }
+        pipResize.addEventListener('pointerup', endResize);
+        pipResize.addEventListener('pointercancel', endResize);
+
+        // Keep it pinned to its corner on viewport resize.
+        window.addEventListener('resize', function() {
+            if (pip.classList.contains('active')) snapToCorner(currentCorner, false);
+        });
+
+        // ============================================
+        // COMPLETION
+        // ============================================
+        // "I'm Done" no longer jumps straight to the dashboard — it first reveals
+        // the mandatory "STOP" video gate. The real navigation happens in
+        // continueToDashboard() once the 45-second timer unlocks the button.
+        window.finishSummitSetup = function(btn) {
+            var overlay = document.getElementById('stopOverlay');
+            overlay.classList.add('active');
+            overlay.scrollTop = 0;
+            try { window.scrollTo(0, 0); } catch (e) {}
+            startStopUnlockTimer();
+        };
+
+        // Countdown that unlocks the Continue button after the video runs (2:55).
+        // Starts the moment the STOP screen is revealed (time-based, independent
+        // of the embed's own playback events).
+        var stopTimerStarted = false;
+        function fmtMMSS(s) {
+            var m = Math.floor(s / 60);
+            var r = s % 60;
+            return m + ':' + (r < 10 ? '0' + r : r);
+        }
+        function startStopUnlockTimer() {
+            if (stopTimerStarted) return;
+            stopTimerStarted = true;
+            var remaining = 277; // 4:37
+            var btn = document.getElementById('stopContinueBtn');
+            var label = document.getElementById('stopContinueLabel');
+            var hint = document.getElementById('stopContinueHint');
+            label.textContent = 'Please wait… ' + fmtMMSS(remaining);
+            var iv = setInterval(function() {
+                remaining -= 1;
+                if (remaining <= 0) {
+                    clearInterval(iv);
+                    btn.disabled = false;
+                    label.textContent = 'Continue to Dashboard';
+                    hint.textContent = "Thanks for watching — you're all set.";
+                } else {
+                    label.textContent = 'Please wait… ' + fmtMMSS(remaining);
+                }
+            }, 1000);
+        }
+
+        // The dashboard ("/") sends free_trial users with onboarding_completed=false
+        // to /trial/ (the old trial videos). So we MUST mark onboarding complete and
+        // WAIT for it to persist before navigating, or they'd land on the wrong page.
+        window.continueToDashboard = async function(btn) {
+            if (btn && btn.disabled) return;
+            if (btn) btn.disabled = true;
+            document.getElementById('stopContinueLabel').textContent = 'Taking you to your dashboard…';
+            try {
+                var uid = window._summitUserId;
+                if (!uid && window.supabaseClient && window.supabaseClient.auth) {
+                    var res = await window.supabaseClient.auth.getSession();
+                    uid = res && res.data && res.data.session && res.data.session.user.id;
+                }
+                if (uid && window.markTrialOnboardingComplete) {
+                    await window.markTrialOnboardingComplete(uid);
+                }
+            } catch (e) { console.warn('Could not mark onboarding complete:', e); }
+            window.location.href = '/';
+        };
+
+        // Expose handlers used by inline onclick
+        window.enterPip = enterPip;
+        window.exitPip = exitPip;
+        window.reopenPip = reopenPip;
+        window.cycleCorner = cycleCorner;
+    </script>
+</body>
+</html>

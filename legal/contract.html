@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Algorithm Customer Agreement - VantageQuant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0e0e0e;
+            color: #d4d4d4;
+            line-height: 1.8;
+            font-size: 14px;
+            padding: 40px 32px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3b6dff;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1e2433;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-top: 24px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #c0c0c0;
+        }
+
+        .header-block {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid #3b6dff;
+        }
+
+        .header-block .subtitle {
+            font-size: 15px;
+            font-weight: 600;
+            color: #3b6dff;
+            margin-bottom: 16px;
+        }
+
+        .header-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .header-meta span {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .header-meta strong {
+            color: #d4d4d4;
+        }
+
+        .summary-box {
+            background: #1a1a1a;
+            border: 1px solid #1e2433;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0 32px;
+        }
+
+        .summary-box h2 {
+            margin-top: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .summary-box p {
+            font-size: 13.5px;
+        }
+
+        .summary-box strong {
+            color: #3b6dff;
+        }
+
+        .section-num {
+            color: #3b6dff;
+            font-weight: 700;
+        }
+
+        .subsection {
+            margin-left: 0;
+            margin-bottom: 14px;
+        }
+
+        .subsection-title {
+            font-weight: 700;
+            color: #e0e0e0;
+        }
+
+        .caps-block {
+            background: #1a1a0a;
+            border-left: 3px solid #3b6dff;
+            padding: 16px 20px;
+            margin: 14px 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #c0b870;
+        }
+
+        .list-alpha {
+            margin: 10px 0 14px 20px;
+            list-style: none;
+            counter-reset: alpha-counter;
+        }
+
+        .list-alpha li {
+            counter-increment: alpha-counter;
+            margin-bottom: 8px;
+            padding-left: 8px;
+            color: #b0b0b0;
+        }
+
+        .list-alpha li::before {
+            content: "(" counter(alpha-counter, lower-alpha) ") ";
+            color: #3b6dff;
+            font-weight: 600;
+        }
+
+        ul.bullet-list {
+            margin: 10px 0 14px 20px;
+            list-style: none;
+        }
+
+        ul.bullet-list li {
+            margin-bottom: 8px;
+            padding-left: 12px;
+            position: relative;
+            color: #b0b0b0;
+        }
+
+        ul.bullet-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 9px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #3b6dff;
+        }
+
+        .warning-box {
+            background: #1a1210;
+            border: 1px solid #4a2020;
+            border-left: 4px solid #ef4444;
+            border-radius: 0 8px 8px 0;
+            padding: 20px;
+            margin: 16px 0;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #e0a0a0;
+        }
+
+        .warning-box strong {
+            color: #ef4444;
+        }
+
+        .signature-block {
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 2px solid #3b6dff;
+        }
+
+        .signature-block .checkbox-line {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 24px 0;
+            padding: 16px;
+            background: #1a1a1a;
+            border: 1px solid #1e2433;
+            border-radius: 8px;
+        }
+
+        .signature-block .checkbox-line input[type="checkbox"] {
+            margin-top: 3px;
+            accent-color: #3b6dff;
+            width: 18px;
+            height: 18px;
+        }
+
+        .sig-fields {
+            margin-top: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sig-field {
+            border-bottom: 1px solid #3a3a3a;
+            padding-bottom: 8px;
+        }
+
+        .sig-field label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .payment-box {
+            background: #1a1a1a;
+            border: 1px solid #1e2433;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+
+        .payment-box .field {
+            margin-bottom: 12px;
+        }
+
+        .payment-box .field label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .payment-box .field .line {
+            border-bottom: 1px solid #3a3a3a;
+            padding: 4px 0;
+            margin-top: 4px;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #1e2433;
+            margin: 32px 0;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 24px 16px;
+                font-size: 13px;
+            }
+            h1 { font-size: 22px; }
+            h2 { font-size: 17px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header-block">
+        <h1>TRADING ALGORITHM CUSTOMER AGREEMENT</h1>
+        <p class="subtitle">VantageQuant Automated Trading Algorithm</p>
+        <div class="header-meta">
+            <span><strong>Contracting Entity:</strong> VantageQuant - RP Profits</span>
+            <span><strong>Effective Date:</strong> The date you accept this Agreement electronically</span>
+            <span><strong>Governing Law:</strong> State of Florida, United States</span>
+            <span><strong>Support Contact:</strong> info@vantagequant.com</span>
+        </div>
+    </div>
+
+    <!-- PLAIN-ENGLISH SUMMARY -->
+    <div class="summary-box">
+        <h2>PLAIN-ENGLISH SUMMARY (NON-BINDING OVERVIEW)</h2>
+        <p><em>This summary is provided for your convenience only and does not form part of the binding legal agreement. In the event of any conflict between this summary and the full terms below, the full terms control.</em></p>
+
+        <p><strong>What You Are Getting:</strong> You are licensing access to automated trading software (the "Software") that generates trading signals for E-mini S&P 500 (ES) futures contracts. The Software is delivered as a Software-as-a-Service (SaaS) through integration with the TradePost platform, which connects to your brokerage account.</p>
+
+        <p><strong>What We Are Not:</strong> We are a software provider, not a financial adviser, broker, or money manager. We do not provide personalized investment advice, and we do not have access to your funds. You remain in full control of your trading account and all trading decisions.</p>
+
+        <p><strong>Trading Is Risky:</strong> All trading involves substantial risk of loss. Past performance&mdash;whether actual or hypothetical&mdash;is not indicative of future results. You can lose money, and you should only trade with capital you can afford to lose.</p>
+
+        <p><strong>Your Responsibilities:</strong> You must use the Software correctly, comply with all laws, and follow the setup instructions provided during onboarding. If you wish to claim the refund guarantee, you must adhere to the specific conditions outlined in Annex B.</p>
+
+        <p><strong>Our 90-Day Profitability Guarantee:</strong> If the Software is not profitable over a 90-day evaluation period when used under the specified conditions, we will refund 100% of your license fee. This is your exclusive remedy for performance-related issues. Details are in Annex B.</p>
+
+        <p><strong>Disputes and Refunds:</strong> Before initiating any payment dispute or chargeback, you must contact us and allow 10 business days to resolve the issue. Initiating a chargeback is a material breach of this contract and will trigger aggressive collection and legal action. All disputes are resolved through binding arbitration in Florida. You waive your right to a jury trial and to participate in a class action lawsuit.</p>
+
+        <p><strong>Limited Liability:</strong> We are not responsible for your trading losses or any other damages arising from your use of the Software. Our maximum liability to you is limited to the amount you paid for the Software.</p>
+    </div>
+
+    <!-- FULL LEGAL TERMS -->
+    <h2>FULL LEGAL TERMS AND CONDITIONS</h2>
+
+    <!-- SECTION 1 -->
+    <h2><span class="section-num">1.</span> DEFINITIONS AND INTERPRETATION</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">1.1. Definitions.</span> In this Agreement, the following terms have the meanings set forth below:</p>
+        <ul class="bullet-list">
+            <li><strong>"Agreement"</strong> means this Trading Algorithm Customer Agreement, including all Annexes.</li>
+            <li><strong>"Company," "we," "us," or "our"</strong> means Acies Investments LLC, d/b/a VantageQuant - RP Profits.</li>
+            <li><strong>"Customer," "you," or "your"</strong> means the individual or entity accepting this Agreement.</li>
+            <li><strong>"Effective Date"</strong> means the date on which you accept this Agreement electronically.</li>
+            <li><strong>"Evaluation Period"</strong> means the 90-day period described in Annex B.</li>
+            <li><strong>"Software"</strong> means the VantageQuant Automated Trading Algorithm, including all updates and documentation.</li>
+            <li><strong>"TradePost"</strong> means the third-party software platform through which the Software is delivered and connected to your brokerage account.</li>
+        </ul>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">1.2. Interpretation.</span> Headings are for convenience only. References to "including" mean "including without limitation." References to Sections and Annexes are to sections of and annexes to this Agreement.</p>
+    </div>
+
+    <!-- SECTION 2 -->
+    <h2><span class="section-num">2.</span> PARTIES; SCOPE; LICENSE GRANT</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">2.1. Parties.</span> This Agreement is entered into between the Company and the Customer.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">2.2. Scope.</span> This Agreement governs your access to and use of the Software. By accepting this Agreement, you acknowledge that you have read, understood, and agree to be bound by all of its terms.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">2.3. License Grant.</span> Subject to your compliance with this Agreement, the Company grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Software solely for your own personal trading purposes during the term of this Agreement.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">2.4. License Restrictions.</span> You may not, and you may not permit any third party to:</p>
+        <ol class="list-alpha">
+            <li>Copy, modify, adapt, translate, or create derivative works of the Software;</li>
+            <li>Reverse engineer, decompile, disassemble, or otherwise attempt to discover the source code, object code, or underlying structure, ideas, or algorithms of the Software;</li>
+            <li>Rent, lease, sell, sublicense, assign, distribute, publish, transfer, or otherwise make available the Software to any third party;</li>
+            <li>Remove or obscure any proprietary notices on the Software;</li>
+            <li>Use the Software for any illegal purpose or in violation of any applicable law or regulation;</li>
+            <li>Use the Software to provide services to third parties (including as part of a managed account or advisory service);</li>
+            <li>Share your login credentials, trading signals, or any other output of the Software with any third party;</li>
+            <li>Attempt to circumvent any usage limits, access controls, or security features of the Software.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">2.5. No Source Code.</span> You acknowledge that the Software is provided in object-code form only. You have no right to access the source code of the Software.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">2.6. Reservation of Rights.</span> The Company reserves all rights not expressly granted to you in this Agreement. The Software and all related intellectual property rights are and shall remain the exclusive property of the Company.</p>
+    </div>
+
+    <!-- SECTION 3 -->
+    <h2><span class="section-num">3.</span> REGULATORY DISCLAIMERS; NO ADVICE; NO FIDUCIARY DUTY</h2>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">3.1. Software Provider Only.</span> THE COMPANY IS A SOFTWARE AND TECHNOLOGY PROVIDER ONLY. THE COMPANY IS NOT, AND DOES NOT ACT AS, A BROKER, DEALER, REGISTERED INVESTMENT ADVISER (RIA), COMMODITY TRADING ADVISOR (CTA), COMMODITY POOL OPERATOR (CPO), FINANCIAL PLANNER, FIDUCIARY, OR ANY OTHER TYPE OF FINANCIAL SERVICES PROVIDER. THE SOFTWARE IS PROVIDED AS AN EDUCATIONAL AND INFORMATIONAL TOOL ONLY.</p>
+    </div>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">3.2. No Personalized Advice or Recommendations.</span> THE COMPANY DOES NOT PROVIDE PERSONALIZED INVESTMENT ADVICE, TRADING RECOMMENDATIONS, OR INDIVIDUALIZED FINANCIAL GUIDANCE OF ANY KIND. THE SOFTWARE GENERATES AUTOMATED TRADING SIGNALS BASED ON ALGORITHMIC MODELS. THESE SIGNALS ARE NOT TAILORED TO YOUR INDIVIDUAL FINANCIAL SITUATION, INVESTMENT OBJECTIVES, RISK TOLERANCE, OR CIRCUMSTANCES. YOU ARE SOLELY RESPONSIBLE FOR EVALUATING WHETHER THE SOFTWARE IS SUITABLE FOR YOUR NEEDS AND FOR MAKING ALL TRADING DECISIONS.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">3.3. Customer Control and Responsibility.</span> You retain full and exclusive control over your brokerage account and all trading activity. You are solely responsible for:</p>
+        <ol class="list-alpha">
+            <li>Deciding whether to use the Software;</li>
+            <li>Configuring the Software and your brokerage account;</li>
+            <li>Monitoring the Software's operation and your account;</li>
+            <li>Deciding whether to accept, reject, or modify any signals generated by the Software;</li>
+            <li>All orders placed in your account, whether placed manually or automatically through the Software;</li>
+            <li>All trading results, including profits and losses.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">3.4. No Fiduciary Duty.</span> No fiduciary, advisory, or agency relationship is created between you and the Company by this Agreement or by your use of the Software. The Company owes you no fiduciary duty of any kind.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">3.5. Regulatory Compliance.</span> The Company is not registered with the U.S. Securities and Exchange Commission (SEC), the Commodity Futures Trading Commission (CFTC), the Financial Industry Regulatory Authority (FINRA), the National Futures Association (NFA), or any other financial regulatory authority. The Company is not required to register with any such authority because it does not provide investment advice or individualized recommendations.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">3.6. No Custody of Funds.</span> The Company does not have access to, custody of, or control over your funds or brokerage account. All funds remain in your account at your broker at all times.</p>
+    </div>
+
+    <!-- SECTION 4 -->
+    <h2><span class="section-num">4.</span> RISK DISCLOSURES</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">4.1. Acknowledgment of Risks.</span> You acknowledge and agree that you have read, understood, and accept the comprehensive risk disclosures set forth in <strong>Annex A</strong> (Comprehensive Risk Disclosures), which is incorporated into this Agreement by reference.</p>
+    </div>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">4.2. Trading Involves Substantial Risk.</span> TRADING FUTURES, OPTIONS, AND OTHER FINANCIAL INSTRUMENTS INVOLVES SUBSTANTIAL RISK OF LOSS AND IS NOT SUITABLE FOR ALL INVESTORS. YOU CAN LOSE MORE THAN YOUR INITIAL INVESTMENT. YOU SHOULD ONLY TRADE WITH CAPITAL THAT YOU CAN AFFORD TO LOSE.</p>
+    </div>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">4.3. Hypothetical Performance Disclaimer.</span> HYPOTHETICAL OR SIMULATED PERFORMANCE RESULTS HAVE CERTAIN INHERENT LIMITATIONS. UNLIKE AN ACTUAL PERFORMANCE RECORD, SIMULATED RESULTS DO NOT REPRESENT ACTUAL TRADING. ALSO, SINCE THE TRADES HAVE NOT ACTUALLY BEEN EXECUTED, THE RESULTS MAY HAVE UNDER- OR OVER-COMPENSATED FOR THE IMPACT, IF ANY, OF CERTAIN MARKET FACTORS, SUCH AS LACK OF LIQUIDITY. SIMULATED TRADING PROGRAMS IN GENERAL ARE ALSO SUBJECT TO THE FACT THAT THEY ARE DESIGNED WITH THE BENEFIT OF HINDSIGHT. NO REPRESENTATION IS BEING MADE THAT ANY ACCOUNT WILL OR IS LIKELY TO ACHIEVE PROFITS OR LOSSES SIMILAR TO THOSE SHOWN.</p>
+    </div>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">4.4. Past Performance Not Indicative.</span> PAST PERFORMANCE, WHETHER ACTUAL OR HYPOTHETICAL, IS NOT INDICATIVE OF FUTURE RESULTS. THERE IS NO GUARANTEE THAT THE SOFTWARE WILL BE PROFITABLE OR THAT YOU WILL NOT LOSE MONEY.</p>
+    </div>
+
+    <!-- SECTION 5 -->
+    <h2><span class="section-num">5.</span> USER RESPONSIBILITIES</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">5.1. Account and Setup.</span> You are responsible for:</p>
+        <ol class="list-alpha">
+            <li>Maintaining a funded brokerage account with a broker supported by TradePost;</li>
+            <li>Establishing and maintaining an active account with TradePost;</li>
+            <li>Correctly connecting your brokerage account to TradePost and the Software;</li>
+            <li>Following all setup and configuration instructions provided by the Company during onboarding;</li>
+            <li>Ensuring that your account settings, permissions, and margin requirements are appropriate for the trading strategy;</li>
+            <li>Monitoring the Software's operation and your account regularly.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">5.2. Security.</span> You are responsible for:</p>
+        <ol class="list-alpha">
+            <li>Maintaining the confidentiality and security of your login credentials for the Software, TradePost, and your brokerage account;</li>
+            <li>Not sharing your credentials or access to the Software with any third party;</li>
+            <li>Notifying the Company immediately if you become aware of any unauthorized access to or use of your account.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">5.3. Compliance with Laws.</span> You are responsible for:</p>
+        <ol class="list-alpha">
+            <li>Complying with all applicable federal, state, local, and foreign laws and regulations in connection with your use of the Software and your trading activity;</li>
+            <li>Determining and paying all taxes, duties, and other governmental charges arising from your use of the Software or your trading activity;</li>
+            <li>Ensuring that you are legally permitted to trade the instruments offered by the Software in your jurisdiction.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">5.4. Adherence to Guarantee Conditions.</span> If you wish to be eligible for the refund guarantee described in Annex B, you are responsible for:</p>
+        <ol class="list-alpha">
+            <li>Using the Software in strict accordance with the Conditions of Use set forth in Annex B;</li>
+            <li>Maintaining logs, records, and documentation as required by Annex B;</li>
+            <li>Providing such logs, records, and documentation to the Company upon request;</li>
+            <li>Submitting any refund claim in accordance with the procedures and deadlines set forth in Annex B.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">5.5. Age Requirement.</span> You represent and warrant that you are at least 18 years of age. If you are under 18, you may not use the Software.</p>
+    </div>
+
+    <!-- SECTION 6 -->
+    <h2><span class="section-num">6.</span> THIRD-PARTY SERVICES</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">6.1. TradePost Integration.</span> The Software is delivered through integration with TradePost, a third-party software platform. TradePost provides the connection between the Software and your brokerage account. You acknowledge and agree that:</p>
+        <ol class="list-alpha">
+            <li>TradePost is not affiliated with, controlled by, or under the direction of the Company;</li>
+            <li>Your use of TradePost is subject to TradePost's own terms of service, privacy policy, and other policies, which you are responsible for reviewing and accepting;</li>
+            <li>The Company has no control over and assumes no responsibility for the functionality, availability, security, performance, or content of TradePost;</li>
+            <li>The Company is not responsible for any acts or omissions of TradePost or for any loss, damage, or expense arising from your use of TradePost.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">6.2. Brokers and Exchanges.</span> Your brokerage account and all trading activity are subject to the terms and conditions of your broker and the rules of the exchanges on which you trade. You acknowledge and agree that:</p>
+        <ol class="list-alpha">
+            <li>The Company is not affiliated with, and has no control over, your broker or any exchange;</li>
+            <li>The Company is not responsible for any acts or omissions of your broker or any exchange, including but not limited to order execution, fills, rejections, outages, errors, fees, commissions, margin calls, or liquidations;</li>
+            <li>You are solely responsible for all fees, commissions, financing costs, borrow costs, funding rates, and other charges imposed by your broker or any exchange;</li>
+            <li>Outages, errors, or failures by your broker or any exchange do not create any liability for the Company.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">6.3. Data Providers.</span> The Software may rely on market data provided by third-party data vendors. You acknowledge and agree that:</p>
+        <ol class="list-alpha">
+            <li>The Company does not control or guarantee the accuracy, completeness, timeliness, or availability of any third-party data;</li>
+            <li>The Company is not responsible for any loss or damage arising from errors, delays, or interruptions in third-party data.</li>
+        </ol>
+    </div>
+
+    <!-- SECTION 7 -->
+    <h2><span class="section-num">7.</span> FEES, PAYMENT TERMS, AND TAXES</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">7.1. License Fee.</span> In consideration for the license granted under this Agreement, you agree to pay the Company the license fee as agreed upon at the time of purchase.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">7.2. Payment Method.</span> You agree to provide a valid payment method and authorize the Company to charge all fees to that payment method. If your payment method fails or your account is past due, the Company may suspend or terminate your access to the Software.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">7.3. No Refunds Except as Provided.</span> Except as expressly provided in the refund guarantee set forth in Annex B, all fees are non-refundable. You are not entitled to a refund or credit for partial months or periods of non-use.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">7.4. Recurring Subscriptions.</span> If you have selected a recurring subscription payment plan:</p>
+        <ol class="list-alpha">
+            <li>Your subscription will automatically renew at the end of each billing period unless you cancel prior to the renewal date;</li>
+            <li>You may cancel your subscription at any time by contacting the Company at info@vantagequant.com;</li>
+            <li>Cancellation will take effect at the end of the then-current billing period;</li>
+            <li>No refunds or credits will be provided for partial billing periods.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">7.5. Taxes.</span> All fees are exclusive of taxes. You are responsible for all sales, use, value-added, goods and services, and other taxes and duties (other than taxes on the Company's income) arising from your purchase or use of the Software.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">7.6. No Setup Fees.</span> There are no setup fees or additional charges beyond the license fee set forth in Section 7.1.</p>
+    </div>
+
+    <!-- SECTION 8 -->
+    <h2><span class="section-num">8.</span> REFUND GUARANTEE</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">8.1. Guarantee Overview.</span> The Company offers a limited, one-time refund guarantee based on the profitability of the Software over a defined evaluation period, subject to strict conditions. The complete terms, conditions, definitions, procedures, and limitations of the refund guarantee are set forth in <strong>Annex B</strong> (Refund Guarantee Mechanics), which is incorporated into this Agreement by reference.</p>
+    </div>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">8.2. Exclusive Remedy.</span> THE REFUND GUARANTEE SET FORTH IN ANNEX B IS YOUR SOLE AND EXCLUSIVE REMEDY FOR ANY CLAIM THAT THE SOFTWARE DID NOT PERFORM AS EXPECTED OR WAS NOT PROFITABLE. IF YOU ARE ELIGIBLE FOR AND RECEIVE A REFUND UNDER ANNEX B, YOU WAIVE ANY AND ALL OTHER CLAIMS, DEMANDS, OR CAUSES OF ACTION AGAINST THE COMPANY RELATED TO THE PERFORMANCE OR PROFITABILITY OF THE SOFTWARE.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">8.3. No Other Refunds.</span> Except as expressly provided in Annex B, the Company does not offer refunds for any reason, including but not limited to dissatisfaction with the Software, changes in market conditions, trading losses, or any other circumstance.</p>
+    </div>
+
+    <!-- SECTION 9 -->
+    <h2><span class="section-num">9.</span> ACCEPTABLE USE; INTELLECTUAL PROPERTY PROTECTION; CONFIDENTIALITY</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">9.1. Prohibited Conduct.</span> In addition to the restrictions set forth in Section 2.4, you agree not to:</p>
+        <ol class="list-alpha">
+            <li>Use the Software in any manner that violates any applicable law or regulation;</li>
+            <li>Use the Software to engage in any fraudulent, abusive, or otherwise illegal activity;</li>
+            <li>Interfere with or disrupt the integrity or performance of the Software or any related systems;</li>
+            <li>Attempt to gain unauthorized access to the Software or any related systems or networks;</li>
+            <li>Use any robot, spider, scraper, or other automated means to access the Software;</li>
+            <li>Extract, copy, or replicate the trading signals, algorithms, models, or strategies embodied in the Software;</li>
+            <li>Use the Software to develop, train, or improve any competing product or service;</li>
+            <li>Publicly perform, display, or communicate the Software or its output without the Company's prior written consent.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">9.2. Intellectual Property Ownership.</span> The Software and all related documentation, materials, and content, including but not limited to all software code, algorithms, models, parameters, weights, designs, text, graphics, logos, and trademarks, are the exclusive property of the Company and are protected by U.S. and international copyright, trademark, patent, trade secret, and other intellectual property laws. No title to or ownership of any intellectual property is transferred to you under this Agreement.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">9.3. Confidential Information.</span> You acknowledge that the Software and all related materials contain valuable trade secrets and confidential information of the Company, including but not limited to the algorithms, models, parameters, trading logic, and performance data (collectively, "Confidential Information"). You agree to:</p>
+        <ol class="list-alpha">
+            <li>Hold all Confidential Information in strict confidence;</li>
+            <li>Not disclose any Confidential Information to any third party;</li>
+            <li>Use Confidential Information solely for the purpose of using the Software as permitted by this Agreement;</li>
+            <li>Take all reasonable precautions to prevent unauthorized disclosure of Confidential Information.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">9.4. Telemetry and Watermarking.</span> You acknowledge and agree that the Company may embed telemetry, watermarking, or other tracking mechanisms in the Software to monitor usage, detect unauthorized use, and protect the Company's intellectual property rights.</p>
+    </div>
+
+    <!-- SECTION 10 -->
+    <h2><span class="section-num">10.</span> DATA, PRIVACY, AND SECURITY</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">10.1. Data Collection.</span> In connection with your use of the Software, the Company may collect certain data, including but not limited to:</p>
+        <ol class="list-alpha">
+            <li>Operational telemetry (e.g., software version, uptime, errors, performance metrics);</li>
+            <li>Trading activity logs (e.g., signals generated, orders placed, execution results);</li>
+            <li>Account information (e.g., email address, payment information);</li>
+            <li>Technical information (e.g., IP address, browser type, device information).</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">10.2. Purpose of Data Collection.</span> The Company collects data for the following purposes:</p>
+        <ol class="list-alpha">
+            <li>To provide, maintain, and improve the Software;</li>
+            <li>To provide customer support and respond to your inquiries;</li>
+            <li>To verify compliance with this Agreement and to detect and prevent fraud or misuse;</li>
+            <li>To verify refund claims under Annex B;</li>
+            <li>To develop and improve the Company's algorithms and models.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">10.3. Privacy Policy.</span> The Company's collection, use, and disclosure of your personal information is governed by the Company's Privacy Policy. By accepting this Agreement, you acknowledge that you have read and understood the Privacy Policy.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">10.4. No Access to Funds.</span> The Company does not have access to, custody of, or control over your funds or brokerage account. You do not provide the Company with any API keys, credentials, or permissions that would enable the Company to place trades or withdraw funds from your account.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">10.5. Data Security.</span> The Company implements reasonable administrative, technical, and physical safeguards designed to protect your data from unauthorized access, use, or disclosure. However, no security system is impenetrable, and the Company cannot guarantee the absolute security of your data.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">10.6. Data Retention.</span> The Company will retain your data for as long as necessary to fulfill the purposes described in this Section 10 and to comply with legal obligations.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">10.7. Your Data Rights.</span> Depending on your jurisdiction, you may have certain rights with respect to your personal data, such as the right to access, correct, delete, or restrict the use of your data. To exercise any such rights, please contact the Company at info@vantagequant.com.</p>
+    </div>
+
+    <!-- SECTION 11 -->
+    <h2><span class="section-num">11.</span> WARRANTIES AND DISCLAIMERS</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">11.1. Company Warranties.</span> The Company warrants that:</p>
+        <ol class="list-alpha">
+            <li>It has the right and authority to enter into this Agreement and to grant the license set forth herein;</li>
+            <li>The Software, as provided by the Company, does not infringe any third-party intellectual property rights.</li>
+        </ol>
+    </div>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">11.2. DISCLAIMER OF WARRANTIES.</span> EXCEPT AS EXPRESSLY SET FORTH IN SECTION 11.1, THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITH ALL FAULTS AND WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COMPANY DISCLAIMS ALL WARRANTIES, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO:</p>
+        <ol class="list-alpha">
+            <li>IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT;</li>
+            <li>WARRANTIES ARISING FROM COURSE OF DEALING, COURSE OF PERFORMANCE, OR USAGE OF TRADE;</li>
+            <li>WARRANTIES THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR FREE FROM VIRUSES OR OTHER HARMFUL COMPONENTS;</li>
+            <li>WARRANTIES THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS OR ACHIEVE ANY PARTICULAR RESULT;</li>
+            <li>WARRANTIES REGARDING THE ACCURACY, RELIABILITY, COMPLETENESS, OR TIMELINESS OF ANY DATA, CONTENT, OR INFORMATION PROVIDED BY OR THROUGH THE SOFTWARE.</li>
+        </ol>
+    </div>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">11.3. No Warranty of Performance or Profitability.</span> THE COMPANY MAKES NO REPRESENTATION OR WARRANTY THAT THE SOFTWARE WILL BE PROFITABLE OR THAT YOU WILL ACHIEVE ANY PARTICULAR TRADING RESULTS. THE COMPANY DOES NOT GUARANTEE ANY LEVEL OF PERFORMANCE, RETURN, OR OUTCOME. YOUR USE OF THE SOFTWARE IS AT YOUR OWN RISK.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">11.4. Hypothetical and Past Performance.</span> Any performance data, results, or testimonials provided by the Company, whether based on actual trading, backtesting, or simulation, are for informational purposes only and do not constitute a representation or warranty of future performance.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">11.5. Third-Party Services.</span> The Company makes no representation or warranty regarding any third-party services, including TradePost, your broker, or any data provider. Your use of such services is at your own risk.</p>
+    </div>
+
+    <!-- SECTION 12 -->
+    <h2><span class="section-num">12.</span> LIMITATION OF LIABILITY</h2>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">12.1. EXCLUSION OF DAMAGES.</span> TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE COMPANY, ITS AFFILIATES, OR ITS OR THEIR RESPECTIVE OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, OR LICENSORS (COLLECTIVELY, THE "COMPANY PARTIES") BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY:</p>
+        <ol class="list-alpha">
+            <li>INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES;</li>
+            <li>LOSS OF PROFITS, REVENUES, BUSINESS, OPPORTUNITIES, GOODWILL, OR REPUTATION;</li>
+            <li>LOSS OF OR DAMAGE TO DATA;</li>
+            <li>TRADING LOSSES OR INVESTMENT LOSSES OF ANY KIND;</li>
+            <li>COSTS OF PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</li>
+        </ol>
+        <p>ARISING OUT OF OR RELATED TO THIS AGREEMENT OR YOUR USE OF OR INABILITY TO USE THE SOFTWARE, REGARDLESS OF THE THEORY OF LIABILITY AND EVEN IF A COMPANY PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
+    </div>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">12.2. CAP ON LIABILITY.</span> THE AGGREGATE LIABILITY OF THE COMPANY PARTIES TO YOU FOR ALL CLAIMS ARISING OUT OF OR RELATED TO THIS AGREEMENT OR YOUR USE OF THE SOFTWARE SHALL NOT EXCEED THE TOTAL AMOUNT OF FEES ACTUALLY PAID BY YOU TO THE COMPANY IN THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING RISE TO THE CLAIM.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">12.3. Basis of the Bargain.</span> You acknowledge and agree that the disclaimers and limitations set forth in this Section 12 and in Section 11 are fundamental elements of the basis of the bargain between you and the Company, and that the Company would not be able to provide the Software on an economically reasonable basis without such limitations.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">12.4. Applicable Law.</span> Some jurisdictions do not allow the exclusion or limitation of certain warranties or damages. If you are located in such a jurisdiction, some of the above exclusions or limitations may not apply to you, but they shall apply to the maximum extent permitted by applicable law.</p>
+    </div>
+
+    <!-- SECTION 13 -->
+    <h2><span class="section-num">13.</span> INDEMNIFICATION</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">13.1. Your Indemnification Obligation.</span> You agree to indemnify, defend, and hold harmless the Company Parties from and against any and all claims, liabilities, damages, losses, costs, and expenses (including reasonable attorneys' fees and court costs) arising out of or related to:</p>
+        <ol class="list-alpha">
+            <li>Your use of the Software in violation of this Agreement;</li>
+            <li>Your violation of any applicable law or regulation;</li>
+            <li>Your violation of any third-party right, including any intellectual property right, privacy right, or proprietary right;</li>
+            <li>Any claim that your use of the Software caused damage to a third party;</li>
+            <li>Your trading activity or any trading losses;</li>
+            <li>Any misrepresentation made by you in connection with this Agreement.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">13.2. Defense and Settlement.</span> The Company reserves the right, at its own expense, to assume the exclusive defense and control of any matter otherwise subject to indemnification by you, in which event you will cooperate with the Company in asserting any available defenses. You may not settle any claim subject to this Section 13 without the Company's prior written consent.</p>
+    </div>
+
+    <!-- SECTION 14 -->
+    <h2><span class="section-num">14.</span> TERM, SUSPENSION, AND TERMINATION</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">14.1. Term.</span> This Agreement commences on the Effective Date and continues until terminated in accordance with this Section 14.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">14.2. Termination by You.</span> If you have a recurring subscription, you may cancel your subscription at any time by contacting the Company at info@vantagequant.com. Cancellation will take effect at the end of the then-current billing period. If you have a one-time payment, you may cease using the Software at any time, but you will not be entitled to a refund except as provided in Annex B.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">14.3. Termination or Suspension by Company.</span> The Company may suspend or terminate your access to the Software, with or without notice, if:</p>
+        <ol class="list-alpha">
+            <li>You breach any provision of this Agreement;</li>
+            <li>You fail to pay any fees when due;</li>
+            <li>You engage in any conduct that the Company reasonably believes poses a risk to the Company, the Software, or any third party;</li>
+            <li>The Company is required to do so by law or by a governmental authority;</li>
+            <li>The Company decides, in its sole discretion, to discontinue the Software.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">14.4. Effect of Termination.</span> Upon termination of this Agreement for any reason:</p>
+        <ol class="list-alpha">
+            <li>Your license to use the Software immediately terminates;</li>
+            <li>You must immediately cease all use of the Software;</li>
+            <li>You must delete or destroy all copies of the Software and any related materials in your possession or control;</li>
+            <li>You remain liable for all fees and charges incurred prior to termination;</li>
+            <li>Sections 2.6, 3, 4, 9, 10, 11, 12, 13, 14.4, 15, 16, and 17 survive termination.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">14.5. No Refund Upon Termination.</span> Except as expressly provided in Annex B, you are not entitled to any refund or credit upon termination of this Agreement, regardless of the reason for termination.</p>
+    </div>
+
+    <!-- SECTION 15 -->
+    <h2><span class="section-num">15.</span> BILLING, DISPUTES, CHARGEBACKS &amp; MANDATORY ARBITRATION</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.1. Pre-Dispute Notice and Cure Period (Condition Precedent).</span> Before initiating any third-party dispute, chargeback, arbitration, or legal claim of any kind, you must first:</p>
+        <ol class="list-alpha">
+            <li>Send a detailed written notice of the issue to the Company at info@vantagequant.com, including a description of the problem, all supporting evidence, and your contact information;</li>
+            <li>Allow the Company ten (10) business days from receipt of your notice to investigate and attempt to cure the issue.</li>
+        </ol>
+        <p>Failure to comply with this pre-dispute notice and cure requirement constitutes a material breach of this Agreement and waives any right you may have to recover fees, costs, attorneys' fees, or equitable relief related to that dispute.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.2. Exclusive Refund Path; No Workarounds.</span> All monetary remedies related to the performance or profitability of the Software are limited to the refund guarantee set forth in Annex B. Except for that express remedy, NO OTHER REFUNDS ARE PROVIDED FOR ANY REASON. Attempting to obtain a refund outside the procedures set forth in this Agreement is a breach of this Agreement and grounds for immediate suspension or termination of your access to the Software.</p>
+    </div>
+
+    <div class="warning-box">
+        <p><strong>15.3. CONSEQUENCES OF UNAUTHORIZED CHARGEBACKS.</strong> INITIATING A PAYMENT CARD CHARGEBACK, BANK REVERSAL, OR PAYMENT PROCESSOR DISPUTE WITHOUT FIRST EXHAUSTING THE PROCEDURES IN SECTION 15.1 AND ANNEX B IS A MATERIAL BREACH OF THIS AGREEMENT. BY ACCEPTING THIS AGREEMENT, YOU EXPLICITLY AUTHORIZE THE COMPANY TO PURSUE ANY AND ALL LEGAL AND EQUITABLE REMEDIES AVAILABLE TO IT UNDER LAW, INCLUDING BUT NOT LIMITED TO:</p>
+        <ol class="list-alpha">
+            <li><strong>IMMEDIATE TERMINATION OF SERVICE:</strong> Your access to the Software will be permanently terminated.</li>
+            <li><strong>AGGRESSIVE COLLECTIONS:</strong> Your debt will be immediately sent to a third-party collections agency. You will be responsible for all costs associated with the collection, including agency fees, attorneys' fees, and court costs.</li>
+            <li><strong>LEGAL ACTION FOR DAMAGES:</strong> The Company will pursue legal action against you to the fullest extent of the law to recover the disputed amount, plus any and all damages incurred by the Company.</li>
+            <li><strong>ASSET SEIZURE AND LIENS:</strong> The Company reserves the right to obtain a judgment against you and to use all legal means to enforce that judgment, which may include wage garnishment, bank account levies, and the placement of liens on your personal and business assets.</li>
+            <li><strong>CREDIT REPORTING:</strong> The Company may report the delinquent debt to all major credit bureaus.</li>
+        </ol>
+        <p style="margin-top: 14px;"><strong>PRESERVATION OF CARDHOLDER RIGHTS:</strong> Nothing in this Agreement is intended to waive any non-waivable cardholder rights you may have under applicable law or the rules of your card network. However, you acknowledge and agree that using a chargeback or reversal to circumvent the agreed refund procedures in this Agreement is a fraudulent and malicious act that constitutes a breach of contract.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.4. Evidence and Cooperation for Dispute Defense.</span> You agree to cooperate with the Company and to provide logs, broker statements, configuration screenshots, and read-only access to relevant data as reasonably requested by the Company to assess any issue and to defend against any chargeback, payment dispute, or claim.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.5. Fee-Shifting and Costs (Prevailing Party).</span> If the Company prevails in any dispute, arbitration, or legal proceeding concerning non-payment, chargebacks, breach of this Agreement, or any other claim arising out of this Agreement, you agree to pay the Company's reasonable attorneys' fees, expert witness fees, arbitration administration fees, filing fees, and collection costs.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.6. Interest and Collections.</span> Any unpaid amounts owed to the Company under this Agreement shall accrue interest at the rate of one percent (1.0%) per month (or the maximum rate permitted by applicable law, whichever is less) from the original due date until paid in full.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.7. Mandatory Binding Arbitration; Venue; Small Claims Carve-Out.</span> Except as provided in Section 15.9, any and all disputes, claims, or controversies arising out of or relating to this Agreement shall be resolved exclusively by binding arbitration administered by the American Arbitration Association ("AAA") in accordance with its Commercial Arbitration Rules.</p>
+        <ol class="list-alpha">
+            <li><strong>Arbitration Location.</strong> The arbitration shall take place in Miami-Dade County, Florida, unless the parties agree otherwise in writing.</li>
+            <li><strong>Arbitrator Authority.</strong> The arbitrator shall have the authority to grant any remedy or relief that would be available in court, but shall be bound by the terms of this Agreement.</li>
+            <li><strong>Arbitration Award.</strong> The arbitrator's award shall be final and binding and may be entered as a judgment in any court of competent jurisdiction.</li>
+            <li><strong>Costs.</strong> Each party shall bear its own costs and attorneys' fees, except as provided in Section 15.5.</li>
+            <li><strong>Small Claims Carve-Out.</strong> Either party may bring an individual claim in small claims court if the claim qualifies.</li>
+        </ol>
+    </div>
+
+    <div class="caps-block">
+        <p><span class="subsection-title">15.8. CLASS ACTION WAIVER; JURY TRIAL WAIVER.</span></p>
+        <p>(a) <strong>CLASS ACTION WAIVER.</strong> TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, YOU AND THE COMPANY AGREE THAT EACH PARTY MAY BRING CLAIMS AGAINST THE OTHER PARTY ONLY IN AN INDIVIDUAL CAPACITY, AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS, COLLECTIVE, REPRESENTATIVE, OR PRIVATE ATTORNEY GENERAL ACTION OR PROCEEDING.</p>
+        <p>(b) <strong>JURY TRIAL WAIVER.</strong> TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, YOU AND THE COMPANY WAIVE ANY RIGHT TO A JURY TRIAL IN CONNECTION WITH ANY DISPUTE ARISING OUT OF OR RELATED TO THIS AGREEMENT.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.9. Injunctive Relief for Intellectual Property and Abuse.</span> Notwithstanding Section 15.7, the Company may seek temporary, preliminary, or permanent injunctive or other equitable relief in any court of competent jurisdiction to prevent or restrain:</p>
+        <ol class="list-alpha">
+            <li>Infringement or misappropriation of the Company's intellectual property rights;</li>
+            <li>Unauthorized disclosure of the Company's Confidential Information;</li>
+            <li>Sharing of login credentials, trading signals, or Software access;</li>
+            <li>Reverse engineering, decompilation, or disassembly of the Software;</li>
+            <li>Resale or redistribution of the Software or trading signals;</li>
+            <li>Any other violation of this Agreement that cannot be adequately remedied by monetary damages.</li>
+        </ol>
+        <p>You consent to the jurisdiction of the state and federal courts located in Miami-Dade County, Florida for purposes of any such action.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.10. No Setoff or Withholding.</span> You may not withhold, setoff, or deduct any amounts owed to the Company based on any alleged claim, counterclaim, or dispute.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.11. Processor and Network Cooperation.</span> You agree that the Company may share dispute-related data with payment processors, acquiring banks, card networks, and fraud-prevention networks as necessary to investigate and defend claims.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">15.12. Survival; Suspension.</span> This Section 15 survives termination of this Agreement. The Company may suspend your access to the Software during any unresolved payment dispute or breach of this Agreement.</p>
+    </div>
+
+    <div class="warning-box">
+        <p><strong>15.13. CONSPICUOUS DISCLOSURE REGARDING CHARGEBACKS.</strong></p>
+        <p><strong>WARNING:</strong> CHARGEBACKS ARE A BREACH OF CONTRACT AND WILL BE MET WITH LEGAL ACTION. BY ACCEPTING THIS AGREEMENT, YOU AGREE NOT TO INITIATE ANY PAYMENT CARD, BANK, OR PROCESSOR CHARGEBACK, REVERSAL, OR RETRIEVAL WITHOUT FIRST FOLLOWING THE CONTRACTUAL DISPUTE RESOLUTION PROCESS. VIOLATING THIS AGREEMENT BY INITIATING AN UNAUTHORIZED CHARGEBACK IS A SERIOUS OFFENSE AND WILL BE TREATED AS A FRAUDULENT ATTEMPT TO OBTAIN THE SOFTWARE WITHOUT PAYMENT. THE COMPANY WILL RESPOND BY: (I) IMMEDIATELY TERMINATING YOUR ACCESS; (II) REPORTING THE DEBT TO COLLECTIONS AGENCIES AND CREDIT BUREAUS; AND (III) PURSUING AGGRESSIVE LEGAL ACTION TO RECOVER THE DEBT, PLUS ALL ASSOCIATED COSTS, FEES, AND DAMAGES. NOTHING IN THIS AGREEMENT WAIVES ANY NON-WAIVABLE CARDHOLDER RIGHT; HOWEVER, USING A CHARGEBACK TO CIRCUMVENT THE AGREED CONTRACTUAL REFUND PROCESS IS A BREACH OF CONTRACT AND WILL RESULT IN THE SEVERE CONSEQUENCES DESCRIBED HEREIN.</p>
+    </div>
+
+    <!-- SECTION 16 -->
+    <h2><span class="section-num">16.</span> COMPLIANCE, EXPORT CONTROLS, AND SANCTIONS</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">16.1. Compliance with Laws.</span> You represent, warrant, and covenant that you will comply with all applicable federal, state, local, and foreign laws and regulations in connection with your use of the Software and your trading activity.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">16.2. Export Controls.</span> The Software may be subject to export control laws and regulations of the United States and other countries. You represent and warrant that:</p>
+        <ol class="list-alpha">
+            <li>You are not located in, under the control of, or a national or resident of any country to which the United States has embargoed goods or services;</li>
+            <li>You are not identified on any U.S. government list of prohibited or restricted parties;</li>
+            <li>You will not use the Software in violation of any U.S. export control or sanctions laws or regulations.</li>
+        </ol>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">16.3. OFAC Compliance.</span> You represent and warrant that you are not a person or entity with whom U.S. persons are prohibited from transacting under regulations administered by the U.S. Treasury Department's Office of Foreign Assets Control (OFAC).</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">16.4. Suspension for Non-Compliance.</span> The Company may suspend or terminate your access to the Software immediately and without notice if the Company reasonably believes that you are in violation of any law or regulation.</p>
+    </div>
+
+    <!-- SECTION 17 -->
+    <h2><span class="section-num">17.</span> MISCELLANEOUS</h2>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.1. Governing Law.</span> This Agreement and any Disputes arising out of or related to this Agreement shall be governed by and construed in accordance with the laws of the State of Florida, without regard to its conflicts of law principles.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.2. Venue.</span> Subject to Section 15.7 (arbitration), any legal action or proceeding arising out of or related to this Agreement shall be brought exclusively in the state or federal courts located in Miami-Dade County, Florida, and you consent to the personal jurisdiction of such courts.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.3. Assignment.</span> You may not assign, transfer, or delegate any of your rights or obligations under this Agreement without the Company's prior written consent. Any attempted assignment in violation of this Section is void. The Company may assign this Agreement without your consent.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.4. Force Majeure.</span> The Company shall not be liable for any failure or delay in performance under this Agreement due to causes beyond its reasonable control, including but not limited to acts of God, war, terrorism, riots, embargoes, acts of civil or military authorities, fire, floods, accidents, pandemics, strikes, or shortages of transportation, facilities, fuel, energy, labor, or materials.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.5. Severability.</span> If any provision of this Agreement is held to be invalid, illegal, or unenforceable, the remaining provisions shall continue in full force and effect.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.6. No Waiver.</span> No waiver of any provision of this Agreement shall be deemed or shall constitute a waiver of any other provision, nor shall any waiver constitute a continuing waiver. No failure or delay by the Company in exercising any right shall operate as a waiver thereof.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.7. Entire Agreement.</span> This Agreement, including all Annexes, constitutes the entire agreement between you and the Company regarding the subject matter hereof and supersedes all prior or contemporaneous understandings, agreements, representations, and warranties.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.8. Order of Precedence.</span> In the event of any conflict between the provisions of the main body of this Agreement and the provisions of any Annex, the provisions of the main body shall control unless the Annex expressly states otherwise.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.9. Notices.</span> All notices required or permitted under this Agreement shall be in writing and shall be deemed given when delivered by email to the email address you provided when accepting this Agreement (in the case of notices to you) or to info@vantagequant.com (in the case of notices to the Company).</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.10. Changes to Terms.</span> The Company reserves the right to modify this Agreement at any time by posting a revised version on its website or by providing notice to you by email. Your continued use of the Software after any such modification constitutes your acceptance of the modified Agreement.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.11. Survival.</span> The following provisions survive termination of this Agreement: Sections 2.6, 3, 4, 9, 10, 11, 12, 13, 14.4, 15, 16, 17, and 18.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.12. Headings.</span> The section and subsection headings in this Agreement are for convenience only and shall not affect the interpretation of this Agreement.</p>
+    </div>
+
+    <div class="subsection">
+        <p><span class="subsection-title">17.13. Counterparts and Electronic Signatures.</span> This Agreement may be executed in counterparts, each of which shall be deemed an original. Electronic signatures and electronically accepted agreements shall have the same force and effect as original signatures and paper agreements.</p>
+    </div>
+
+    <!-- CLICKWRAP ACCEPTANCE -->
+    <hr class="divider">
+
+    <div class="signature-block">
+        <h2 style="border-bottom: none; padding-bottom: 0;">CLICKWRAP ACCEPTANCE</h2>
+
+        <div class="caps-block">
+            <p>BY CLICKING "I AGREE" OR BY ACCESSING OR USING THE SOFTWARE, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND AGREE TO BE BOUND BY THIS AGREEMENT IN ITS ENTIRETY, INCLUDING ALL ANNEXES. IF YOU DO NOT AGREE TO THIS AGREEMENT, DO NOT CLICK "I AGREE" AND DO NOT ACCESS OR USE THE SOFTWARE.</p>
+        </div>
+
+        <p><strong>YOU FURTHER ACKNOWLEDGE THAT:</strong></p>
+        <ul class="bullet-list">
+            <li>YOU HAVE HAD THE OPPORTUNITY TO REVIEW THIS AGREEMENT AND TO SEEK INDEPENDENT LEGAL ADVICE BEFORE ACCEPTING IT.</li>
+            <li>YOU UNDERSTAND THAT TRADING INVOLVES SUBSTANTIAL RISK OF LOSS.</li>
+            <li>YOU HAVE READ AND UNDERSTOOD THE RISK DISCLOSURES IN ANNEX A.</li>
+            <li>YOU HAVE READ AND UNDERSTOOD THE REFUND GUARANTEE TERMS IN ANNEX B.</li>
+            <li>YOU WAIVE YOUR RIGHT TO A JURY TRIAL AND TO PARTICIPATE IN A CLASS ACTION.</li>
+            <li>YOU AGREE TO RESOLVE ALL DISPUTES THROUGH BINDING ARBITRATION IN FLORIDA.</li>
+        </ul>
+    </div>
+
+</body>
+</html>

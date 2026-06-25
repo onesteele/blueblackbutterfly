@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Account Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ========== Background Animation ========== */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            /* filter blur removed for performance */
+            opacity: 0.5;
+            /* animation: floatOrb */ animation: none 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -100px; right: -100px;
+        }
+
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(59, 109, 255, 0.25) 0%, transparent 70%);
+            bottom: 20%; left: -50px;
+            animation-delay: -7s;
+            animation-duration: 25s;
+        }
+
+        .orb-3 {
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(59, 109, 255, 0.2) 0%, transparent 70%);
+            top: 50%; left: 40%;
+            animation-delay: -14s;
+            animation-duration: 30s;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 10px) scale(1.02); }
+        }
+
+        /* ========== Top Navbar ========== */
+        .top-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.85);
+            /* backdrop-filter removed for performance */
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+        }
+
+        .navbar-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            gap: 16px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .navbar-logo {
+            width: 38px;
+            height: 38px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 12px var(--accent-glow));
+        }
+
+        .navbar-brand-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 500;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;}
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .navbar-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .navbar-links a:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .navbar-links a.active {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .navbar-user {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .navbar-user-name {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .signout-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .signout-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* ========== Main Container ========== */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+
+        /* ========== Page Header ========== */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 40px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 50%, #2a4fd6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            line-height: 1.2;
+            font-style: italic;}
+
+        .page-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ========== Settings Cards ========== */
+        .settings-section {
+            margin-bottom: 28px;
+        }
+
+        .settings-card {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-card:hover {
+            border-color: rgba(59, 109, 255, 0.2);
+        }
+
+        .settings-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .settings-card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-card-title-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--accent-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .settings-card-title-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+        }
+
+        .settings-card-title h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .settings-card-title p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ========== Form Fields ========== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            min-height: 46px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-value.muted {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .form-input:focus {
+            border-color: rgba(59, 109, 255, 0.4);
+            box-shadow: 0 0 0 3px rgba(59, 109, 255, 0.08);
+        }
+
+        .form-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ========== Buttons ========== */
+        .btn {
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, #2a4fd6 100%);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(59, 109, 255, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+        }
+
+        .btn-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* ========== Status Badge ========== */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.active {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.25);
+        }
+
+        .status-badge.inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* ========== Info Grid ========== */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-label svg {
+            width: 14px;
+            height: 14px;
+            opacity: 0.5;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .info-value.muted {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ========== Toast Notification ========== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            max-width: 400px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+            /* backdrop-filter removed for performance */
+        }
+
+        .toast.error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            /* backdrop-filter removed for performance */
+        }
+
+        .toast svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        /* ========== Loading State ========== */
+        .loading-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .loading-spinner {
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(59, 109, 255, 0.15);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-state p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .btn-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 768px) {
+            .top-navbar {
+                padding: 0 16px;
+            }
+
+            .navbar-links {
+                display: none;
+                position: absolute;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: rgba(10, 10, 10, 0.95);
+                /* backdrop-filter removed for performance */
+                flex-direction: column;
+                padding: 16px;
+                border-bottom: 1px solid var(--border);
+                gap: 4px;
+            }
+
+            .navbar-links.open {
+                display: flex;
+            }
+
+            .navbar-links a {
+                width: 100%;
+                padding: 12px 16px;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .navbar-user {
+                display: none;
+            }
+
+            .page-title {
+                font-size: 30px;
+            }
+
+            .container {
+                padding: 24px 16px 40px;
+            }
+
+            .settings-card {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+
+            .toast {
+                left: 16px;
+                right: 16px;
+                bottom: 16px;
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 26px;
+            }
+
+            .settings-card-title h2 {
+                font-size: 17px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <div class="cs-main-content container" id="mainContent" style="display: none;">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Account Settings</h1>
+            <p class="page-subtitle">Manage your profile and security preferences</p>
+        </div>
+
+        <!-- ==================== Profile Section ==================== -->
+        <div class="settings-section">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-title">
+                        <div class="settings-card-title-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Profile</h2>
+                            <p>Your personal information</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" id="editProfileBtn" onclick="toggleProfileEdit()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Edit
+                    </button>
+                </div>
+
+                <!-- View Mode -->
+                <div id="profileView" class="form-grid">
+                    <div class="form-group">
+                        <span class="form-label">First Name</span>
+                        <div class="form-value" id="viewFirstName">--</div>
+                    </div>
+                    <div class="form-group">
+                        <span class="form-label">Last Name</span>
+                        <div class="form-value" id="viewLastName">--</div>
+                    </div>
+                    <div class="form-group">
+                        <span class="form-label">Email</span>
+                        <div class="form-value muted" id="viewEmail">--</div>
+                    </div>
+                    <div class="form-group">
+                        <span class="form-label">Phone</span>
+                        <div class="form-value" id="viewPhone">--</div>
+                    </div>
+                    <div class="form-group">
+                        <span class="form-label">Location</span>
+                        <div class="form-value muted" id="viewLocation">--</div>
+                    </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div id="profileEdit" style="display: none;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="editFirstName">First Name</label>
+                            <input type="text" class="form-input" id="editFirstName" placeholder="Enter first name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editLastName">Last Name</label>
+                            <input type="text" class="form-input" id="editLastName" placeholder="Enter last name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <div class="form-value muted" id="editEmail">--</div>
+                            <span class="form-hint">Email cannot be changed</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editPhone">Phone</label>
+                            <input type="tel" class="form-input" id="editPhone" placeholder="Enter phone number">
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            Save Changes
+                        </button>
+                        <button class="btn btn-secondary" onclick="cancelProfileEdit()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Password Section ==================== -->
+        <div class="settings-section">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-title">
+                        <div class="settings-card-title-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Change Password</h2>
+                            <p>Update your account password</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label" for="currentPassword">Current Password</label>
+                        <input type="password" class="form-input" id="currentPassword" placeholder="Enter current password" autocomplete="current-password">
+                        <span class="form-hint">For verification purposes</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="newPassword">New Password</label>
+                        <input type="password" class="form-input" id="newPassword" placeholder="Min 6 characters" autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="confirmPassword">Confirm New Password</label>
+                        <input type="password" class="form-input" id="confirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="savePasswordBtn" onclick="changePassword()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        Update Password
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Account Info Section ==================== -->
+        <div class="settings-section">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-title">
+                        <div class="settings-card-title-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Account Information</h2>
+                            <p>Details about your account</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            Email Address
+                        </span>
+                        <span class="info-value" id="infoEmail">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            Member Since
+                        </span>
+                        <span class="info-value" id="infoMemberSince">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Onboarding Completed
+                        </span>
+                        <span class="info-value" id="infoOnboarding">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            Account Status
+                        </span>
+                        <span id="infoStatus">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                <polyline points="10 17 15 12 10 7"></polyline>
+                                <line x1="15" y1="12" x2="3" y2="12"></line>
+                            </svg>
+                            Last Login
+                        </span>
+                        <span class="info-value" id="infoLastLogin">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State (shown while auth check runs) -->
+    <div class="container" id="loadingContainer">
+        <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading account settings...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <svg id="toastIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+    <script src="../activity-tracker.js"></script>
+    <script>
+        // ============================================================
+        // AUTH CHECK & AUTO-LOGOUT
+        // ============================================================
+        let currentUser = null;
+        let currentProfile = null;
+        let autoLogoutTimer = null;
+        let isEditingProfile = false;
+
+        function resetAutoLogout() {
+            if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+            autoLogoutTimer = setTimeout(() => {
+                window.signOut();
+            }, 30 * 60 * 1000);
+        }
+
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, resetAutoLogout, { passive: true });
+        });
+
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+        (async function init() {
+            try {
+                const user = await window.getCurrentUser();
+                if (!user) {
+                    window.location.href = '/auth';
+                    return;
+                }
+                currentUser = user;
+
+                const profile = await window.getUserProfile(user.id);
+                if (!profile) {
+                    window.location.href = '/auth';
+                    return;
+                }
+                currentProfile = profile;
+
+                // Check user status for access
+                const userStatus = (profile.status || 'onboarding').toLowerCase();
+                if (userStatus === 'free_trial' || userStatus === 'free_trial_expired') {
+                    window.location.href = '/';
+                    return;
+                }
+                if (!['member', 'verified_member', 'active'].includes(userStatus)) {
+                    window.location.href = '/onboarding';
+                    return;
+                }
+
+                const displayName = profile.full_name || profile.first_name || user.email;
+                window.injectClientSidebar('account', '../logo.png', userStatus);
+
+                resetAutoLogout();
+
+                // Track page view
+                if (typeof window.trackActivity === 'function') {
+                    window.trackActivity('page_view', '/portal/account');
+                }
+
+                // Populate all fields
+                populateProfile();
+                populateAccountInfo();
+
+                // Show main content, hide loading
+                document.getElementById('loadingContainer').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            } catch (err) {
+                console.error('Init error:', err);
+                window.location.href = '/auth';
+            }
+        })();
+
+        // ============================================================
+        // POPULATE PROFILE
+        // ============================================================
+        function populateProfile() {
+            const p = currentProfile;
+            const email = currentUser.email || '--';
+
+            // View mode
+            document.getElementById('viewFirstName').textContent = p.first_name || '--';
+            document.getElementById('viewLastName').textContent = p.last_name || '--';
+            document.getElementById('viewEmail').textContent = email;
+            document.getElementById('viewPhone').textContent = p.phone || '--';
+            const locParts = [p.city, p.region, p.country].filter(Boolean);
+            document.getElementById('viewLocation').textContent = locParts.length > 0 ? locParts.join(', ') : '--';
+
+            // Edit mode pre-fill
+            document.getElementById('editFirstName').value = p.first_name || '';
+            document.getElementById('editLastName').value = p.last_name || '';
+            document.getElementById('editEmail').textContent = email;
+            document.getElementById('editPhone').value = p.phone || '';
+        }
+
+        // ============================================================
+        // POPULATE ACCOUNT INFO
+        // ============================================================
+        function populateAccountInfo() {
+            const p = currentProfile;
+            const u = currentUser;
+
+            document.getElementById('infoEmail').textContent = u.email || '--';
+            document.getElementById('infoMemberSince').textContent = p.created_at ? formatDateLong(p.created_at) : '--';
+            document.getElementById('infoOnboarding').textContent = p.onboarding_completed_at ? formatDateLong(p.onboarding_completed_at) : '--';
+            document.getElementById('infoLastLogin').textContent = u.last_sign_in_at ? formatDateLong(u.last_sign_in_at) : '--';
+
+            // Account status badge
+            const statusEl = document.getElementById('infoStatus');
+            const isActive = p.onboarding_completed;
+            statusEl.innerHTML = `
+                <span class="status-badge ${isActive ? 'active' : 'inactive'}">
+                    <span class="status-dot"></span>
+                    ${isActive ? 'Active' : 'Inactive'}
+                </span>
+            `;
+        }
+
+        // ============================================================
+        // TOGGLE PROFILE EDIT
+        // ============================================================
+        function toggleProfileEdit() {
+            isEditingProfile = true;
+            document.getElementById('profileView').style.display = 'none';
+            document.getElementById('profileEdit').style.display = 'block';
+            document.getElementById('editProfileBtn').style.display = 'none';
+
+            // Pre-fill edit fields with current values
+            document.getElementById('editFirstName').value = currentProfile.first_name || '';
+            document.getElementById('editLastName').value = currentProfile.last_name || '';
+            document.getElementById('editPhone').value = currentProfile.phone || '';
+
+            // Focus first field
+            document.getElementById('editFirstName').focus();
+        }
+
+        function cancelProfileEdit() {
+            isEditingProfile = false;
+            document.getElementById('profileView').style.display = 'grid';
+            document.getElementById('profileEdit').style.display = 'none';
+            document.getElementById('editProfileBtn').style.display = 'inline-flex';
+        }
+
+        // ============================================================
+        // SAVE PROFILE
+        // ============================================================
+        async function saveProfile() {
+            const btn = document.getElementById('saveProfileBtn');
+            const firstName = document.getElementById('editFirstName').value.trim();
+            const lastName = document.getElementById('editLastName').value.trim();
+            const phone = document.getElementById('editPhone').value.trim();
+
+            if (!firstName) {
+                showToast('First name is required', 'error');
+                document.getElementById('editFirstName').focus();
+                return;
+            }
+
+            // Disable button and show loading
+            btn.disabled = true;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span class="btn-spinner"></span> Saving...';
+
+            try {
+                const updates = {
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone: phone,
+                    full_name: (firstName + ' ' + lastName).trim(),
+                    updated_at: new Date().toISOString()
+                };
+
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update(updates)
+                    .eq('id', currentUser.id);
+
+                if (error) throw error;
+
+                // Update local state
+                currentProfile.first_name = firstName;
+                currentProfile.last_name = lastName;
+                currentProfile.phone = phone;
+                currentProfile.full_name = updates.full_name;
+
+                // Refresh view
+                populateProfile();
+                cancelProfileEdit();
+
+                // Update sidebar name if needed
+                const displayName = currentProfile.full_name || currentProfile.first_name || currentUser.email;
+
+                // Track activity
+                if (typeof window.trackActivity === 'function') {
+                    window.trackActivity('profile_update', '/portal/account', {
+                        fields_updated: ['first_name', 'last_name', 'phone']
+                    });
+                }
+
+                showToast('Profile updated successfully', 'success');
+            } catch (err) {
+                console.error('Profile update error:', err);
+                showToast('Failed to update profile. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        // ============================================================
+        // CHANGE PASSWORD
+        // ============================================================
+        async function changePassword() {
+            const btn = document.getElementById('savePasswordBtn');
+            const currentPw = document.getElementById('currentPassword').value;
+            const newPw = document.getElementById('newPassword').value;
+            const confirmPw = document.getElementById('confirmPassword').value;
+
+            // Validation
+            if (!currentPw) {
+                showToast('Please enter your current password', 'error');
+                document.getElementById('currentPassword').focus();
+                return;
+            }
+
+            if (!newPw) {
+                showToast('Please enter a new password', 'error');
+                document.getElementById('newPassword').focus();
+                return;
+            }
+
+            if (newPw.length < 6) {
+                showToast('New password must be at least 6 characters', 'error');
+                document.getElementById('newPassword').focus();
+                return;
+            }
+
+            if (newPw !== confirmPw) {
+                showToast('Passwords do not match', 'error');
+                document.getElementById('confirmPassword').focus();
+                return;
+            }
+
+            if (currentPw === newPw) {
+                showToast('New password must be different from current password', 'error');
+                document.getElementById('newPassword').focus();
+                return;
+            }
+
+            // Disable button and show loading
+            btn.disabled = true;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span class="btn-spinner"></span> Updating...';
+
+            try {
+                const { error } = await supabaseClient.auth.updateUser({
+                    password: newPw
+                });
+
+                if (error) throw error;
+
+                // Clear fields
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+
+                // Track activity
+                if (typeof window.trackActivity === 'function') {
+                    window.trackActivity('password_change', '/portal/account', {
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+                showToast('Password updated successfully', 'success');
+            } catch (err) {
+                console.error('Password change error:', err);
+                const msg = err.message || 'Failed to update password. Please try again.';
+                showToast(msg, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        // ============================================================
+        // TOAST NOTIFICATION
+        // ============================================================
+        let toastTimer = null;
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            // Clear any existing timer
+            if (toastTimer) {
+                clearTimeout(toastTimer);
+                toast.classList.remove('show');
+            }
+
+            // Set content
+            toastMessage.textContent = message;
+            toast.className = 'toast ' + type;
+
+            // Set icon
+            if (type === 'success') {
+                toastIcon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+            } else {
+                toastIcon.innerHTML = '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
+            }
+
+            // Show
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            // Auto-hide after 4 seconds
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        // ============================================================
+        // MOBILE MENU TOGGLE
+        // ============================================================
+        function toggleMobileMenu() {
+            document.getElementById('navLinks').classList.toggle('open');
+        }
+
+        document.querySelectorAll('.navbar-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('navLinks').classList.remove('open');
+            });
+        });
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
+        function formatDateLong(dateStr) {
+            if (!dateStr) return '--';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '--';
+            return d.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

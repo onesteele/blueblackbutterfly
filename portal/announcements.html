@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Announcements</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ========== Background Animation ========== */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            /* filter blur removed for performance */
+            opacity: 0.5;
+            /* animation: floatOrb */ animation: none 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -100px; right: -100px;
+        }
+
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(59, 109, 255, 0.25) 0%, transparent 70%);
+            bottom: 20%; left: -50px;
+            animation-delay: -7s;
+            animation-duration: 25s;
+        }
+
+        .orb-3 {
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(59, 109, 255, 0.2) 0%, transparent 70%);
+            top: 50%; left: 40%;
+            animation-delay: -14s;
+            animation-duration: 30s;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 10px) scale(1.02); }
+        }
+
+        /* ========== Top Navbar ========== */
+        .top-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.85);
+            /* backdrop-filter removed for performance */
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+        }
+
+        .navbar-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            gap: 16px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .navbar-logo {
+            width: 38px;
+            height: 38px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 12px var(--accent-glow));
+        }
+
+        .navbar-brand-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 500;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;}
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .navbar-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .navbar-links a:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .navbar-links a.active {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .navbar-user {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .navbar-user-name {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .signout-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .signout-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* ========== Main Container ========== */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+
+        /* ========== Page Header ========== */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 40px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 50%, #2a4fd6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            line-height: 1.2;
+            font-style: italic;}
+
+        .page-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ========== Section Label ========== */
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-label svg {
+            flex-shrink: 0;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-dim), transparent);
+        }
+
+        /* ========== Announcement Card ========== */
+        .announcements-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .announcement-card {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .announcement-card:hover {
+            border-color: rgba(59, 109, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(59, 109, 255, 0.06);
+        }
+
+        .announcement-card.pinned {
+            border-color: rgba(59, 109, 255, 0.4);
+            background: rgba(20, 20, 20, 0.9);
+            box-shadow: 0 0 0 1px rgba(59, 109, 255, 0.15), 0 8px 32px rgba(59, 109, 255, 0.06);
+        }
+
+        .announcement-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .announcement-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+            flex: 1;
+        }
+
+        .pinned-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid rgba(59, 109, 255, 0.3);
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .pinned-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .announcement-content {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .announcement-content p {
+            margin-bottom: 12px;
+        }
+
+        .announcement-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .announcement-content a {
+            color: var(--accent);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .announcement-content a:hover {
+            color: var(--accent-light);
+        }
+
+        .announcement-content ul,
+        .announcement-content ol {
+            padding-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .announcement-content li {
+            margin-bottom: 4px;
+        }
+
+        .announcement-content strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .announcement-content h1,
+        .announcement-content h2,
+        .announcement-content h3 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            margin-top: 16px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .announcement-content h1:first-child,
+        .announcement-content h2:first-child,
+        .announcement-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .announcement-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .announcement-content blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 16px;
+            margin: 12px 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .announcement-content code {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .announcement-content pre {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .announcement-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .announcement-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .announcement-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .author-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .announcement-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .announcement-date svg {
+            width: 14px;
+            height: 14px;
+            opacity: 0.6;
+        }
+
+        /* ========== Empty State ========== */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: var(--accent-dim);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-state-icon svg {
+            width: 36px;
+            height: 36px;
+            color: var(--accent);
+            opacity: 0.6;
+        }
+
+        .empty-state-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* ========== Loading State ========== */
+        .loading-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .loading-spinner {
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(59, 109, 255, 0.15);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-state p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 768px) {
+            .top-navbar {
+                padding: 0 16px;
+            }
+
+            .navbar-links {
+                display: none;
+                position: absolute;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: rgba(10, 10, 10, 0.95);
+                /* backdrop-filter removed for performance */
+                flex-direction: column;
+                padding: 16px;
+                border-bottom: 1px solid var(--border);
+                gap: 4px;
+            }
+
+            .navbar-links.open {
+                display: flex;
+            }
+
+            .navbar-links a {
+                width: 100%;
+                padding: 12px 16px;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .navbar-user {
+                display: none;
+            }
+
+            .page-title {
+                font-size: 30px;
+            }
+
+            .container {
+                padding: 24px 16px 40px;
+            }
+
+            .announcement-card {
+                padding: 20px;
+            }
+
+            .announcement-title {
+                font-size: 17px;
+            }
+
+            .announcement-footer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 26px;
+            }
+
+            .announcement-card-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <div class="cs-main-content container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Announcements</h1>
+            <p class="page-subtitle">Stay up to date with the latest news and updates</p>
+        </div>
+
+        <!-- Pinned Announcements Section -->
+        <div id="pinnedSection" style="display: none;">
+            <div class="section-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L12 22"></path>
+                    <path d="M5 5.5C5 5.5 5 12 12 12C19 12 19 5.5 19 5.5"></path>
+                    <path d="M5 12L5 15L12 18L19 15L19 12"></path>
+                </svg>
+                Pinned
+            </div>
+            <div class="announcements-feed" id="pinnedFeed"></div>
+        </div>
+
+        <!-- Spacer between sections -->
+        <div id="sectionSpacer" style="display: none; height: 40px;"></div>
+
+        <!-- All Announcements Section -->
+        <div id="allSection">
+            <div class="section-label" id="allSectionLabel" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+                Recent
+            </div>
+            <div class="announcements-feed" id="allFeed">
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading announcements...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+    <script src="../activity-tracker.js"></script>
+    <script>
+        // ============================================================
+        // AUTH CHECK & AUTO-LOGOUT
+        // ============================================================
+        let currentUser = null;
+        let currentProfile = null;
+        let autoLogoutTimer = null;
+
+        function resetAutoLogout() {
+            if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+            autoLogoutTimer = setTimeout(() => {
+                window.signOut();
+            }, 30 * 60 * 1000);
+        }
+
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, resetAutoLogout, { passive: true });
+        });
+
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+        (async function init() {
+            try {
+                const user = await window.getCurrentUser();
+                if (!user) {
+                    window.location.href = '/auth';
+                    return;
+                }
+                currentUser = user;
+
+                const profile = await window.getUserProfile(user.id);
+                if (!profile) {
+                    window.location.href = '/auth';
+                    return;
+                }
+                currentProfile = profile;
+
+                // Check user status for access
+                const userStatus = (profile.status || 'onboarding').toLowerCase();
+                if (!['member', 'verified_member', 'active', 'free_trial', 'free_trial_expired'].includes(userStatus)) {
+                    window.location.href = '/onboarding';
+                    return;
+                }
+
+                // Inject sidebar
+                window.injectClientSidebar('announcements', '../logo.png', userStatus);
+
+                resetAutoLogout();
+
+                // Track page view
+                if (typeof window.trackActivity === 'function') {
+                    window.trackActivity('page_view', '/portal/announcements');
+                }
+
+                await loadAnnouncements();
+            } catch (err) {
+                console.error('Init error:', err);
+                window.location.href = '/auth';
+            }
+        })();
+
+        // ============================================================
+        // LOAD ANNOUNCEMENTS
+        // ============================================================
+        async function loadAnnouncements() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('announcements')
+                    .select('*')
+                    .eq('is_published', true)
+                    .order('is_pinned', { ascending: false })
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const announcements = data || [];
+
+                if (announcements.length === 0) {
+                    renderEmpty();
+                    return;
+                }
+
+                const pinned = announcements.filter(a => a.is_pinned);
+                const unpinned = announcements.filter(a => !a.is_pinned);
+
+                renderAnnouncements(pinned, unpinned);
+            } catch (err) {
+                console.error('Error loading announcements:', err);
+                document.getElementById('allFeed').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <h3 class="empty-state-title">Failed to load announcements</h3>
+                        <p class="empty-state-text">Please try refreshing the page</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // RENDER ANNOUNCEMENTS
+        // ============================================================
+        function renderAnnouncements(pinned, unpinned) {
+            const pinnedSection = document.getElementById('pinnedSection');
+            const pinnedFeed = document.getElementById('pinnedFeed');
+            const allFeed = document.getElementById('allFeed');
+            const allSectionLabel = document.getElementById('allSectionLabel');
+            const sectionSpacer = document.getElementById('sectionSpacer');
+
+            // Render pinned announcements
+            if (pinned.length > 0) {
+                pinnedSection.style.display = 'block';
+                pinnedFeed.innerHTML = pinned.map(a => renderCard(a, true)).join('');
+
+                if (unpinned.length > 0) {
+                    sectionSpacer.style.display = 'block';
+                    allSectionLabel.style.display = 'flex';
+                }
+            }
+
+            // Render unpinned announcements
+            if (unpinned.length > 0) {
+                allFeed.innerHTML = unpinned.map(a => renderCard(a, false)).join('');
+            } else if (pinned.length > 0) {
+                // If we only have pinned announcements, hide the all section
+                allFeed.innerHTML = '';
+            } else {
+                renderEmpty();
+            }
+        }
+
+        function renderCard(announcement, isPinned) {
+            const title = escapeHtml(announcement.title || 'Untitled');
+            const content = announcement.content || '';
+            const date = formatDate(announcement.created_at);
+            const authorName = announcement.author_name ? escapeHtml(announcement.author_name) : null;
+            const authorInitial = authorName ? authorName.charAt(0).toUpperCase() : null;
+
+            let pinnedBadgeHtml = '';
+            if (isPinned) {
+                pinnedBadgeHtml = `
+                    <span class="pinned-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 17V22"></path>
+                            <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path>
+                        </svg>
+                        Pinned
+                    </span>
+                `;
+            }
+
+            let authorHtml = '';
+            if (authorName) {
+                authorHtml = `
+                    <div class="announcement-author">
+                        <div class="author-avatar">${authorInitial}</div>
+                        <span>${authorName}</span>
+                    </div>
+                `;
+            } else {
+                authorHtml = `
+                    <div class="announcement-author">
+                        <div class="author-avatar">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <span>Team</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="announcement-card ${isPinned ? 'pinned' : ''}">
+                    <div class="announcement-card-header">
+                        <h2 class="announcement-title">${title}</h2>
+                        ${pinnedBadgeHtml}
+                    </div>
+                    <div class="announcement-content">${content}</div>
+                    <div class="announcement-footer">
+                        ${authorHtml}
+                        <div class="announcement-date">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            ${date}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderEmpty() {
+            document.getElementById('allFeed').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </div>
+                    <h3 class="empty-state-title">No announcements yet</h3>
+                    <p class="empty-state-text">Check back soon for news and updates</p>
+                </div>
+            `;
+        }
+
+        // ============================================================
+        // MOBILE MENU TOGGLE
+        // ============================================================
+        function toggleMobileMenu() {
+            document.getElementById('navLinks').classList.toggle('open');
+        }
+
+        document.querySelectorAll('.navbar-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('navLinks').classList.remove('open');
+            });
+        });
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - d;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+
+            return d.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

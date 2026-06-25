@@ -1,0 +1,3408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Customer Detail</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+            --sidebar-width: 60px;
+            --sidebar-expanded: 240px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           BACKGROUND ANIMATION
+           ============================================================ */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            /* filter blur removed for performance */
+            opacity: 0.3;
+            /* animation: floatOrb */ animation: none 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -100px; right: -100px;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, 30px) scale(1.05); }
+        }
+
+        /* ============================================================
+           SIDEBAR NAVIGATION
+           ============================================================ */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: #111111;
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        .sidebar:hover {
+            width: var(--sidebar-expanded);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 14px;
+            border-bottom: 1px solid var(--border);
+            min-height: 60px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+
+        .sidebar-logo-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;}
+
+        .sidebar:hover .sidebar-logo-text {
+            opacity: 1;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 12px 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 18px;
+            margin: 2px 8px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            position: relative;
+            border-left: 3px solid transparent;
+            margin-left: 0;
+            padding-left: 15px;
+        }
+
+        .nav-item:hover {
+            background: rgba(59, 109, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+
+        .nav-item.active .nav-icon svg {
+            color: var(--accent);
+        }
+
+        .nav-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .nav-icon svg {
+            width: 20px;
+            height: 20px;
+            color: currentColor;
+            transition: color 0.2s ease;
+        }
+
+        .nav-label {
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;
+        }
+
+        .sidebar:hover .nav-label {
+            opacity: 1;
+        }
+
+        .sidebar-bottom {
+            border-top: 1px solid var(--border);
+            padding: 12px 0;
+            flex-shrink: 0;
+        }
+
+        .nav-item.signout-item {
+            color: var(--text-muted);
+        }
+
+        .nav-item.signout-item:hover {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        /* ============================================================
+           HAMBURGER MENU (MOBILE)
+           ============================================================ */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 200;
+            width: 40px;
+            height: 40px;
+            background: #111111;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .hamburger-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            /* backdrop-filter removed for performance */
+            z-index: 90;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 10, 10, 0.8);
+            /* backdrop-filter removed for performance */
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-style: italic;}
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .admin-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.3);
+            padding: 5px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ============================================================
+           PAGE BODY
+           ============================================================ */
+        .page-body {
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
+           BACK BUTTON
+           ============================================================ */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            margin-bottom: 24px;
+        }
+
+        .back-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ============================================================
+           PROFILE HEADER
+           ============================================================ */
+        .profile-header {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            position: relative;
+            z-index: 50;
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .profile-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            border: 2px solid rgba(59, 109, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .profile-text h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 26px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+            font-style: italic;}
+
+        .profile-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .profile-meta span {
+            font-size: 13px;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .profile-meta span svg {
+            width: 14px;
+            height: 14px;
+            color: #94a3b8;
+        }
+
+        /* Status dropdown */
+        .status-dropdown-wrapper {
+            position: relative;
+            display: inline-block;
+            z-index: 200;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .status-badge:hover {
+            filter: brightness(1.2);
+        }
+
+        .status-badge.onboarding {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .status-badge.member {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.verified_member {
+            background: rgba(59, 109, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .status-badge.active {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.inactive {
+            background: rgba(107, 114, 128, 0.15);
+            color: var(--text-muted);
+        }
+
+        .status-badge.churned {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .status-badge.at_risk {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .status-badge.dispute {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .status-badge.free_trial {
+            background: rgba(168, 85, 247, 0.15);
+            color: #a855f7;
+        }
+
+        .status-badge.free_trial_expired {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px;
+            min-width: 160px;
+            z-index: 60;
+            display: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .status-dropdown.show {
+            display: block;
+        }
+
+        .status-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .status-dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .status-dropdown-item .sdi-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dropdown-item .sdi-dot.onboarding { background: #60a5fa; }
+        .status-dropdown-item .sdi-dot.member { background: var(--success); }
+        .status-dropdown-item .sdi-dot.verified_member { background: var(--accent); }
+        .status-dropdown-item .sdi-dot.active { background: var(--success); }
+        .status-dropdown-item .sdi-dot.inactive { background: var(--text-muted); }
+        .status-dropdown-item .sdi-dot.churned { background: var(--error); }
+        .status-dropdown-item .sdi-dot.at_risk { background: #f59e0b; }
+        .status-dropdown-item .sdi-dot.dispute { background: var(--error); }
+        .status-dropdown-item .sdi-dot.free_trial { background: #a855f7; }
+        .status-dropdown-item .sdi-dot.free_trial_expired { background: #f87171; }
+
+        /* Tags in profile header */
+        .profile-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .profile-tag-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+        .profile-tag-pill .tag-remove-btn { background: none; border: none; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; opacity: 0.6; padding: 0 0 0 2px; }
+        .profile-tag-pill .tag-remove-btn:hover { opacity: 1; }
+        .profile-tag-pill.at_risk, .profile-tag-pill.churn_risk { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .profile-tag-pill.refund_requested, .profile-tag-pill.dispute { background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .profile-tag-pill.vip, .profile-tag-pill.high_value { background: rgba(59, 109, 255, 0.12); color: var(--accent); border: 1px solid rgba(59, 109, 255, 0.2); }
+        .btn-add-profile-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.04); border: 1px dashed var(--border); color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; position: relative; }
+        .btn-add-profile-tag:hover { border-color: var(--text-muted); color: var(--text-secondary); }
+        .profile-tag-dropdown { position: absolute; top: 100%; left: 0; margin-top: 4px; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; padding: 4px; min-width: 160px; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: none; }
+        .profile-tag-dropdown.show { display: block; }
+        .profile-tag-dd-item { padding: 6px 10px; font-size: 12px; color: var(--text-secondary); cursor: pointer; border-radius: 4px; transition: background 0.15s ease; }
+        .profile-tag-dd-item:hover { background: rgba(59, 109, 255, 0.1); color: var(--accent); }
+
+        /* Quick action buttons */
+        .profile-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 16px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.25);
+            border-radius: 10px;
+            color: var(--accent);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            background: rgba(59, 109, 255, 0.25);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(59, 109, 255, 0.15);
+        }
+
+        .action-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .action-btn.whatsapp {
+            background: rgba(37, 211, 102, 0.12);
+            border-color: rgba(37, 211, 102, 0.3);
+            color: #25d366;
+        }
+
+        .action-btn.whatsapp:hover {
+            background: rgba(37, 211, 102, 0.25);
+            border-color: #25d366;
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.15);
+        }
+
+        .action-btn.convert-member {
+            background: rgba(34, 197, 94, 0.12);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+
+        .action-btn.convert-member:hover {
+            background: rgba(34, 197, 94, 0.25);
+            border-color: #22c55e;
+        }
+
+        .action-btn.danger {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--error);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: var(--error);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
+        }
+
+        /* Delete Confirmation Modal */
+        .confirm-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            /* backdrop-filter removed for performance */
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .confirm-overlay.show {
+            display: flex;
+        }
+
+        .confirm-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .confirm-card .confirm-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .confirm-card .confirm-icon svg {
+            width: 28px;
+            height: 28px;
+            color: var(--error);
+        }
+
+        .confirm-card h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .confirm-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .confirm-card .confirm-name {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn-cancel {
+            padding: 10px 24px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            border-color: var(--text-muted);
+            color: var(--text-primary);
+        }
+
+        .btn-confirm-delete {
+            padding: 10px 24px;
+            background: var(--error);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-confirm-delete:hover {
+            background: #dc2626;
+        }
+
+        .btn-confirm-delete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ============================================================
+           TABS
+           ============================================================ */
+        .tabs-header {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            overflow-x: auto;
+        }
+
+        .tabs-header::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            box-shadow: 0 2px 8px rgba(59, 109, 255, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ============================================================
+           GLASS CARD (shared)
+           ============================================================ */
+        .glass-card {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(59, 109, 255, 0.03);
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* ============================================================
+           OVERVIEW TAB - Profile Grid
+           ============================================================ */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .profile-field {
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .profile-field-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .profile-field-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        /* Admin notes */
+        .notes-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .notes-textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 109, 255, 0.1);
+        }
+
+        .notes-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .notes-save-status {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            min-height: 18px;
+        }
+
+        .notes-save-status.saved {
+            color: var(--success);
+        }
+
+        /* ============================================================
+           ACTIVITY LOG TAB
+           ============================================================ */
+        .activity-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .activity-filter-select {
+            padding: 8px 14px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+
+        .activity-filter-select option {
+            background: #1a1a1a;
+        }
+
+        .activity-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .activity-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .activity-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .activity-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-entry:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon-wrapper {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .activity-icon-wrapper svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent);
+        }
+
+        .activity-entry-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .activity-entry-action {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .activity-entry-details {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .activity-entry-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .activity-entry-meta span {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .activity-entry-page {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .load-more-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 16px;
+        }
+
+        .load-more-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        /* ============================================================
+           ONBOARDING TAB
+           ============================================================ */
+        .onboarding-progress-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .onboarding-progress-bar {
+            flex: 1;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .onboarding-progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+            transition: width 0.5s ease;
+        }
+
+        .onboarding-progress-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .onboarding-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .onboarding-step {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: border-color 0.2s ease;
+        }
+
+        .onboarding-step.completed {
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .onboarding-step.completed .step-number {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .step-info {
+            flex: 1;
+        }
+
+        .step-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .step-video-status {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .step-badge {
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step-badge.completed {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .step-badge.pending {
+            background: rgba(107, 114, 128, 0.15);
+            color: var(--text-muted);
+        }
+
+        /* ============================================================
+           COMMUNICATION TAB
+           ============================================================ */
+        /* Ticket History List */
+        .ticket-history-list {
+            padding: 0;
+        }
+
+        .ticket-history-item {
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .ticket-history-item:last-child {
+            border-bottom: none;
+        }
+
+        .ticket-history-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ticket-history-item.expanded {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ticket-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .ticket-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .ticket-item-num {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .ticket-item-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ticket-item-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .ticket-item-date {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .ticket-item-status {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .ticket-item-status.open {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .ticket-item-status.resolved {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--text-muted);
+            border: 1px solid rgba(107, 114, 128, 0.15);
+        }
+
+        .ticket-item-preview {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ticket-item-chevron {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .ticket-history-item.expanded .ticket-item-chevron {
+            transform: rotate(90deg);
+        }
+
+        /* Inline ticket messages */
+        .ticket-messages-inline {
+            display: none;
+            padding: 12px 0 4px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .ticket-messages-inline::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .ticket-messages-inline::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .ticket-history-item.expanded .ticket-messages-inline {
+            display: block;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .chat-message {
+            display: flex;
+            max-width: 75%;
+        }
+
+        .chat-message.user {
+            align-self: flex-start;
+        }
+
+        .chat-message.admin {
+            align-self: flex-end;
+        }
+
+        .chat-bubble {
+            padding: 10px 16px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .chat-message.user .chat-bubble {
+            background: rgba(107, 114, 128, 0.2);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-message.admin .chat-bubble {
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.2);
+            color: var(--accent);
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-timestamp {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+
+        .chat-message.admin .chat-timestamp {
+            text-align: right;
+        }
+
+        .chat-input-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent);
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .chat-send-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .chat-send-btn:hover {
+            background: var(--accent-light);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(59, 109, 255, 0.3);
+        }
+
+        .chat-send-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .chat-empty {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            padding: 40px 0;
+        }
+
+        .ticket-empty-state {
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           WORKFLOW PICKER MODAL
+           ============================================================ */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            /* backdrop-filter removed for performance */
+            z-index: 500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 480px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .modal-close svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .modal-body {
+            padding: 16px 24px 24px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .workflow-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .workflow-item:hover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .workflow-item-info {
+            flex: 1;
+        }
+
+        .workflow-item-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .workflow-item-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .workflow-trigger-btn {
+            padding: 6px 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .workflow-trigger-btn:hover {
+            background: var(--accent-light);
+        }
+
+        /* ============================================================
+           LOADING / EMPTY
+           ============================================================ */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-expanded);
+                z-index: 150;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar.mobile-open .nav-label,
+            .sidebar.mobile-open .sidebar-logo-text {
+                opacity: 1;
+            }
+
+            .hamburger-btn {
+                display: flex;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .top-bar {
+                padding: 16px 16px 16px 64px;
+            }
+
+            .page-body {
+                padding: 20px 16px;
+            }
+
+            .page-title {
+                font-size: 22px;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+            }
+
+            .profile-actions {
+                width: 100%;
+            }
+
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs-header {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+
+            .chat-message {
+                max-width: 90%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-bar-right {
+                display: none;
+            }
+
+            .profile-text h2 {
+                font-size: 20px;
+            }
+        }
+
+        /* ============================================================
+           DIGITAL SIGNING RECORD
+           ============================================================ */
+        .signing-record {
+            background: #0f0f0f;
+            border: 1px solid #1e2433;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .signing-record-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: rgba(59, 109, 255, 0.06);
+            border-bottom: 1px solid #1e2433;
+        }
+
+        .signing-record-title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .signing-record-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #22c55e;
+        }
+
+        .signing-record-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .signing-record-body {
+            padding: 24px;
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .signing-record-photo {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .signing-record-photo img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #1e2433;
+        }
+
+        .signing-record-photo-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        .signing-record-meta {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .signing-record-meta-row {
+            display: flex;
+            gap: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .signing-record-meta-label {
+            color: var(--text-muted);
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+
+        .signing-record-meta-value {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .signing-record-divider {
+            height: 1px;
+            background: #1e2433;
+            margin: 20px 24px;
+        }
+
+        .signing-record-sig-block {
+            padding: 0 24px 24px;
+        }
+
+        .signing-record-sig-label {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .signing-record-sig-name {
+            font-family: 'Dancing Script', cursive;
+            font-size: 48px;
+            font-weight: 700;
+            color: #c0c8ff;
+            line-height: 1.1;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #3a3a3a;
+            display: inline-block;
+            min-width: 200px;
+        }
+
+        .signing-record-sig-printed {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 10px;
+            gap: 24px;
+        }
+
+        .signing-record-sig-printed-col {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .signing-record-sig-printed-value {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .signing-record-sig-printed-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .signing-record-disclaimer {
+            margin: 16px 24px 24px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #222;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .signing-record-unsigned {
+            padding: 32px 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Mobile Hamburger Button -->
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="../logo.png" alt="VantageQuant">
+            <span class="sidebar-logo-text">VantageQuant</span>
+        </div>
+
+        <div class="sidebar-nav">
+            <a href="/admin/" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+
+            <!-- Customers (ACTIVE) -->
+            <a href="/admin/customers.html" class="nav-item active">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Customers</span>
+            </a>
+
+            <a href="/admin/content.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Content</span>
+            </a>
+
+            <a href="/admin/announcements.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Announcements</span>
+            </a>
+
+            <a href="/admin/conversations.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Conversations</span>
+            </a>
+
+            <a href="/admin/workflows.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Workflows</span>
+            </a>
+
+            <a href="/admin/notifications.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                </span>
+                <span class="nav-label">Notifications</span>
+            </a>
+
+            <a href="/admin/settings.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Settings</span>
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a class="nav-item" onclick="window.toggleTheme()" style="cursor:pointer;">
+                <span class="nav-icon"><span class="theme-toggle-icon"></span></span>
+                <span class="nav-label theme-toggle-label"></span>
+            </a>
+            <a class="nav-item signout-item" onclick="window.signOut()" style="cursor:pointer;">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </span>
+                <span class="nav-label">Sign Out</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <h1 class="page-title">Customer Detail</h1>
+            </div>
+            <div class="top-bar-right">
+                <span class="admin-name" id="admin-name">Loading...</span>
+                <span class="admin-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Admin
+                </span>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body" id="page-body">
+            <!-- Loading State -->
+            <div class="loading-spinner" id="loading-state">
+                <div class="spinner"></div>
+            </div>
+
+            <!-- Loaded Content (hidden until data loads) -->
+            <div id="loaded-content" style="display:none;">
+                <!-- Back Button -->
+                <a href="/admin/customers.html" class="back-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Customers
+                </a>
+
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-info">
+                        <div class="profile-avatar" id="profile-avatar">--</div>
+                        <div class="profile-text">
+                            <h2 id="profile-name">Loading...</h2>
+                            <div class="profile-meta">
+                                <div class="status-dropdown-wrapper" id="status-dropdown-wrapper">
+                                    <span class="status-badge onboarding" id="status-badge" onclick="toggleStatusDropdown()">
+                                        <span class="status-dot"></span>
+                                        <span id="status-label">onboarding</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;margin-left:2px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </span>
+                                    <div class="status-dropdown" id="status-dropdown">
+                                        <div class="status-dropdown-item" onclick="changeStatus('onboarding')">
+                                            <span class="sdi-dot onboarding"></span> Onboarding
+                                        </div>
+                                        <div class="status-dropdown-item" onclick="changeStatus('free_trial')">
+                                            <span class="sdi-dot free_trial"></span> Free Trial
+                                        </div>
+                                        <div class="status-dropdown-item" onclick="changeStatus('free_trial_expired')">
+                                            <span class="sdi-dot free_trial_expired"></span> Trial Expired
+                                        </div>
+                                        <div class="status-dropdown-item" onclick="changeStatus('member')">
+                                            <span class="sdi-dot member"></span> Member
+                                        </div>
+                                        <div class="status-dropdown-item" onclick="changeStatus('verified_member')">
+                                            <span class="sdi-dot verified_member"></span> Verified Member
+                                        </div>
+                                        <div class="status-dropdown-item" onclick="changeStatus('active')">
+                                            <span class="sdi-dot active"></span> Active
+                                        </div>
+                                        <div class="status-dropdown-item" onclick="changeStatus('inactive')">
+                                            <span class="sdi-dot inactive"></span> Inactive
+                                        </div>
+                                        <div class="status-dropdown-item" onclick="changeStatus('churned')">
+                                            <span class="sdi-dot churned"></span> Churned
+                                        </div>
+                                        <div class="status-dropdown-item" onclick="changeStatus('at_risk')">
+                                            <span class="sdi-dot at_risk"></span> At Risk
+                                        </div>
+                                        <div class="status-dropdown-item" onclick="changeStatus('dispute')">
+                                            <span class="sdi-dot dispute"></span> Dispute
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="profile-tags" id="profile-tags"></div>
+                                <span id="profile-email-meta">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                    <span id="meta-email">--</span>
+                                </span>
+                                <span id="profile-phone-meta">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                    </svg>
+                                    <span id="meta-phone">--</span>
+                                </span>
+                                <span id="profile-location-meta">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span id="meta-location">--</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <a class="action-btn" id="email-btn" href="#">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Email
+                        </a>
+                        <a class="action-btn whatsapp" id="whatsapp-btn" href="#" target="_blank">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.13.556 4.13 1.531 5.87L.06 23.487a.5.5 0 00.612.612l5.617-1.471A11.944 11.944 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.94 0-3.79-.516-5.416-1.478l-.388-.231-3.332.873.888-3.242-.253-.403A9.96 9.96 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                            </svg>
+                            WhatsApp
+                        </a>
+                        <button class="action-btn" onclick="openWorkflowModal()">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Trigger Workflow
+                        </button>
+                        <button class="action-btn convert-member" id="convert-btn" style="display:none;" onclick="openConvertModal()">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            Convert to Member
+                        </button>
+                        <button class="action-btn danger" onclick="openDeleteConfirm()">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabs Header -->
+                <div class="tabs-header">
+                    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+                    <button class="tab-btn" onclick="switchTab('activity')">Activity Log</button>
+                    <button class="tab-btn" onclick="switchTab('onboarding')">Onboarding</button>
+                    <button class="tab-btn" onclick="switchTab('communication')">Communication</button>
+                    <button class="tab-btn" onclick="switchTab('legal')">Legal Info</button>
+                </div>
+
+                <!-- ============================================================
+                     TAB 1: OVERVIEW
+                     ============================================================ -->
+                <div class="tab-content active" id="tab-overview">
+                    <div class="glass-card" style="margin-bottom:24px;">
+                        <div class="card-header">
+                            <span class="card-title">Profile Information</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="profile-grid" id="profile-grid">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <span class="card-title">Admin Notes</span>
+                        </div>
+                        <div class="card-body">
+                            <textarea class="notes-textarea" id="admin-notes" placeholder="Add notes about this customer..."></textarea>
+                            <div class="notes-save-status" id="notes-save-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     TAB 2: ACTIVITY LOG
+                     ============================================================ -->
+                <div class="tab-content" id="tab-activity">
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <span class="card-title">Activity Log</span>
+                            <select class="activity-filter-select" id="activity-type-filter" onchange="filterActivityLog()">
+                                <option value="all">All Actions</option>
+                                <option value="page_view">Page Views</option>
+                                <option value="login">Logins</option>
+                                <option value="content_access">Content Access</option>
+                                <option value="settings_change">Settings Changes</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list" id="activity-list">
+                                <div class="loading-spinner"><div class="spinner"></div></div>
+                            </div>
+                            <button class="load-more-btn" id="load-more-activity" onclick="loadMoreActivity()" style="display:none;">Load More</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     TAB 3: ONBOARDING
+                     ============================================================ -->
+                <div class="tab-content" id="tab-onboarding">
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <span class="card-title">Onboarding Progress</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="onboarding-progress-header">
+                                <div class="onboarding-progress-bar">
+                                    <div class="onboarding-progress-fill" id="onboarding-progress-fill" style="width:0%"></div>
+                                </div>
+                                <span class="onboarding-progress-text" id="onboarding-progress-text">0%</span>
+                            </div>
+                            <div class="onboarding-steps" id="onboarding-steps">
+                                <div class="loading-spinner"><div class="spinner"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     TAB 4: COMMUNICATION
+                     ============================================================ -->
+                <div class="tab-content" id="tab-communication">
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <span class="card-title">Ticket History</span>
+                        </div>
+                        <div class="card-body" style="padding:0;">
+                            <div class="ticket-history-list" id="ticket-history-list">
+                                <div class="ticket-empty-state">Loading tickets...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     TAB 5: LEGAL INFO
+                     ============================================================ -->
+                <div class="tab-content" id="tab-legal">
+                    <div class="glass-card" style="margin-bottom:24px;">
+                        <div class="card-header">
+                            <span class="card-title">Payment Information</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="profile-grid" id="payment-info-grid">
+                                <div class="profile-field">
+                                    <div class="field-label">Payment Plan</div>
+                                    <div class="field-value" id="legal-payment-plan">--</div>
+                                </div>
+                                <div class="profile-field">
+                                    <div class="field-label">Total Amount</div>
+                                    <div class="field-value" id="legal-payment-total">--</div>
+                                </div>
+                                <div class="profile-field">
+                                    <div class="field-label">Amount Down</div>
+                                    <div class="field-value" id="legal-payment-down">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card" style="margin-bottom:24px;">
+                        <div class="card-header">
+                            <span class="card-title">Verification Photo</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="legal-photo-container">
+                                <p style="color:var(--text-muted);">No verification photo on file.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <span class="card-title">Digital Signing Record</span>
+                            <span id="legal-guarantee-badge" style="display:none; font-size:11px; font-weight:700; color:var(--accent); background:var(--accent-dim); padding:4px 10px; border-radius:20px;">90-Day Guarantee Active</span>
+                        </div>
+                        <div class="card-body" style="padding:0;">
+                            <div id="signing-record-container">
+                                <div class="signing-record-unsigned">No contract on file.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Picker Modal -->
+    <div class="modal-overlay" id="workflow-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Trigger Workflow</span>
+                <button class="modal-close" onclick="closeWorkflowModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" id="workflow-list">
+                <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Convert to Member Modal -->
+    <div class="modal-overlay" id="convert-modal">
+        <div class="modal-content" style="max-width:480px;">
+            <div class="modal-header">
+                <span class="modal-title">Convert Free Trial to Member</span>
+                <button class="modal-close" onclick="closeConvertModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" style="padding:20px 24px;">
+                <p style="color:var(--text-secondary);font-size:13px;line-height:1.6;margin-bottom:20px;">
+                    This will convert <strong id="convert-name" style="color:var(--text-primary);"></strong> from a free trial user to a full member. They will be placed into the standard onboarding course flow (verification is already complete). A <strong style="color:#4ade80;">free_trial_conversion</strong> tag will be added automatically.
+                </p>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Payment Method</label>
+                    <select id="convert-plan" style="width:100%;padding:10px 14px;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'Inter', sans-serif;font-size:14px;">
+                        <option value="">Select payment method...</option>
+                        <option value="cash">Cash</option>
+                        <option value="inhouse_splitpay">In-House SplitPay</option>
+                        <option value="split_it">Split-It</option>
+                        <option value="klarna">Klarna</option>
+                        <option value="affirm">Affirm</option>
+                        <option value="afterpay">Afterpay</option>
+                        <option value="winnible">Winnible</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Total Amount Closed ($)</label>
+                    <input type="number" id="convert-total" placeholder="0.00" min="0" step="0.01" style="width:100%;padding:10px 14px;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'Inter', sans-serif;font-size:14px;box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Cash Collected ($)</label>
+                    <input type="number" id="convert-down" placeholder="0.00" min="0" step="0.01" style="width:100%;padding:10px 14px;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'Inter', sans-serif;font-size:14px;box-sizing:border-box;">
+                </div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;">
+                    <button onclick="closeConvertModal()" style="padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-secondary);font-family:'Inter', sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+                    <button id="convert-submit-btn" onclick="submitConversion()" style="padding:10px 24px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:8px;color:#fff;font-family:'Inter', sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:transform 0.2s ease,box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 16px rgba(34,197,94,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Convert to Member</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Link Modal (post-conversion) -->
+    <div class="modal-overlay" id="convert-link-modal">
+        <div class="modal-content" style="max-width:480px;">
+            <div class="modal-header">
+                <span class="modal-title">Conversion Complete</span>
+                <button class="modal-close" onclick="closeConvertLinkModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" style="padding:20px 24px;text-align:center;">
+                <div style="width:56px;height:56px;background:rgba(34,197,94,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#22c55e" stroke-width="2" style="width:28px;height:28px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h3 style="color:var(--text-primary);font-family:'Inter', sans-serif;font-size:18px;margin-bottom:8px;" id="convert-link-name">Customer Converted!</h3>
+                <p style="color:var(--text-secondary);font-size:13px;margin-bottom:20px;">Share this onboarding link so they can complete the course videos:</p>
+                <div style="display:flex;gap:8px;">
+                    <input type="text" id="convert-link-url" readonly style="flex:1;padding:10px 14px;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;color:var(--accent);font-family:monospace;font-size:13px;">
+                    <button onclick="copyConvertLink()" id="convert-copy-btn" style="padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Inter', sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Copy Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="confirm-overlay" id="delete-confirm">
+        <div class="confirm-card">
+            <div class="confirm-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <h3>Delete Customer</h3>
+            <p>Are you sure you want to permanently delete <span class="confirm-name" id="delete-confirm-name"></span>? This action cannot be undone.</p>
+            <div class="confirm-actions">
+                <button class="btn-cancel" onclick="closeDeleteConfirm()">Cancel</button>
+                <button class="btn-confirm-delete" id="btn-confirm-delete" onclick="confirmDeleteCustomer()">Delete Customer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+
+    <script>
+        // ============================================================
+        // STATE
+        // ============================================================
+        const customerId = new URLSearchParams(window.location.search).get('id');
+        let customerData = null;
+        let adminUser = null;
+        let adminProfile = null;
+        let activityData = [];
+        let activityOffset = 0;
+        const activityLimit = 50;
+        let allActivityData = [];
+        let conversationId = null;
+        let customerTickets = [];
+        let autoLogoutTimer = null;
+
+        const ONBOARDING_STEPS = [
+            'Create TradersPost Account',
+            'Connect Broker Account',
+            'Configure Algorithm Parameters',
+            'Understanding Risk Management',
+            'Reading Performance Metrics',
+            'Preparing for Setup Call',
+            'Final Review & Next Steps'
+        ];
+
+        // ============================================================
+        // AUTH + INIT
+        // ============================================================
+        async function initPage() {
+            if (!customerId) {
+                window.location.href = '/admin/customers.html';
+                return;
+            }
+
+            const user = await window.getCurrentUser();
+            if (!user) {
+                window.location.href = '/auth';
+                return;
+            }
+
+            const profile = await window.getUserProfile(user.id);
+            if (!profile || !window.hasAdminAccess(profile)) {
+                window.location.href = '/auth';
+                return;
+            }
+
+            adminUser = user;
+            adminProfile = profile;
+            document.getElementById('admin-name').textContent = profile.full_name || profile.email;
+
+            // Load permissions and apply role-based sidebar
+            await window.loadRolePermissions();
+            window.applySidebarRole(profile, 'customers');
+
+            // Hide delete button if not allowed
+            if (!window.canDeleteCustomers(profile)) {
+                const deleteBtn = document.querySelector('.action-btn.danger');
+                if (deleteBtn) deleteBtn.style.display = 'none';
+            }
+
+            // Hide status dropdown if not allowed
+            if (!window.canChangeStatus(profile)) {
+                const statusDropdown = document.querySelector('.status-dropdown');
+                if (statusDropdown) statusDropdown.style.display = 'none';
+            }
+
+            resetAutoLogout();
+            document.addEventListener('mousemove', resetAutoLogout);
+            document.addEventListener('keydown', resetAutoLogout);
+            document.addEventListener('click', resetAutoLogout);
+
+            await loadCustomerData();
+        }
+
+        function resetAutoLogout() {
+            if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+            autoLogoutTimer = setTimeout(() => {
+                window.signOut();
+            }, 30 * 60 * 1000);
+        }
+
+        // ============================================================
+        // LOAD CUSTOMER DATA
+        // ============================================================
+        async function loadCustomerData() {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('id', customerId)
+                    .single();
+
+                if (error || !data) {
+                    console.error('Customer not found:', error);
+                    document.getElementById('loading-state').innerHTML = `
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p>Customer not found.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                customerData = data;
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('loaded-content').style.display = 'block';
+
+                renderProfileHeader();
+                renderOverviewTab();
+                renderLegalTab();
+                loadActivityLog();
+                loadOnboardingProgress();
+                loadConversation();
+
+            } catch (err) {
+                console.error('Error:', err);
+            }
+        }
+
+        // ============================================================
+        // PROFILE HEADER
+        // ============================================================
+        function renderProfileHeader() {
+            const c = customerData;
+            const initials = (c.full_name || 'NA').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            if (c.avatar_url) {
+                document.getElementById('profile-avatar').innerHTML = '<img src="' + c.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.textContent=\'' + initials + '\'">';
+            } else {
+                document.getElementById('profile-avatar').textContent = initials;
+            }
+            document.getElementById('profile-name').textContent = c.full_name || 'N/A';
+            document.getElementById('meta-email').textContent = c.email || 'N/A';
+            document.getElementById('meta-phone').textContent = c.phone || 'N/A';
+            const locParts = [c.city, c.region, c.country].filter(Boolean);
+            document.getElementById('meta-location').textContent = locParts.length > 0 ? locParts.join(', ') : 'Unknown';
+
+            // Status badge
+            const status = c.status || 'onboarding';
+            const badge = document.getElementById('status-badge');
+            badge.className = `status-badge ${status}`;
+            const statusLabels = { pending_verification: 'Pending Verification', onboarding: 'Onboarding', free_trial: 'Free Trial', free_trial_expired: 'Trial Expired', member: 'Member', verified_member: 'Verified Member', active: 'Active', inactive: 'Inactive', churned: 'Churned', at_risk: 'At Risk', dispute: 'Dispute' };
+            document.getElementById('status-label').textContent = statusLabels[status] || status;
+
+            // Email button
+            if (c.email) {
+                document.getElementById('email-btn').href = `mailto:${c.email}`;
+            }
+
+            // WhatsApp button
+            if (c.phone) {
+                const cleanPhone = c.phone.replace(/[^0-9]/g, '');
+                document.getElementById('whatsapp-btn').href = `https://wa.me/${cleanPhone}`;
+            }
+
+            // Tags
+            renderProfileTags();
+
+            // Show convert button only for free trial / expired users
+            var convertBtn = document.getElementById('convert-btn');
+            if (convertBtn) {
+                convertBtn.style.display = (status === 'free_trial' || status === 'free_trial_expired') ? '' : 'none';
+            }
+        }
+
+        // ============================================================
+        // TAGS MANAGEMENT
+        // ============================================================
+        const PROFILE_TAGS = ['at_risk', 'refund_requested', 'dispute', 'churn_risk', 'vip', 'high_value', 'free_trial_conversion'];
+        const PROFILE_TAG_LABELS = { at_risk: 'At Risk', refund_requested: 'Refund', dispute: 'Dispute', churn_risk: 'Churn Risk', vip: 'VIP', high_value: 'High Value' };
+        let profileTagDDOpen = false;
+
+        function renderProfileTags() {
+            const tags = window.getUserTags ? window.getUserTags(customerData) : (Array.isArray(customerData?.tags) ? customerData.tags : []);
+            const container = document.getElementById('profile-tags');
+            let html = tags.map(t =>
+                `<span class="profile-tag-pill ${t}">${PROFILE_TAG_LABELS[t] || t}<button class="tag-remove-btn" onclick="removeProfileTag('${t}')">&times;</button></span>`
+            ).join('');
+            html += `<span style="position:relative; display:inline-block;">
+                <button class="btn-add-profile-tag" onclick="toggleProfileTagDD()">+ Add tag</button>
+                <div class="profile-tag-dropdown" id="profile-tag-dropdown"></div>
+            </span>`;
+            container.innerHTML = html;
+        }
+
+        function toggleProfileTagDD() {
+            const dd = document.getElementById('profile-tag-dropdown');
+            profileTagDDOpen = !profileTagDDOpen;
+            dd.classList.toggle('show', profileTagDDOpen);
+            if (profileTagDDOpen) {
+                const current = window.getUserTags ? window.getUserTags(customerData) : (Array.isArray(customerData?.tags) ? customerData.tags : []);
+                const avail = PROFILE_TAGS.filter(t => !current.includes(t));
+                dd.innerHTML = avail.length ? avail.map(t =>
+                    `<div class="profile-tag-dd-item" onclick="addProfileTag('${t}')">${PROFILE_TAG_LABELS[t] || t}</div>`
+                ).join('') : '<div style="padding:8px 10px;font-size:12px;color:var(--text-muted);">All tags added</div>';
+            }
+        }
+
+        async function addProfileTag(tag) {
+            profileTagDDOpen = false;
+            try {
+                if (typeof window.addUserTag === 'function') {
+                    await window.addUserTag(customerId, tag);
+                } else {
+                    const tags = Array.isArray(customerData.tags) ? [...customerData.tags] : [];
+                    if (!tags.includes(tag)) tags.push(tag);
+                    await window.supabaseClient.from('users').update({ tags }).eq('id', customerId);
+                }
+                if (!Array.isArray(customerData.tags)) customerData.tags = [];
+                if (!customerData.tags.includes(tag)) customerData.tags.push(tag);
+                renderProfileTags();
+            } catch (err) { console.error('Error adding tag:', err); alert('Failed to add tag.'); }
+        }
+
+        async function removeProfileTag(tag) {
+            try {
+                if (typeof window.removeUserTag === 'function') {
+                    await window.removeUserTag(customerId, tag);
+                } else {
+                    const tags = (Array.isArray(customerData.tags) ? customerData.tags : []).filter(t => t !== tag);
+                    await window.supabaseClient.from('users').update({ tags }).eq('id', customerId);
+                }
+                customerData.tags = (customerData.tags || []).filter(t => t !== tag);
+                renderProfileTags();
+            } catch (err) { console.error('Error removing tag:', err); alert('Failed to remove tag.'); }
+        }
+
+        // Close tag dropdown on outside click
+        document.addEventListener('click', (e) => {
+            if (profileTagDDOpen && !e.target.closest('.btn-add-profile-tag') && !e.target.closest('.profile-tag-dropdown')) {
+                const dd = document.getElementById('profile-tag-dropdown');
+                if (dd) { dd.classList.remove('show'); profileTagDDOpen = false; }
+            }
+        });
+
+        // ============================================================
+        // STATUS DROPDOWN
+        // ============================================================
+        function toggleStatusDropdown() {
+            const dd = document.getElementById('status-dropdown');
+            dd.classList.toggle('show');
+        }
+
+        async function changeStatus(newStatus) {
+            document.getElementById('status-dropdown').classList.remove('show');
+            if (newStatus === customerData.status) return;
+
+            const success = await window.updateUserStatus(customerId, newStatus);
+            if (success) {
+                customerData.status = newStatus;
+                const isCompleted = ['member', 'verified_member', 'active'].includes(newStatus);
+                customerData.onboarding_completed = isCompleted;
+                if (isCompleted) customerData.onboarding_completed_at = new Date().toISOString();
+                renderProfileHeader();
+                renderOverviewTab();
+            } else {
+                alert('Failed to update status.');
+            }
+        }
+
+        // ============================================================
+        // DELETE CUSTOMER
+        // ============================================================
+        function openDeleteConfirm() {
+            const name = customerData.full_name || customerData.email || 'this customer';
+            document.getElementById('delete-confirm-name').textContent = name;
+            document.getElementById('delete-confirm').classList.add('show');
+        }
+
+        function closeDeleteConfirm() {
+            document.getElementById('delete-confirm').classList.remove('show');
+        }
+
+        async function confirmDeleteCustomer() {
+            const btn = document.getElementById('btn-confirm-delete');
+            btn.disabled = true;
+            btn.textContent = 'Deleting...';
+
+            try {
+                const success = await window.deleteUser(customerId);
+                if (success) {
+                    // Redirect back to customers list
+                    window.location.href = '/admin/customers.html';
+                } else {
+                    alert('Failed to delete customer. Please try again.');
+                    closeDeleteConfirm();
+                }
+            } catch (error) {
+                console.error('Error deleting customer:', error);
+                alert('Error: ' + (error.message || 'Failed to delete customer.'));
+                closeDeleteConfirm();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Delete Customer';
+            }
+        }
+
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('status-dropdown-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('status-dropdown').classList.remove('show');
+            }
+        });
+
+        // ============================================================
+        // FREE TRIAL CONVERSION
+        // ============================================================
+        function openConvertModal() {
+            if (!customerData) return;
+            document.getElementById('convert-name').textContent = customerData.full_name || customerData.email || 'this customer';
+            document.getElementById('convert-plan').value = '';
+            document.getElementById('convert-total').value = '';
+            document.getElementById('convert-down').value = '';
+            document.getElementById('convert-modal').classList.add('show');
+        }
+
+        function closeConvertModal() {
+            document.getElementById('convert-modal').classList.remove('show');
+        }
+
+        function closeConvertLinkModal() {
+            document.getElementById('convert-link-modal').classList.remove('show');
+        }
+
+        function copyConvertLink() {
+            var urlInput = document.getElementById('convert-link-url');
+            navigator.clipboard.writeText(urlInput.value).then(function() {
+                var btn = document.getElementById('convert-copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = 'Copy Link'; }, 2000);
+            });
+        }
+
+        async function submitConversion() {
+            var plan = document.getElementById('convert-plan').value;
+            var total = parseFloat(document.getElementById('convert-total').value) || 0;
+            var down = parseFloat(document.getElementById('convert-down').value) || 0;
+
+            if (!plan) {
+                alert('Please select a payment plan.');
+                return;
+            }
+            if (total <= 0) {
+                alert('Please enter the total amount closed.');
+                return;
+            }
+
+            var btn = document.getElementById('convert-submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Converting...';
+
+            try {
+                // 1. Update user profile: status → onboarding, add payment info, set onboarding_completed to false
+                var updateData = {
+                    status: 'onboarding',
+                    payment_plan: plan,
+                    payment_total: total,
+                    payment_down: down,
+                    onboarding_completed: false
+                };
+                var { error: updateError } = await window.supabaseClient
+                    .from('users')
+                    .update(updateData)
+                    .eq('id', customerId);
+
+                if (updateError) throw updateError;
+
+                // 2. Auto-add "free_trial_conversion" tag
+                var tags = Array.isArray(customerData.tags) ? [...customerData.tags] : [];
+                if (!tags.includes('free_trial_conversion')) {
+                    tags.push('free_trial_conversion');
+                    await window.supabaseClient
+                        .from('users')
+                        .update({ tags: tags })
+                        .eq('id', customerId);
+                    customerData.tags = tags;
+                }
+
+                // 3. Log activity
+                if (window.trackActivity) {
+                    window.trackActivity('free_trial_conversion', '/admin/customer-detail.html', {
+                        customer_id: customerId,
+                        payment_plan: plan,
+                        payment_total: total,
+                        payment_down: down,
+                        converted_by: adminProfile?.email || 'admin'
+                    });
+                }
+
+                // 4. Update local data and re-render
+                customerData.status = 'onboarding';
+                customerData.payment_plan = plan;
+                customerData.payment_total = total;
+                customerData.payment_down = down;
+                renderProfileHeader();
+
+                // 5. Close convert modal, show onboarding link modal
+                closeConvertModal();
+                var name = customerData.full_name || 'Customer';
+                document.getElementById('convert-link-name').textContent = name + ' Converted!';
+                document.getElementById('convert-link-url').value = window.location.origin + '/onboarding/';
+                document.getElementById('convert-link-modal').classList.add('show');
+
+            } catch (error) {
+                console.error('Conversion error:', error);
+                alert('Error converting customer: ' + (error.message || 'Please try again.'));
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Convert to Member';
+            }
+        }
+
+        // Close convert modals on overlay click
+        document.getElementById('convert-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeConvertModal();
+        });
+        document.getElementById('convert-link-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeConvertLinkModal();
+        });
+
+        // ============================================================
+        // OVERVIEW TAB
+        // ============================================================
+        async function renderLegalTab() {
+            const c = customerData;
+
+            // Payment info
+            const planLabel = c.payment_plan ? c.payment_plan.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A';
+            document.getElementById('legal-payment-plan').textContent = planLabel;
+            document.getElementById('legal-payment-total').textContent = c.payment_total ? '$' + parseFloat(c.payment_total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
+            document.getElementById('legal-payment-down').textContent = c.payment_down ? '$' + parseFloat(c.payment_down).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
+
+            // Verification photo
+            if (c.verification_photo_url) {
+                try {
+                    // Get photo URL — could be a full URL or a storage path
+                    var photoUrl = c.verification_photo_url;
+                    if (!photoUrl.startsWith('http') && window.getVerificationPhotoUrl) {
+                        photoUrl = window.getVerificationPhotoUrl(c.verification_photo_url);
+                    }
+                    if (photoUrl) {
+                        const verifiedDate = c.verification_completed_at ? window.formatFullDate(c.verification_completed_at) : 'Unknown date';
+                        document.getElementById('legal-photo-container').innerHTML =
+                            '<img src="' + photoUrl + '" style="max-width:200px; border-radius:12px; border:2px solid var(--border);">' +
+                            '<p style="color:var(--text-muted); margin-top:8px; font-size:13px;">Verified: ' + verifiedDate + '</p>';
+                    }
+                } catch (err) {
+                    console.error('Error loading verification photo:', err);
+                }
+            } else if (c.avatar_url) {
+                // Fallback: use avatar_url if verification_photo_url is not set
+                const verifiedDate = c.verification_completed_at ? window.formatFullDate(c.verification_completed_at) : 'Unknown date';
+                document.getElementById('legal-photo-container').innerHTML =
+                    '<img src="' + c.avatar_url + '" style="max-width:200px; border-radius:12px; border:2px solid var(--border);">' +
+                    '<p style="color:var(--text-muted); margin-top:8px; font-size:13px;">Verified: ' + verifiedDate + '</p>';
+            }
+
+            // Digital signing record
+            const sigContainer = document.getElementById('signing-record-container');
+            const guaranteeBadge = document.getElementById('legal-guarantee-badge');
+            if (c.guarantee_opted_in) {
+                guaranteeBadge.style.display = 'inline-block';
+            }
+            if (c.contract_signed_at && c.contract_signature) {
+                const sigDate = new Date(c.contract_signed_at);
+                const sigDateStr = sigDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                const sigTimeStr = sigDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' });
+                const locationParts = [c.city, c.region, c.country].filter(Boolean);
+                const locationStr = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown';
+
+                // Resolve photo URL
+                let photoHtml = '';
+                const photoSrc = c.verification_photo_url || c.avatar_url || '';
+                if (photoSrc) {
+                    let resolvedUrl = photoSrc;
+                    if (!resolvedUrl.startsWith('http') && window.getVerificationPhotoUrl) {
+                        try { resolvedUrl = window.getVerificationPhotoUrl(photoSrc); } catch(e) {}
+                    }
+                    if (resolvedUrl) {
+                        photoHtml = `
+                            <div class="signing-record-photo">
+                                <img src="${resolvedUrl}" alt="Signer photo" onerror="this.parentElement.style.display='none'">
+                                <span class="signing-record-photo-label">Signer ID Photo</span>
+                            </div>`;
+                    }
+                }
+
+                sigContainer.innerHTML = `
+                    <div class="signing-record">
+                        <div class="signing-record-header">
+                            <span class="signing-record-title">Electronically Signed Document</span>
+                            <span class="signing-record-badge">
+                                <span class="signing-record-badge-dot"></span>
+                                SIGNATURE VERIFIED
+                            </span>
+                        </div>
+                        <div class="signing-record-body">
+                            ${photoHtml}
+                            <div class="signing-record-meta">
+                                <div class="signing-record-meta-row">
+                                    <span class="signing-record-meta-label">Signed by</span>
+                                    <span class="signing-record-meta-value">${escapeHtml(c.contract_signature)}</span>
+                                </div>
+                                <div class="signing-record-meta-row">
+                                    <span class="signing-record-meta-label">Date</span>
+                                    <span class="signing-record-meta-value">${escapeHtml(sigDateStr)}</span>
+                                </div>
+                                <div class="signing-record-meta-row">
+                                    <span class="signing-record-meta-label">Time</span>
+                                    <span class="signing-record-meta-value">${escapeHtml(sigTimeStr)}</span>
+                                </div>
+                                <div class="signing-record-meta-row">
+                                    <span class="signing-record-meta-label">IP Address</span>
+                                    <span class="signing-record-meta-value">${escapeHtml(c.ip_address || 'N/A')}</span>
+                                </div>
+                                <div class="signing-record-meta-row">
+                                    <span class="signing-record-meta-label">Location</span>
+                                    <span class="signing-record-meta-value">${escapeHtml(locationStr)}</span>
+                                </div>
+                                <div class="signing-record-meta-row">
+                                    <span class="signing-record-meta-label">Method</span>
+                                    <span class="signing-record-meta-value">Click-wrap Electronic Signature</span>
+                                </div>
+                                <div class="signing-record-meta-row">
+                                    <span class="signing-record-meta-label">Guarantee</span>
+                                    <span class="signing-record-meta-value" style="color:${c.guarantee_opted_in ? '#22c55e' : 'var(--text-muted)'};">${c.guarantee_opted_in ? '90-Day Performance Guarantee Opted In' : 'Not opted in'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="signing-record-divider"></div>
+                        <div class="signing-record-sig-block">
+                            <div class="signing-record-sig-label">Customer Signature</div>
+                            <div class="signing-record-sig-name">${escapeHtml(c.contract_signature)}</div>
+                            <div class="signing-record-sig-printed">
+                                <div class="signing-record-sig-printed-col">
+                                    <span class="signing-record-sig-printed-value">${escapeHtml(c.contract_signature)}</span>
+                                    <span class="signing-record-sig-printed-label">Printed Name</span>
+                                </div>
+                                <div class="signing-record-sig-printed-col" style="text-align:right;">
+                                    <span class="signing-record-sig-printed-value">${escapeHtml(sigDateStr)}</span>
+                                    <span class="signing-record-sig-printed-label">Date Signed</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="signing-record-disclaimer">
+                            This electronic signature was captured via click-wrap acceptance. The signatory checked all required agreement boxes, typed their full legal name, and submitted the form at the date and time shown above. Their IP address and geographic location were recorded at the time of signing. This record is stored and associated with the customer's account as evidence of agreement.
+                        </div>
+                    </div>`;
+            } else {
+                sigContainer.innerHTML = '<div class="signing-record-unsigned">This customer has not yet signed the contract.</div>';
+            }
+        }
+
+        function renderOverviewTab() {
+            const c = customerData;
+            // Build location string
+            const locationParts = [c.city, c.region, c.country].filter(Boolean);
+            const locationStr = locationParts.length > 0 ? locationParts.join(', ') : 'N/A';
+
+            const fields = [
+                { label: 'Full Name', value: c.full_name || 'N/A' },
+                { label: 'Email', value: c.email || 'N/A' },
+                { label: 'Phone', value: c.phone || 'N/A' },
+                { label: 'Location', value: locationStr },
+                { label: 'IP Address', value: c.ip_address || 'N/A' },
+                { label: 'Account Created', value: window.formatFullDate(c.created_at) },
+                { label: 'Last Login', value: window.formatFullDate(c.last_login) },
+                { label: 'Onboarding Completed', value: c.onboarding_completed_at ? window.formatFullDate(c.onboarding_completed_at) : 'Not completed' },
+                { label: 'Status', value: c.status || 'onboarding' }
+            ];
+
+            document.getElementById('profile-grid').innerHTML = fields.map(f => `
+                <div class="profile-field">
+                    <div class="profile-field-label">${f.label}</div>
+                    <div class="profile-field-value">${escapeHtml(f.value)}</div>
+                </div>
+            `).join('');
+
+            // Admin notes
+            document.getElementById('admin-notes').value = c.notes || '';
+        }
+
+        // Auto-save notes on blur
+        let notesSaveTimer = null;
+        document.getElementById('admin-notes').addEventListener('blur', async () => {
+            const notes = document.getElementById('admin-notes').value;
+            const statusEl = document.getElementById('notes-save-status');
+            statusEl.textContent = 'Saving...';
+            statusEl.className = 'notes-save-status';
+
+            const success = await window.updateUserNotes(customerId, notes);
+            if (success) {
+                statusEl.textContent = 'Saved';
+                statusEl.className = 'notes-save-status saved';
+                customerData.notes = notes;
+            } else {
+                statusEl.textContent = 'Failed to save';
+                statusEl.className = 'notes-save-status';
+                statusEl.style.color = 'var(--error)';
+            }
+
+            setTimeout(() => { statusEl.textContent = ''; }, 3000);
+        });
+
+        // ============================================================
+        // ACTIVITY LOG TAB
+        // ============================================================
+        async function loadActivityLog() {
+            try {
+                const data = await window.getActivityLog(customerId, activityLimit, activityOffset);
+                allActivityData = [...allActivityData, ...data];
+                activityOffset += data.length;
+
+                renderActivityLog();
+
+                // Show/hide load more
+                const loadMoreBtn = document.getElementById('load-more-activity');
+                if (data.length >= activityLimit) {
+                    loadMoreBtn.style.display = 'block';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Error loading activity:', err);
+            }
+        }
+
+        function filterActivityLog() {
+            renderActivityLog();
+        }
+
+        function renderActivityLog() {
+            const filter = document.getElementById('activity-type-filter').value;
+            const filtered = filter === 'all' ? allActivityData : allActivityData.filter(a => a.action === filter);
+            const listEl = document.getElementById('activity-list');
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p>No activity recorded yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(a => {
+                const icon = getActivityIcon(a.action);
+                const timestamp = window.formatFullDate(a.created_at);
+                const details = (typeof a.details === 'object' && a.details) ? a.details : {};
+                const pageName = details.page_name || a.page || '';
+                const actionLabel = formatActionLabel(a.action, pageName, details);
+                return `
+                    <div class="activity-entry">
+                        <div class="activity-icon-wrapper">${icon}</div>
+                        <div class="activity-entry-body">
+                            <div class="activity-entry-action">${actionLabel}</div>
+                            <div class="activity-entry-meta">
+                                <span>${timestamp}</span>
+                                ${a.ip_address && a.ip_address !== 'Unknown' ? `<span>IP: ${escapeHtml(a.ip_address)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadMoreActivity() {
+            const btn = document.getElementById('load-more-activity');
+            btn.textContent = 'Loading...';
+            await loadActivityLog();
+            btn.textContent = 'Load More';
+        }
+
+        function formatActionLabel(action, pageName, details) {
+            switch (action) {
+                case 'page_view':
+                    return `Viewed <strong>${escapeHtml(pageName || 'page')}</strong>`;
+                case 'login':
+                    return 'Signed in';
+                case 'content_access':
+                    return details.title
+                        ? `Accessed content: <strong>${escapeHtml(details.title)}</strong>`
+                        : 'Accessed content';
+                case 'settings_change':
+                case 'profile_update':
+                    return 'Updated profile settings';
+                case 'message_sent':
+                    return 'Sent a message';
+                default:
+                    return escapeHtml(action || 'Unknown action');
+            }
+        }
+
+        function getActivityIcon(action) {
+            switch (action) {
+                case 'page_view':
+                    return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+                case 'login':
+                    return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>`;
+                case 'content_access':
+                    return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+                case 'settings_change':
+                    return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`;
+                default:
+                    return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+            }
+        }
+
+        // ============================================================
+        // ONBOARDING TAB
+        // ============================================================
+        async function loadOnboardingProgress() {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('onboarding_progress')
+                    .select('*')
+                    .eq('user_id', customerId)
+                    .order('step_number', { ascending: true });
+
+                const progressMap = {};
+                if (data) {
+                    data.forEach(p => {
+                        progressMap[p.step_number] = p;
+                    });
+                }
+
+                let completedCount = 0;
+                const stepsHtml = ONBOARDING_STEPS.map((name, idx) => {
+                    const stepNum = idx + 1;
+                    const progress = progressMap[stepNum];
+                    const isCompleted = progress ? progress.completed : false;
+                    if (isCompleted) completedCount++;
+                    const videoWatched = progress && progress.video_watched;
+
+                    return `
+                        <div class="onboarding-step ${isCompleted ? 'completed' : ''}">
+                            <div class="step-number">${stepNum}</div>
+                            <div class="step-info">
+                                <div class="step-name">${name}</div>
+                                <div class="step-video-status">${videoWatched ? 'Video watched' : 'Video not watched'}</div>
+                            </div>
+                            <span class="step-badge ${isCompleted ? 'completed' : 'pending'}">${isCompleted ? 'Completed' : 'Pending'}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const percent = Math.round((completedCount / ONBOARDING_STEPS.length) * 100);
+                document.getElementById('onboarding-progress-fill').style.width = `${percent}%`;
+                document.getElementById('onboarding-progress-text').textContent = `${percent}%`;
+                document.getElementById('onboarding-steps').innerHTML = stepsHtml;
+
+            } catch (err) {
+                console.error('Error loading onboarding:', err);
+            }
+        }
+
+        // ============================================================
+        // COMMUNICATION TAB — TICKET HISTORY
+        // ============================================================
+        async function loadConversation() {
+            const listEl = document.getElementById('ticket-history-list');
+            listEl.innerHTML = '<div class="ticket-empty-state">Loading tickets...</div>';
+
+            try {
+                const { data: tickets, error } = await window.supabaseClient
+                    .from('chat_conversations')
+                    .select('*')
+                    .eq('user_id', customerId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                customerTickets = tickets || [];
+                renderTicketHistory();
+
+            } catch (err) {
+                console.error('Error loading tickets:', err);
+                listEl.innerHTML = '<div class="ticket-empty-state">Failed to load tickets.</div>';
+            }
+        }
+
+        function renderTicketHistory() {
+            const listEl = document.getElementById('ticket-history-list');
+
+            if (customerTickets.length === 0) {
+                listEl.innerHTML = '<div class="ticket-empty-state">No support tickets for this customer yet.</div>';
+                return;
+            }
+
+            listEl.innerHTML = customerTickets.map(ticket => {
+                const status = ticket.status || 'open';
+                const isOpen = status === 'open';
+                const ticketNum = ticket.ticket_number ? `#${ticket.ticket_number}` : '';
+                const title = escapeHtml(ticket.title || 'Support Request');
+                const preview = ticket.last_message_preview ? escapeHtml(ticket.last_message_preview) : 'No messages';
+                const dateStr = window.formatRelativeTime(ticket.last_message_at || ticket.created_at);
+
+                return `
+                    <div class="ticket-history-item" id="ticket-${ticket.id}" onclick="toggleTicketExpand('${ticket.id}')">
+                        <div class="ticket-item-header">
+                            <div class="ticket-item-left">
+                                <svg class="ticket-item-chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                </svg>
+                                <span class="ticket-item-num">${ticketNum}</span>
+                                <span class="ticket-item-title">${title}</span>
+                            </div>
+                            <div class="ticket-item-right">
+                                <span class="ticket-item-date">${dateStr}</span>
+                                <span class="ticket-item-status ${isOpen ? 'open' : 'resolved'}">${isOpen ? 'Open' : 'Resolved'}</span>
+                            </div>
+                        </div>
+                        <div class="ticket-item-preview">${preview}</div>
+                        <div class="ticket-messages-inline" id="ticket-msgs-${ticket.id}">
+                            <div class="chat-empty">Loading messages...</div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        async function toggleTicketExpand(ticketId) {
+            const item = document.getElementById('ticket-' + ticketId);
+            if (!item) return;
+
+            const wasExpanded = item.classList.contains('expanded');
+
+            // Collapse all
+            document.querySelectorAll('.ticket-history-item.expanded').forEach(el => {
+                el.classList.remove('expanded');
+            });
+
+            if (wasExpanded) return;
+
+            // Expand this one and load messages
+            item.classList.add('expanded');
+            const msgsEl = document.getElementById('ticket-msgs-' + ticketId);
+            msgsEl.innerHTML = '<div class="chat-empty">Loading messages...</div>';
+
+            try {
+                const { data: messages, error } = await window.supabaseClient
+                    .from('chat_messages')
+                    .select('*')
+                    .eq('conversation_id', ticketId)
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+
+                if (!messages || messages.length === 0) {
+                    msgsEl.innerHTML = '<div class="chat-empty">No messages in this ticket.</div>';
+                    return;
+                }
+
+                msgsEl.innerHTML = messages.map(m => {
+                    const isAdmin = m.sender_id !== customerId;
+                    const time = window.formatRelativeTime(m.created_at);
+                    return `
+                        <div class="chat-message ${isAdmin ? 'admin' : 'user'}">
+                            <div>
+                                <div class="chat-bubble">${escapeHtml(m.content || m.message || '')}</div>
+                                <div class="chat-timestamp">${time}</div>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                msgsEl.scrollTop = msgsEl.scrollHeight;
+
+            } catch (err) {
+                console.error('Error loading ticket messages:', err);
+                msgsEl.innerHTML = '<div class="chat-empty">Failed to load messages.</div>';
+            }
+        }
+
+        // ============================================================
+        // WORKFLOW MODAL
+        // ============================================================
+        async function openWorkflowModal() {
+            const modal = document.getElementById('workflow-modal');
+            modal.classList.add('show');
+
+            const listEl = document.getElementById('workflow-list');
+            listEl.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+            try {
+                const { data: workflows, error } = await window.supabaseClient
+                    .from('workflows')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+
+                if (!workflows || workflows.length === 0) {
+                    listEl.innerHTML = `
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <p>No active workflows available.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                listEl.innerHTML = workflows.map(w => `
+                    <div class="workflow-item">
+                        <div class="workflow-item-info">
+                            <div class="workflow-item-name">${escapeHtml(w.name)}</div>
+                            <div class="workflow-item-desc">${escapeHtml(w.description || '')}</div>
+                        </div>
+                        <button class="workflow-trigger-btn" onclick="triggerWorkflowAction('${w.id}', this)">Trigger</button>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                console.error('Error loading workflows:', err);
+                listEl.innerHTML = '<div class="empty-state"><p>Failed to load workflows.</p></div>';
+            }
+        }
+
+        function closeWorkflowModal() {
+            document.getElementById('workflow-modal').classList.remove('show');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('workflow-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('workflow-modal')) {
+                closeWorkflowModal();
+            }
+        });
+
+        async function triggerWorkflowAction(workflowId, btnEl) {
+            btnEl.textContent = 'Running...';
+            btnEl.disabled = true;
+
+            const result = await window.triggerWorkflow(workflowId, {
+                id: customerData.id,
+                full_name: customerData.full_name,
+                email: customerData.email,
+                phone: customerData.phone,
+                status: customerData.status,
+                triggered_by_id: adminUser.id
+            }, adminProfile.email);
+
+            if (result.success) {
+                btnEl.textContent = 'Sent!';
+                btnEl.style.background = 'var(--success)';
+                setTimeout(() => {
+                    btnEl.textContent = 'Trigger';
+                    btnEl.style.background = '';
+                    btnEl.disabled = false;
+                }, 2000);
+            } else {
+                btnEl.textContent = 'Failed';
+                btnEl.style.background = 'var(--error)';
+                btnEl.style.color = '#fff';
+                setTimeout(() => {
+                    btnEl.textContent = 'Trigger';
+                    btnEl.style.background = '';
+                    btnEl.style.color = '';
+                    btnEl.disabled = false;
+                }, 2000);
+            }
+        }
+
+        // ============================================================
+        // TAB SWITCHING
+        // ============================================================
+        function switchTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+
+            // Activate selected
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        // ============================================================
+        // UTILITIES
+        // ============================================================
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('show');
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        initPage();
+    </script>
+</body>
+</html>

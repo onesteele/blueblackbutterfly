@@ -1,0 +1,2803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Welcome</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ============================================ */
+        /* BACKGROUND ANIMATIONS                        */
+        /* ============================================ */
+
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            /* filter blur removed for performance */
+            opacity: 0.5;
+            /* animation: floatOrb */ animation: none 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -100px; left: -100px;
+        }
+
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(59, 109, 255, 0.25) 0%, transparent 70%);
+            bottom: 20%; right: -50px;
+            animation-delay: -7s;
+            animation-duration: 25s;
+        }
+
+        .orb-3 {
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(59, 109, 255, 0.2) 0%, transparent 70%);
+            top: 50%; left: 30%;
+            animation-delay: -14s;
+            animation-duration: 30s;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 10px) scale(1.02); }
+        }
+
+        /* ============================================ */
+        /* LOADING SCREEN                               */
+        /* ============================================ */
+
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 48px; height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============================================ */
+        /* VERIFICATION FLOW                            */
+        /* ============================================ */
+
+        .v-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .v-screen.active {
+            display: flex;
+            animation: vScreenFadeIn 0.5s ease-out;
+        }
+
+        @keyframes vScreenFadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .v-card {
+            width: 100%;
+            max-width: 520px;
+            background: rgba(20, 20, 20, 0.85);
+            /* backdrop-filter removed for performance */
+            -webkit-/* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .v-card:hover {
+            border-color: rgba(59, 109, 255, 0.3);
+            box-shadow: 0 0 40px rgba(59, 109, 255, 0.08);
+        }
+
+        .v-card-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .v-card-logo img {
+            width: 48px; height: 48px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 16px var(--accent-glow));
+        }
+
+        .v-card-logo span {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 500;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;}
+
+        .v-card h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .v-card .v-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .v-form-group {
+            margin-bottom: 20px;
+        }
+
+        .v-form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .v-form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .v-form-group input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .v-form-group input[readonly] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .v-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .v-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .v-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .v-btn:hover:not(:disabled)::before { left: 100%; }
+
+        .v-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .v-btn:disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .v-btn:disabled::before { display: none; }
+
+        .v-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--error);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .v-error.show { display: block; }
+
+        .v-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--success);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .v-success.show { display: block; }
+
+        /* Loading transition screen */
+        .v-loading-content {
+            text-align: center;
+        }
+
+        .v-loading-spinner {
+            width: 56px; height: 56px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        .v-loading-content h2 {
+            margin-bottom: 12px;
+        }
+
+        .v-loading-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .v-loading-dots span {
+            width: 8px; height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: loadDot 1.4s ease-in-out infinite;
+        }
+
+        .v-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .v-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes loadDot {
+            0%, 80%, 100% { transform: scale(0.4); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Camera UI */
+        .camera-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .camera-circle {
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-card);
+            box-shadow: 0 0 30px var(--accent-dim);
+        }
+
+        .camera-circle video,
+        .camera-circle img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-circle canvas {
+            display: none;
+        }
+
+        .camera-placeholder {
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            gap: 8px;
+        }
+
+        .camera-placeholder svg {
+            width: 48px; height: 48px;
+            color: var(--text-muted);
+        }
+
+        .camera-shutter {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            border: 4px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .camera-shutter:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 24px var(--accent-glow);
+        }
+
+        .camera-shutter svg {
+            width: 28px; height: 28px;
+            color: var(--bg-dark);
+        }
+
+        .camera-actions {
+            display: none;
+            gap: 12px;
+        }
+
+        .camera-actions.show {
+            display: flex;
+        }
+
+        .camera-actions button {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .camera-retake {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+            border: 1px solid var(--border) !important;
+        }
+
+        .camera-retake:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .camera-accept {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: var(--bg-dark);
+        }
+
+        .camera-accept:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+
+        .camera-fallback {
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.2s ease;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .camera-fallback:hover { color: var(--accent); }
+        .camera-fallback.show { display: block; }
+
+        /* Contract screen */
+        .contract-checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+
+        .contract-checkbox-item input {
+            display: none;
+        }
+
+        .contract-check-box {
+            width: 22px; height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .contract-check-box svg {
+            width: 14px; height: 14px;
+            color: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .contract-checkbox-item input:checked + .contract-check-box {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .contract-checkbox-item input:checked + .contract-check-box svg {
+            color: var(--bg-dark);
+        }
+
+        .contract-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .contract-label a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .contract-label a:hover { text-decoration: underline; }
+
+        .signature-field {
+            margin-top: 20px;
+        }
+
+        .signature-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .signature-field input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Dancing Script', 'Inter', cursive, sans-serif;
+            font-size: 20px;
+            font-style: italic;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .signature-field input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        /* Contract Modal */
+
+        /* Confirmation screen */
+        .v-confirm-content {
+            text-align: center;
+        }
+
+        .v-confirm-spinner {
+            width: 56px; height: 56px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        .v-confirm-success {
+            display: none;
+        }
+
+        .v-confirm-success.show {
+            display: block;
+            animation: vScreenFadeIn 0.5s ease-out;
+        }
+
+        .v-confirm-checkmark {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            animation: checkPop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .v-confirm-checkmark svg {
+            width: 40px; height: 40px;
+            color: white;
+        }
+
+        .v-confirm-success h2 {
+            color: var(--success);
+            margin-bottom: 8px;
+        }
+
+        .v-confirm-success .v-subtitle {
+            margin-bottom: 0;
+        }
+
+        /* ============================================ */
+        /* COURSE FLOW                                  */
+        /* ============================================ */
+
+        .course-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            /* backdrop-filter removed for performance */
+            -webkit-/* backdrop-filter removed for performance */
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+        }
+
+        .course-header-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .course-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .course-progress-bar-wrap {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .course-progress-bar-container {
+            height: 8px;
+            background: var(--border);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .course-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            border-radius: 100px;
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .course-lesson-count {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .course-lesson-count span {
+            color: var(--accent);
+        }
+
+        .course-signout {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            white-space: nowrap;
+            background: none;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .course-signout:hover { color: var(--accent); }
+
+        .lesson-container {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        .lesson-screen {
+            display: none;
+        }
+
+        .lesson-screen.active {
+            display: block;
+            animation: vScreenFadeIn 0.5s ease-out;
+        }
+
+        .lesson-icon {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 0 30px var(--accent-dim);
+        }
+
+        .lesson-icon svg {
+            width: 40px; height: 40px;
+            color: var(--accent);
+        }
+
+        .lesson-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .lesson-description {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-bottom: 32px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .lesson-video {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 32px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+        }
+
+        .video-watch-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 12px;
+            padding: 11px 18px;
+            background: rgba(59, 109, 255, 0.1);
+            border: 1px solid rgba(59, 109, 255, 0.3);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #3b6dff;
+            letter-spacing: 0.02em;
+            text-align: center;
+        }
+        .video-watch-banner svg {
+            flex-shrink: 0;
+            width: 17px; height: 17px;
+        }
+        .lesson-video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            background: #000;
+        }
+
+        .lesson-video-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        .video-complete-badge {
+            position: absolute;
+            top: 12px; right: 12px;
+            background: var(--success);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+            z-index: 10;
+        }
+
+        .video-complete-badge.show {
+            display: flex;
+        }
+
+        .video-complete-badge svg {
+            width: 16px; height: 16px;
+        }
+
+        .video-countdown {
+            width: 100%;
+            max-width: 800px;
+            margin: 12px auto 0;
+            padding: 12px 16px;
+            background: rgba(59, 109, 255, 0.08);
+            border: 1px solid rgba(59, 109, 255, 0.25);
+            border-radius: 10px;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .video-countdown.done {
+            background: rgba(0, 179, 65, 0.1);
+            border-color: rgba(0, 179, 65, 0.35);
+        }
+        .video-countdown-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: 0.01em;
+        }
+        .video-countdown-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .video-countdown-fill {
+            height: 100%;
+            width: 0%;
+            background: #3b6dff;
+            border-radius: 999px;
+            transition: width 0.5s linear, background 0.3s ease;
+        }
+        .video-countdown.done .video-countdown-fill {
+            background: #00b341;
+            width: 100% !important;
+        }
+
+        .quiz-section {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .quiz-section.show {
+            display: block;
+            animation: vScreenFadeIn 0.4s ease-out;
+        }
+
+        .quiz-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;}
+
+        .quiz-title svg {
+            width: 20px; height: 20px;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .quiz-checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quiz-checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .quiz-checkbox-item input { display: none; }
+
+        .quiz-check-box {
+            width: 22px; height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .quiz-check-box svg {
+            width: 14px; height: 14px;
+            color: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .quiz-checkbox-item input:checked + .quiz-check-box {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .quiz-checkbox-item input:checked + .quiz-check-box svg {
+            color: var(--bg-dark);
+        }
+
+        .quiz-checkbox-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .quiz-checkbox-label a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .quiz-checkbox-label a:hover { text-decoration: underline; }
+
+        .complete-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .complete-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .complete-btn:hover:not(:disabled)::before { left: 100%; }
+
+        .complete-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .complete-btn:disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .complete-btn:disabled::before { display: none; }
+
+        .btn-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* Booking card */
+        .booking-card {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 48px 32px;
+            text-align: center;
+            margin-top: 40px;
+            transition: all 0.5s ease;
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .booking-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, var(--accent-dim), transparent, var(--accent-dim), transparent);
+            animation: rotateBorder 10s linear infinite;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .booking-card.unlocked::before { opacity: 1; }
+
+        .booking-card::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 18px;
+            z-index: 0;
+        }
+
+        @keyframes rotateBorder {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .booking-card.unlocked {
+            border-color: var(--accent);
+            box-shadow: 0 0 60px var(--accent-dim);
+        }
+
+        .booking-card > * { position: relative; z-index: 1; }
+
+        .booking-icon {
+            width: 80px; height: 80px;
+            margin: 0 auto 24px;
+            background: var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+
+        .booking-card.unlocked .booking-icon {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            animation: iconPulse 2s infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+            50% { box-shadow: 0 0 0 20px transparent; }
+        }
+
+        .booking-icon svg {
+            width: 36px; height: 36px;
+            color: var(--text-muted);
+            transition: all 0.5s ease;
+        }
+
+        .booking-card.unlocked .booking-icon svg { color: var(--bg-dark); }
+
+        .booking-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .booking-subtitle {
+            background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 16px;
+            margin-bottom: 32px;}
+
+        .booking-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 36px;
+            background: var(--border);
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: not-allowed;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .booking-card.unlocked .booking-btn {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: var(--bg-dark);
+            cursor: pointer;
+        }
+
+        .booking-card.unlocked .booking-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px var(--accent-glow);
+        }
+
+        .booking-btn svg { width: 20px; height: 20px; }
+
+        .portal-continue {
+            display: none;
+            margin-top: 24px;
+            text-align: center;
+        }
+
+        .portal-continue.show { display: block; }
+
+        .portal-continue-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: transparent;
+            color: var(--accent);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .portal-continue-btn:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .portal-continue-btn svg { width: 18px; height: 18px; }
+
+        .bookmark-notice {
+            display: none;
+            margin-top: 20px;
+            padding: 16px 20px;
+            background: rgba(59, 109, 255, 0.08);
+            border: 1px solid rgba(59, 109, 255, 0.2);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .bookmark-notice.show { display: block; }
+
+        .bookmark-notice p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .bookmark-notice strong {
+            color: var(--accent);
+        }
+
+        .bookmark-notice .bookmark-url {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            user-select: all;
+            cursor: text;
+        }
+
+        /* Confetti */
+        .confetti-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px; height: 10px;
+            opacity: 0;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--success);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.3);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast svg { width: 20px; height: 20px; }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================ */
+        /* RESPONSIVE                                   */
+        /* ============================================ */
+
+        @media (max-width: 640px) {
+            .v-card {
+                padding: 28px 20px;
+            }
+
+            .v-form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .camera-circle {
+                width: 220px; height: 220px;
+            }
+
+            .lesson-container { padding: 24px 16px 60px; }
+
+            .lesson-title { font-size: 22px; }
+
+            .course-header-inner {
+                flex-wrap: wrap;
+            }
+
+            .booking-card { padding: 32px 20px; }
+            .booking-btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VERIFICATION FLOW (6 screens)               -->
+    <!-- ============================================ -->
+    <div id="verification-flow" style="display:none;">
+
+        <!-- Screen 1: Email Entry -->
+        <div class="v-screen" id="v-screen-email">
+            <div class="v-card">
+                <div class="v-card-logo">
+                    <img src="../logo.png" alt="VantageQuant">
+                    <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:26px;width:auto;max-width:100%;object-fit:contain;display:inline-block;vertical-align:middle;">
+                </div>
+                <h2>Welcome to VantageQuant</h2>
+                <p class="v-subtitle">Enter your email to get started</p>
+                <div class="v-error" id="email-error"></div>
+                <div class="v-form-group">
+                    <label for="v-email-input">Email Address</label>
+                    <input type="email" id="v-email-input" placeholder="you@example.com" autocomplete="email">
+                </div>
+                <button class="v-btn" id="v-email-btn" onclick="handleEmailLookup()">Continue</button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Confirm Details + Set Password -->
+        <div class="v-screen" id="v-screen-details">
+            <div class="v-card">
+                <div class="v-card-logo">
+                    <img src="../logo.png" alt="VantageQuant">
+                    <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:26px;width:auto;max-width:100%;object-fit:contain;display:inline-block;vertical-align:middle;">
+                </div>
+                <h2>Confirm Your Information</h2>
+                <p class="v-subtitle">Verify your details and set a password</p>
+                <div class="v-error" id="details-error"></div>
+                <div class="v-form-row">
+                    <div class="v-form-group">
+                        <label for="v-first-name">First Name</label>
+                        <input type="text" id="v-first-name" placeholder="First name">
+                    </div>
+                    <div class="v-form-group">
+                        <label for="v-last-name">Last Name</label>
+                        <input type="text" id="v-last-name" placeholder="Last name">
+                    </div>
+                </div>
+                <div class="v-form-group">
+                    <label for="v-email-display">Email</label>
+                    <input type="email" id="v-email-display" readonly>
+                </div>
+                <div class="v-form-group">
+                    <label for="v-phone">Phone</label>
+                    <input type="tel" id="v-phone" placeholder="(555) 123-4567">
+                </div>
+                <div class="v-form-row">
+                    <div class="v-form-group">
+                        <label for="v-password">Password (min 6 chars)</label>
+                        <input type="password" id="v-password" placeholder="Create password" minlength="6">
+                    </div>
+                    <div class="v-form-group">
+                        <label for="v-password-confirm">Confirm Password</label>
+                        <input type="password" id="v-password-confirm" placeholder="Confirm password" minlength="6">
+                    </div>
+                </div>
+                <button class="v-btn" id="v-details-btn" onclick="handleDetailsConfirm()">I confirm this is correct</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Loading Transition -->
+        <div class="v-screen" id="v-screen-loading">
+            <div class="v-loading-content">
+                <div class="v-loading-spinner"></div>
+                <h2>Setting up your account...</h2>
+                <p class="v-subtitle">Please wait while we configure everything</p>
+                <div class="v-loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Photo Verification -->
+        <div class="v-screen" id="v-screen-photo">
+            <div class="v-card">
+                <h2>Photo Verification</h2>
+                <p class="v-subtitle">Take a quick photo to verify your identity</p>
+                <div class="v-error" id="photo-error"></div>
+                <div class="camera-container">
+                    <div class="camera-circle" id="camera-circle">
+                        <video id="camera-video" autoplay playsinline muted></video>
+                        <canvas id="camera-canvas"></canvas>
+                        <img id="camera-preview" style="display:none;">
+                        <div class="camera-placeholder" id="camera-placeholder">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span style="font-size:13px;">Initializing camera...</span>
+                        </div>
+                    </div>
+                    <button class="camera-shutter" id="camera-shutter" onclick="capturePhoto()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <div class="camera-actions" id="camera-actions">
+                        <button class="camera-retake" onclick="retakePhoto()">Retake</button>
+                        <button class="camera-accept" onclick="acceptPhoto()">Continue</button>
+                    </div>
+                    <span class="camera-fallback" id="camera-fallback" onclick="document.getElementById('camera-file-input').click()">Camera not working? Upload a photo instead</span>
+                    <input type="file" id="camera-file-input" accept="image/*" capture="user" style="display:none;" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 5: 90-Day Performance Guarantee -->
+        <div class="v-screen" id="v-screen-contract">
+            <div class="v-card">
+                <h2>90-Day Performance Guarantee</h2>
+                <p class="v-subtitle">Enable your performance guarantee and refund protection</p>
+                <div class="v-error" id="contract-error"></div>
+
+                <label class="contract-checkbox-item">
+                    <input type="checkbox" id="contract-agree-terms" onchange="checkContractReady()">
+                    <span class="contract-check-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </span>
+                    <span class="contract-label">I agree to the <a href="javascript:void(0)" onclick="openContractModal(event)">performance guarantee</a> terms and conditions</span>
+                </label>
+
+                <label class="contract-checkbox-item">
+                    <input type="checkbox" id="contract-guarantee" onchange="checkContractReady()">
+                    <span class="contract-check-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </span>
+                    <span class="contract-label" id="guarantee-label-text">I want to enable my 90-Day Performance Guarantee</span>
+                </label>
+
+                <div class="signature-field">
+                    <label id="signature-label">Signature</label>
+                    <input type="text" id="contract-signature" placeholder="Type your full name" oninput="checkContractReady()">
+                </div>
+
+                <div class="v-form-group" style="margin-top:20px;">
+                    <label for="contract-date">Date</label>
+                    <input type="text" id="contract-date" readonly>
+                </div>
+
+                <button class="v-btn" id="v-contract-btn" onclick="handleContractSubmit()" disabled>Enable Protection & Continue</button>
+            </div>
+        </div>
+
+        <!-- Screen 6: Confirmation -->
+        <div class="v-screen" id="v-screen-confirm">
+            <div class="v-confirm-content">
+                <div id="confirm-loading">
+                    <div class="v-confirm-spinner"></div>
+                    <h2>Confirming your information...</h2>
+                    <p class="v-subtitle">This may take a moment</p>
+                    <div class="v-loading-dots" style="margin-top:16px;">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                <div class="v-confirm-success" id="confirm-success">
+                    <div class="v-confirm-checkmark">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <h2>Information Confirmed!</h2>
+                    <p class="v-subtitle">Redirecting to your onboarding course...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- COURSE FLOW                                  -->
+    <!-- ============================================ -->
+    <div id="course-flow" style="display:none;">
+        <div class="course-header">
+            <div class="course-header-inner">
+                <div class="course-header-left">
+                    <span class="course-lesson-count">Lesson <span id="course-current-lesson">1</span> of <span id="course-total-lessons">3</span></span>
+                    <div class="course-progress-bar-wrap">
+                        <div class="course-progress-bar-container">
+                            <div class="course-progress-bar" id="course-progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="course-signout" onclick="window.signOut()">Sign Out</button>
+            </div>
+        </div>
+
+        <div class="lesson-container" id="lesson-container">
+            <!-- Lessons are rendered dynamically -->
+        </div>
+
+        <!-- Booking Card (shown after all lessons complete) -->
+        <div class="lesson-container" style="padding-top:0;">
+            <div class="booking-card" id="booking-card" style="display:none;">
+                <div class="booking-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h2 class="booking-title">You're All Set!</h2>
+                <p class="booking-subtitle">You've completed all lessons. Head to your member portal to get started.</p>
+
+                <div class="portal-continue" id="portal-continue">
+                    <a href="/" class="portal-continue-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                        Continue to Member Portal
+                    </a>
+                </div>
+
+                <div class="bookmark-notice" id="bookmark-notice">
+                    <p>
+                        <strong>Save this link for future logins!</strong><br>
+                        Bookmark the link below so you always know where to sign in to your member portal.
+                    </p>
+                    <span class="bookmark-url" id="bookmark-url"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span id="toast-message">Step completed!</span>
+    </div>
+
+    <!-- Confetti Container -->
+    <div class="confetti-container" id="confetti-container"></div>
+
+    <script>
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        // ============================================
+        // GLOBAL STATE
+        // ============================================
+        let currentUser = null;
+        let currentProfile = null;
+        let pendingUserData = null;
+        let verificationPhotoUrl = null;
+        let verificationPhotoPath = null;
+        let cameraStream = null;
+        let capturedBlob = null;
+        let adminSettings = null;
+
+        // Course state
+        let completedSteps = [];
+        let watchedVideos = {};
+        let checkedItems = {};
+        let totalSteps = 7;
+        const BOOKING_URL = '/booking/';
+
+        let requiredChecks = { 1: 2, 2: 2, 3: 2, 4: 1, 5: 1, 6: 2, 7: 2 };
+        let videoDurations = { 1: 120, 2: 180, 3: 150, 4: 120, 5: 180, 6: 120, 7: 90 };
+        let videoTimers = {};
+
+        // ============================================
+        // LESSON DATA
+        // ============================================
+        let lessonData = [
+            {
+                step: 1,
+                title: 'Create Your TradersPost Account',
+                description: 'Learn how to create your TradersPost account. Select the $49 plan and get your account ready for algorithm integration.',
+                videoUrl: 'https://www.loom.com/embed/90586f245c364fa79f5c9ca64661ec69',
+                svgIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
+                checkboxes: [
+                    'I have created my TradersPost account at <a href="https://traderspost.io/" target="_blank">traderspost.io</a>',
+                    'I have selected the $49/month plan'
+                ]
+            },
+            {
+                step: 2,
+                title: 'Connect Your Broker Account',
+                description: 'Connect your broker or funded account (Tradovate, Apex, etc.) to TradersPost for automated trading.',
+                videoUrl: 'https://www.loom.com/embed/a6cfc77d985b47bcaae827bbf55e2a02',
+                svgIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>',
+                checkboxes: [
+                    'I have my broker/funded account credentials ready (Tradovate, Apex, etc.)',
+                    'I have connected my broker to TradersPost'
+                ]
+            },
+            {
+                step: 3,
+                title: 'Configure Algorithm Parameters',
+                description: 'Set up your algorithm parameters including max daily loss and max drawdown for each account.',
+                videoUrl: 'https://www.loom.com/embed/c0b516c949ed4e78ba6ca9eee2abd5b2',
+                svgIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>',
+                checkboxes: [
+                    'I know my max daily loss for each account',
+                    'I know my max drawdown for each account'
+                ]
+            },
+            {
+                step: 4,
+                title: 'Understanding Risk Management',
+                description: 'Learn how the algorithm manages risk and protects your capital.',
+                videoUrl: 'https://www.loom.com/embed/006abf83f3a64947af1b7cbd504ca521',
+                svgIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>',
+                checkboxes: [
+                    'I understand how the risk management system works'
+                ]
+            },
+            {
+                step: 5,
+                title: 'Reading Performance Metrics',
+                description: 'Learn how to interpret the algorithm\'s data and performance metrics.',
+                videoUrl: 'https://www.loom.com/embed/a0f400b331df4af399d6c6500cabf0ad',
+                svgIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+                checkboxes: [
+                    'I understand how to read the performance metrics'
+                ]
+            },
+            {
+                step: 6,
+                title: 'Preparing for Your Setup Call',
+                description: 'What to expect on your setup call and how to prepare. You must join on a laptop/computer.',
+                videoUrl: 'https://www.loom.com/embed/a0f400b331df4af399d6c6500cabf0ad',
+                svgIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>',
+                checkboxes: [
+                    'I will join the call on a laptop/computer (not phone)',
+                    'I have all my credentials ready for the call'
+                ]
+            },
+            {
+                step: 7,
+                title: 'Final Review & Next Steps',
+                description: 'Final review of everything you\'ve set up. Complete this to unlock your booking link!',
+                videoUrl: 'https://www.loom.com/embed/ed997e66e2be4069be5839781adf7e45',
+                svgIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>',
+                checkboxes: [
+                    'I have completed all previous setup steps',
+                    'I am ready to book my setup call'
+                ]
+            }
+        ];
+
+        // ============================================
+        // AUTO-LOGOUT (30 min inactivity)
+        // ============================================
+        (function() {
+            var inactivityTimer;
+            var INACTIVITY_TIMEOUT = 30 * 60 * 1000;
+
+            function resetInactivityTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(function() {
+                    console.log('Auto-logout due to 30 minutes of inactivity');
+                    window.signOut();
+                }, INACTIVITY_TIMEOUT);
+            }
+
+            var activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+            activityEvents.forEach(function(evt) {
+                document.addEventListener(evt, resetInactivityTimer, true);
+            });
+
+            resetInactivityTimer();
+        })();
+
+        // ============================================
+        // LOAD ONBOARDING CONFIG FROM DATABASE
+        // ============================================
+        var onboardingButtonConfig = { video3_button_text: '', video3_button_url: '' };
+
+        async function loadOnboardingConfig() {
+            try {
+                var result = await window.supabaseClient
+                    .from('admin_settings')
+                    .select('value')
+                    .eq('key', 'onboarding_config')
+                    .single();
+
+                if (result.error || !result.data || !result.data.value) return false;
+
+                var config = result.data.value;
+                if (!config.videos || config.videos.length === 0) return false;
+
+                onboardingButtonConfig.video3_button_text = config.video3_button_text || '';
+                onboardingButtonConfig.video3_button_url = config.video3_button_url || '';
+
+                // Build lessonData from config
+                var defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>';
+
+                lessonData = config.videos.map(function(v, i) {
+                    return {
+                        step: i + 1,
+                        title: v.title || ('Lesson ' + (i + 1)),
+                        description: v.description || '',
+                        videoUrl: v.url || '',
+                        svgIcon: defaultIcon,
+                        checkboxes: v.checkboxes || []
+                    };
+                });
+
+                totalSteps = lessonData.length;
+
+                // Rebuild requiredChecks and videoDurations
+                requiredChecks = {};
+                videoDurations = {};
+                config.videos.forEach(function(v, i) {
+                    var step = i + 1;
+                    requiredChecks[step] = (v.checkboxes || []).length || 1;
+                    videoDurations[step] = parseInt(v.duration) || 120;
+                });
+
+                return true;
+            } catch (e) {
+                console.log('Could not load onboarding config, using defaults:', e);
+                return false;
+            }
+        }
+
+        // ============================================
+        // INIT AUTH - MAIN ENTRY POINT
+        // ============================================
+        (async function initAuth() {
+            try {
+                // Load admin settings for contract URL / guarantee label
+                loadAdminSettings();
+
+                // Load configurable onboarding videos (if set in admin panel)
+                await loadOnboardingConfig();
+
+                var sessionResult = await window.supabaseClient.auth.getSession();
+                var session = sessionResult.data.session;
+
+                // For pending_verification users who aren't logged in yet,
+                // show the email entry screen without auth
+                if (!session) {
+                    document.getElementById('verification-flow').style.display = 'block';
+                    document.getElementById('v-screen-email').classList.add('active');
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    return;
+                }
+
+                currentUser = session.user;
+                var profile = await window.getUserProfile(currentUser.id);
+                if (!profile) {
+                    window.location.href = '/auth';
+                    return;
+                }
+
+                if (window.hasAdminAccess && window.hasAdminAccess(profile)) {
+                    window.location.href = '/admin';
+                    return;
+                }
+
+                var status = (profile.status || 'onboarding').toLowerCase();
+                if (['member', 'verified_member', 'active'].includes(status)) {
+                    window.location.href = '/';
+                    return;
+                }
+                if (status === 'free_trial') {
+                    window.location.href = '/trial/';
+                    return;
+                }
+                if (status === 'free_trial_expired') {
+                    window.location.href = '/';
+                    return;
+                }
+
+                currentProfile = profile;
+
+                if (status === 'pending_verification') {
+                    document.getElementById('verification-flow').style.display = 'block';
+                    // Skip to details screen since they're already looked up
+                    showVerificationScreen('details');
+                    prefillDetails(profile);
+                } else {
+                    // Show the course. Wrap initCourseFlow in its own try-catch so any
+                    // course-level error doesn't bubble up and trigger the email-form fallback.
+                    document.getElementById('course-flow').style.display = 'block';
+                    try {
+                        initCourseFlow();
+                    } catch (courseErr) {
+                        console.error('Error starting course flow:', courseErr);
+                    }
+                }
+
+                document.getElementById('loadingScreen').classList.add('hidden');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                // If a session exists but something else failed, send them to auth to re-route
+                // properly rather than trapping them in the email entry form loop.
+                try {
+                    var fallbackSession = await window.supabaseClient.auth.getSession();
+                    if (fallbackSession.data && fallbackSession.data.session) {
+                        window.location.href = '/auth/';
+                        return;
+                    }
+                } catch (e) { /* ignore */ }
+                // Genuinely not logged in — show email entry for new account setup
+                document.getElementById('verification-flow').style.display = 'block';
+                document.getElementById('v-screen-email').classList.add('active');
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }
+        })();
+
+        // ============================================
+        // ADMIN SETTINGS LOADER
+        // ============================================
+        async function loadAdminSettings() {
+            try {
+                var result = await window.supabaseClient
+                    .from('admin_settings')
+                    .select('*')
+                    .in('key', ['contract_config', 'payment_plans']);
+
+                if (result.data && result.data.length > 0) {
+                    adminSettings = {};
+                    result.data.forEach(function(row) {
+                        if (row.key === 'contract_config' && row.value) {
+                            adminSettings.contract_url = row.value.contract_url || '';
+                            adminSettings.guarantee_label = row.value.guarantee_label || '90-Day Refund Protection Guarantee';
+                        }
+                    });
+                    // Update guarantee label if available
+                    if (adminSettings.guarantee_label) {
+                        var labelEl = document.getElementById('guarantee-label-text');
+                        if (labelEl) {
+                            labelEl.textContent = 'I want to enable my ' + adminSettings.guarantee_label;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Could not load admin settings:', e);
+            }
+        }
+
+        // ============================================
+        // VERIFICATION FLOW HELPERS
+        // ============================================
+        function showVerificationScreen(screenName) {
+            // Hide all v-screens
+            document.querySelectorAll('.v-screen').forEach(function(el) {
+                el.classList.remove('active');
+            });
+            // Show target
+            var target = document.getElementById('v-screen-' + screenName);
+            if (target) {
+                target.classList.add('active');
+            }
+        }
+
+        function prefillDetails(profile) {
+            document.getElementById('v-first-name').value = profile.first_name || '';
+            document.getElementById('v-last-name').value = profile.last_name || '';
+            document.getElementById('v-email-display').value = profile.email || '';
+            document.getElementById('v-phone').value = profile.phone || '';
+            // Update signature label
+            var fullName = ((profile.first_name || '') + ' ' + (profile.last_name || '')).trim();
+            if (fullName) {
+                document.getElementById('signature-label').textContent = 'Signature of ' + fullName;
+            }
+        }
+
+        // ============================================
+        // SCREEN 1: EMAIL LOOKUP
+        // ============================================
+        async function handleEmailLookup() {
+            var emailInput = document.getElementById('v-email-input');
+            var errorEl = document.getElementById('email-error');
+            var btn = document.getElementById('v-email-btn');
+            var email = emailInput.value.trim().toLowerCase();
+
+            errorEl.classList.remove('show');
+
+            if (!email || !email.includes('@')) {
+                errorEl.textContent = 'Please enter a valid email address.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Looking up...';
+
+            try {
+                var result = await window.supabaseClient.rpc('lookup_pending_user', { user_email: email });
+
+                if (result.error) {
+                    throw result.error;
+                }
+
+                if (result.data && result.data.length > 0) {
+                    pendingUserData = result.data[0];
+                    // Prefill the details screen
+                    document.getElementById('v-first-name').value = pendingUserData.first_name || '';
+                    document.getElementById('v-last-name').value = pendingUserData.last_name || '';
+                    document.getElementById('v-email-display').value = email;
+                    document.getElementById('v-phone').value = pendingUserData.phone || '';
+                    // Update signature label
+                    var fullName = ((pendingUserData.first_name || '') + ' ' + (pendingUserData.last_name || '')).trim();
+                    if (fullName) {
+                        document.getElementById('signature-label').textContent = 'Signature of ' + fullName;
+                    }
+                    showVerificationScreen('details');
+                } else if (result.data && typeof result.data === 'object' && !Array.isArray(result.data) && result.data.id) {
+                    // Single object returned
+                    pendingUserData = result.data;
+                    document.getElementById('v-first-name').value = pendingUserData.first_name || '';
+                    document.getElementById('v-last-name').value = pendingUserData.last_name || '';
+                    document.getElementById('v-email-display').value = email;
+                    document.getElementById('v-phone').value = pendingUserData.phone || '';
+                    var fullName2 = ((pendingUserData.first_name || '') + ' ' + (pendingUserData.last_name || '')).trim();
+                    if (fullName2) {
+                        document.getElementById('signature-label').textContent = 'Signature of ' + fullName2;
+                    }
+                    showVerificationScreen('details');
+                } else {
+                    // No pending account found.
+                    // Check if they have an existing auth account — if so, send them directly to login.
+                    // This also breaks the redirect loop for users whose status was reset to onboarding.
+                    var sessionCheck = await window.supabaseClient.auth.getSession();
+                    if (sessionCheck.data && sessionCheck.data.session) {
+                        // They're already logged in — go straight to auth to re-route properly
+                        window.location.href = '/auth/';
+                        return;
+                    }
+                    // Try a password-less sign-in check via OTP to see if the email exists in auth.
+                    // Supabase doesn't expose "does this email exist" directly, so we use the users table.
+                    // Fall back to a helpful message that sends them to login if they have an account.
+                    var sessionResult2 = await window.supabaseClient
+                        .from('users')
+                        .select('id, status')
+                        .eq('email', email)
+                        .maybeSingle();
+                    if (sessionResult2.data) {
+                        // Account exists — redirect to login immediately, no message needed
+                        window.location.href = '/auth/';
+                        return;
+                    }
+                    errorEl.textContent = 'No account found for this email. Please contact our team.';
+                    errorEl.classList.add('show');
+                }
+            } catch (err) {
+                console.error('Email lookup error:', err);
+                errorEl.textContent = 'No account found with that email. Please contact our team.';
+                errorEl.classList.add('show');
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Continue';
+        }
+
+        // Allow Enter key on email input
+        document.getElementById('v-email-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') handleEmailLookup();
+        });
+
+        // ============================================
+        // SCREEN 2: CONFIRM DETAILS + SET PASSWORD
+        // ============================================
+        async function handleDetailsConfirm() {
+            var errorEl = document.getElementById('details-error');
+            var btn = document.getElementById('v-details-btn');
+            errorEl.classList.remove('show');
+
+            var firstName = document.getElementById('v-first-name').value.trim();
+            var lastName = document.getElementById('v-last-name').value.trim();
+            var email = document.getElementById('v-email-display').value.trim();
+            var phone = document.getElementById('v-phone').value.trim();
+            var password = document.getElementById('v-password').value;
+            var passwordConfirm = document.getElementById('v-password-confirm').value;
+
+            // Validate
+            if (!firstName || !lastName) {
+                errorEl.textContent = 'Please enter your first and last name.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            if (!password || password.length < 6) {
+                errorEl.textContent = 'Password must be at least 6 characters.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                errorEl.textContent = 'Passwords do not match.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Setting up...';
+
+            try {
+                // Step 1: Set password via RPC (creates auth.users row if needed, preserving the existing public.users UUID)
+                var rpcResult = await window.supabaseClient.rpc('set_pending_user_password', {
+                    user_email: email,
+                    new_password: password
+                });
+
+                if (rpcResult.error) {
+                    throw rpcResult.error;
+                }
+
+                // Step 2: Sign in with the new credentials
+                var signInResult = await window.supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (signInResult.error) {
+                    throw signInResult.error;
+                }
+
+                currentUser = signInResult.data.user;
+
+                // Step 3: Capture IP and location
+                var ipAddress = '';
+                var geoCity = '';
+                var geoRegion = '';
+                var geoCountry = '';
+                try {
+                    ipAddress = await window.getUserIP();
+                    if (window._geoData) {
+                        geoCity = window._geoData.city || '';
+                        geoRegion = window._geoData.region || '';
+                        geoCountry = window._geoData.country || '';
+                    }
+                } catch (geoErr) {
+                    console.warn('Could not get IP/location:', geoErr);
+                }
+
+                // Step 4: Update profile with corrections and location
+                var updateResult = await window.supabaseClient
+                    .from('users')
+                    .update({
+                        first_name: firstName,
+                        last_name: lastName,
+                        phone: phone,
+                        ip_address: ipAddress,
+                        city: geoCity,
+                        region: geoRegion,
+                        country: geoCountry
+                    })
+                    .eq('id', currentUser.id);
+
+                if (updateResult.error) {
+                    console.error('Profile update error:', updateResult.error);
+                }
+
+                // Update the signature label with potentially corrected name
+                var fullName = (firstName + ' ' + lastName).trim();
+                document.getElementById('signature-label').textContent = 'Signature of ' + fullName;
+
+                // Load updated profile
+                currentProfile = await window.getUserProfile(currentUser.id);
+
+                // Show loading transition
+                showVerificationScreen('loading');
+
+                // Auto-advance to photo screen after 2.5 seconds
+                setTimeout(function() {
+                    showVerificationScreen('photo');
+                    initCamera();
+                }, 2500);
+
+            } catch (err) {
+                console.error('Details confirm error:', err);
+                errorEl.textContent = err.message || 'Something went wrong. Please try again.';
+                errorEl.classList.add('show');
+                btn.disabled = false;
+                btn.textContent = 'I confirm this is correct';
+            }
+        }
+
+        // ============================================
+        // SCREEN 4: PHOTO VERIFICATION
+        // ============================================
+        async function initCamera() {
+            var video = document.getElementById('camera-video');
+            var placeholder = document.getElementById('camera-placeholder');
+            var fallback = document.getElementById('camera-fallback');
+
+            // Show fallback after 8 seconds
+            setTimeout(function() {
+                fallback.classList.add('show');
+            }, 8000);
+
+            try {
+                var stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } }
+                });
+                cameraStream = stream;
+                video.srcObject = stream;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+
+                // Show fallback sooner if camera seems odd (5s)
+                setTimeout(function() {
+                    fallback.classList.add('show');
+                }, 5000);
+            } catch (err) {
+                console.error('Camera error:', err);
+                placeholder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:48px;height:48px;color:var(--text-muted)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span style="font-size:13px;margin-top:4px;">Camera unavailable</span>';
+                fallback.classList.add('show');
+            }
+        }
+
+        function capturePhoto() {
+            var video = document.getElementById('camera-video');
+            var canvas = document.getElementById('camera-canvas');
+            var preview = document.getElementById('camera-preview');
+            var shutter = document.getElementById('camera-shutter');
+            var actions = document.getElementById('camera-actions');
+
+            if (!video.srcObject) return;
+
+            // Set canvas size to match video
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 640;
+
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert to blob
+            canvas.toBlob(function(blob) {
+                capturedBlob = blob;
+                var url = URL.createObjectURL(blob);
+                preview.src = url;
+                preview.style.display = 'block';
+                video.style.display = 'none';
+                shutter.style.display = 'none';
+                actions.classList.add('show');
+            }, 'image/jpeg', 0.85);
+        }
+
+        function retakePhoto() {
+            var video = document.getElementById('camera-video');
+            var preview = document.getElementById('camera-preview');
+            var shutter = document.getElementById('camera-shutter');
+            var actions = document.getElementById('camera-actions');
+
+            preview.style.display = 'none';
+            video.style.display = 'block';
+            shutter.style.display = 'flex';
+            actions.classList.remove('show');
+            capturedBlob = null;
+        }
+
+        async function acceptPhoto() {
+            if (!capturedBlob || !currentUser) return;
+
+            var errorEl = document.getElementById('photo-error');
+            errorEl.classList.remove('show');
+
+            try {
+                // Upload photo
+                if (window.uploadVerificationPhoto) {
+                    var photoResult = await window.uploadVerificationPhoto(currentUser.id, capturedBlob);
+                    if (photoResult) {
+                        verificationPhotoUrl = photoResult.publicUrl || photoResult.path || null;
+                        verificationPhotoPath = photoResult.path || null;
+                    }
+                } else {
+                    // Fallback: upload directly to Supabase storage
+                    var fileName = currentUser.id + '/verification.jpg';
+                    var uploadResult = await window.supabaseClient.storage
+                        .from('verification-photos')
+                        .upload(fileName, capturedBlob, { contentType: 'image/jpeg', upsert: true });
+
+                    if (uploadResult.data) {
+                        var urlResult = window.supabaseClient.storage
+                            .from('verification-photos')
+                            .getPublicUrl(fileName);
+                        verificationPhotoUrl = urlResult.data.publicUrl;
+                        verificationPhotoPath = fileName;
+                    }
+                }
+
+                // Stop camera
+                stopCamera();
+
+                // Move to contract screen
+                showVerificationScreen('contract');
+
+                // Set today's date
+                var today = new Date();
+                var dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('contract-date').value = dateStr;
+
+            } catch (err) {
+                console.error('Photo upload error:', err);
+                errorEl.textContent = 'Failed to upload photo. Please try again.';
+                errorEl.classList.add('show');
+            }
+        }
+
+        function handleFileUpload(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            var preview = document.getElementById('camera-preview');
+            var video = document.getElementById('camera-video');
+            var shutter = document.getElementById('camera-shutter');
+            var actions = document.getElementById('camera-actions');
+            var placeholder = document.getElementById('camera-placeholder');
+
+            // Create blob from file
+            capturedBlob = file;
+            var url = URL.createObjectURL(file);
+            preview.src = url;
+            preview.style.display = 'block';
+            video.style.display = 'none';
+            placeholder.style.display = 'none';
+            shutter.style.display = 'none';
+            actions.classList.add('show');
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+                cameraStream = null;
+            }
+        }
+
+        // ============================================
+        // SCREEN 5: CONTRACT AGREEMENT
+        // ============================================
+        function openContractModal(event) {
+            if (event) event.preventDefault();
+            var contractUrl = (adminSettings && adminSettings.contract_url) ? adminSettings.contract_url : '';
+            if (contractUrl) {
+                window.open(contractUrl, '_blank');
+            } else {
+                alert('The program agreement is not yet available. Please contact support.');
+            }
+        }
+
+        function checkContractReady() {
+            var termsChecked = document.getElementById('contract-agree-terms').checked;
+            var signature = document.getElementById('contract-signature').value.trim();
+            var btn = document.getElementById('v-contract-btn');
+
+            if (termsChecked && signature.length > 0) {
+                btn.disabled = false;
+            } else {
+                btn.disabled = true;
+            }
+        }
+
+        async function handleContractSubmit() {
+            var errorEl = document.getElementById('contract-error');
+            var btn = document.getElementById('v-contract-btn');
+            errorEl.classList.remove('show');
+
+            var termsChecked = document.getElementById('contract-agree-terms').checked;
+            var guaranteeChecked = document.getElementById('contract-guarantee').checked;
+            var signature = document.getElementById('contract-signature').value.trim();
+
+            if (!termsChecked || !signature) {
+                errorEl.textContent = 'Please agree to the program terms and provide your signature.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            try {
+                // Use the public URL from the upload as avatar
+                var avatarUrl = verificationPhotoUrl || null;
+
+                // Determine post-verification status: free trial users go to free_trial, others to onboarding
+                var isFreeTrial = currentUser.user_metadata && currentUser.user_metadata.is_free_trial === true;
+                var postVerificationStatus = isFreeTrial ? 'free_trial' : 'onboarding';
+
+                var verificationData = {
+                    contract_signed_at: new Date().toISOString(),
+                    contract_signature: signature,
+                    guarantee_opted_in: guaranteeChecked,
+                    verification_photo_url: verificationPhotoPath || verificationPhotoUrl || null,
+                    verification_completed_at: new Date().toISOString(),
+                    avatar_url: avatarUrl,
+                    status: postVerificationStatus
+                };
+
+                if (window.saveVerificationData) {
+                    await window.saveVerificationData(currentUser.id, verificationData);
+                } else {
+                    // Fallback: update user record directly
+                    var updateResult = await window.supabaseClient
+                        .from('users')
+                        .update(verificationData)
+                        .eq('id', currentUser.id);
+
+                    if (updateResult.error) {
+                        throw updateResult.error;
+                    }
+                }
+
+                // Show confirmation screen
+                showVerificationScreen('confirm');
+
+                // After 12 seconds, show success state
+                setTimeout(function() {
+                    document.getElementById('confirm-loading').style.display = 'none';
+                    document.getElementById('confirm-success').classList.add('show');
+
+                    // After 2 more seconds, reload to enter course flow
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                }, 12000);
+
+            } catch (err) {
+                console.error('Contract submit error:', err);
+                errorEl.textContent = err.message || 'Something went wrong. Please try again.';
+                errorEl.classList.add('show');
+                btn.disabled = false;
+                btn.textContent = 'Submit Agreement';
+            }
+        }
+
+        // ============================================
+        // COURSE FLOW
+        // ============================================
+        function initCourseFlow() {
+            try {
+                renderAllLessons();
+            } catch (renderErr) {
+                console.error('Error rendering lessons:', renderErr);
+            }
+            loadProgress().catch(function(e) {
+                console.error('Progress load error, starting from step 1:', e);
+            }).then(function() {
+                showCurrentLesson();
+            });
+        }
+
+        function renderAllLessons() {
+            var container = document.getElementById('lesson-container');
+            var html = '';
+
+            lessonData.forEach(function(lesson) {
+                var checkboxHtml = '';
+                lesson.checkboxes.forEach(function(text, idx) {
+                    checkboxHtml += '<label class="quiz-checkbox-item">' +
+                        '<input type="checkbox" data-step="' + lesson.step + '" data-check="' + (idx + 1) + '">' +
+                        '<span class="quiz-check-box"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></span>' +
+                        '<span class="quiz-checkbox-label">' + text + '</span>' +
+                        '</label>';
+                });
+
+                // Video 3 TradeLux button (configurable from admin settings)
+                var video3ButtonHtml = '';
+                if (lesson.step === 3 && onboardingButtonConfig.video3_button_url) {
+                    var btnText = escapeHtml(onboardingButtonConfig.video3_button_text || 'Create Your TradeLux Account');
+                    var btnUrl = escapeHtml(onboardingButtonConfig.video3_button_url);
+                    video3ButtonHtml = '<div style="text-align:center;margin:16px 0 8px;">' +
+                        '<button onclick="window.open(\'' + btnUrl + '\', \'tradelink\', \'width=1100,height=700,scrollbars=yes,resizable=yes\')" ' +
+                        'style="display:inline-flex;align-items:center;gap:8px;padding:12px 32px;background:#3b6dff;color:#000;font-size:15px;font-weight:700;border-radius:10px;border:none;cursor:pointer;transition:background 0.2s;font-family:inherit;" ' +
+                        'onmouseover="this.style.background=\'#d4af2d\'" onmouseout="this.style.background=\'#3b6dff\'">' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>' +
+                        btnText +
+                        '</button></div>';
+                }
+
+                html += '<div class="lesson-screen" id="lesson-' + lesson.step + '" data-step="' + lesson.step + '">' +
+                    '<div class="lesson-icon">' + lesson.svgIcon + '</div>' +
+                    '<h2 class="lesson-title">' + lesson.title + '</h2>' +
+                    '<p class="lesson-description">' + lesson.description + '</p>' +
+                    '<div class="video-watch-banner">' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' +
+                        'Watch the entire video — the next step will not unlock until it is complete.' +
+                    '</div>' +
+                    '<div class="lesson-video">' +
+                        '<div class="lesson-video-wrapper">' +
+                            '<iframe id="course-video-' + lesson.step + '" src="' + lesson.videoUrl + '" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>' +
+                            '<div class="video-complete-badge" id="course-badge-' + lesson.step + '">' +
+                                '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' +
+                                '<span>Video Complete!</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="video-countdown" id="course-countdown-' + lesson.step + '">' +
+                            '<div class="video-countdown-text" id="course-countdown-text-' + lesson.step + '">Preparing…</div>' +
+                            '<div class="video-countdown-bar"><div class="video-countdown-fill" id="course-countdown-fill-' + lesson.step + '"></div></div>' +
+                        '</div>' +
+                    '</div>' +
+                    video3ButtonHtml +
+                    '<div class="quiz-section" id="course-quiz-' + lesson.step + '">' +
+                        '<div class="quiz-title">' +
+                            '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' +
+                            'Confirm Your Setup' +
+                        '</div>' +
+                        '<div class="quiz-checkbox-group">' + checkboxHtml + '</div>' +
+                    '</div>' +
+                    '<button class="complete-btn" id="course-btn-' + lesson.step + '" onclick="completeCourseStep(' + lesson.step + ')" disabled>' +
+                        'Watch the video first...' +
+                    '</button>' +
+                    '<p class="btn-hint" id="course-hint-' + lesson.step + '">Watch the video and confirm all items above</p>' +
+                '</div>';
+            });
+
+            container.innerHTML = html;
+
+            // Add checkbox listeners
+            container.querySelectorAll('.quiz-checkbox-item input').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    var step = parseInt(this.dataset.step);
+                    if (!checkedItems[step]) checkedItems[step] = {};
+                    checkedItems[step][this.dataset.check] = this.checked;
+                    checkCourseStepCompletion(step);
+                    saveProgress();
+                });
+            });
+        }
+
+        function showCurrentLesson() {
+            // Determine which lesson to show
+            var currentStep = 1;
+            if (completedSteps.length > 0) {
+                var maxCompleted = Math.max.apply(null, completedSteps);
+                currentStep = maxCompleted + 1;
+                if (currentStep > totalSteps) currentStep = totalSteps;
+            }
+
+            // Hide all lessons
+            document.querySelectorAll('.lesson-screen').forEach(function(el) {
+                el.classList.remove('active');
+            });
+
+            var target = document.getElementById('lesson-' + currentStep);
+            if (target) {
+                target.classList.add('active');
+            }
+
+            // Restore UI state for videos/checkboxes
+            for (var s = 1; s <= totalSteps; s++) {
+                if (watchedVideos[s]) {
+                    var badge = document.getElementById('course-badge-' + s);
+                    var quiz = document.getElementById('course-quiz-' + s);
+                    var cdEl = document.getElementById('course-countdown-' + s);
+                    var cdText = document.getElementById('course-countdown-text-' + s);
+                    var cdFill = document.getElementById('course-countdown-fill-' + s);
+                    if (badge) badge.classList.add('show');
+                    if (quiz) quiz.classList.add('show');
+                    if (cdEl) cdEl.classList.add('done');
+                    if (cdText) cdText.textContent = 'Video complete — you can continue below';
+                    if (cdFill) cdFill.style.width = '100%';
+                }
+
+                if (checkedItems[s]) {
+                    Object.keys(checkedItems[s]).forEach(function(checkKey) {
+                        var cb = document.querySelector('#lesson-' + s + ' input[data-step="' + s + '"][data-check="' + checkKey + '"]');
+                        if (cb) cb.checked = checkedItems[s][checkKey];
+                    });
+                }
+
+                checkCourseStepCompletion(s);
+            }
+
+            // Update header
+            updateCourseHeader(currentStep);
+
+            // Start video timer for current step
+            if (!completedSteps.includes(currentStep)) {
+                startCourseVideoTimer(currentStep);
+            }
+
+            // Check if all complete
+            if (completedSteps.length >= totalSteps) {
+                showBookingCard();
+            }
+        }
+
+        function updateCourseHeader(currentStep) {
+            document.getElementById('course-current-lesson').textContent = currentStep;
+            var totalEl = document.getElementById('course-total-lessons');
+            if (totalEl) totalEl.textContent = totalSteps;
+            var percent = Math.round((completedSteps.length / totalSteps) * 100);
+            document.getElementById('course-progress-bar').style.width = percent + '%';
+        }
+
+        function startCourseVideoTimer(step) {
+            if (watchedVideos[step] || videoTimers[step]) return;
+
+            var duration = (videoDurations[step] || 120) * 1000;
+            var startedAt = Date.now();
+            var countdownEl = document.getElementById('course-countdown-' + step);
+            var textEl = document.getElementById('course-countdown-text-' + step);
+            var fillEl = document.getElementById('course-countdown-fill-' + step);
+
+            function render() {
+                var elapsed = Date.now() - startedAt;
+                var remaining = Math.max(0, duration - elapsed);
+                if (fillEl) {
+                    var pct = Math.min(100, (elapsed / duration) * 100);
+                    fillEl.style.width = pct + '%';
+                }
+                if (textEl) {
+                    if (remaining <= 0) {
+                        textEl.textContent = 'Video complete — you can continue below';
+                    } else {
+                        var secs = Math.ceil(remaining / 1000);
+                        var m = Math.floor(secs / 60);
+                        var s = secs % 60;
+                        textEl.textContent = 'Continue unlocks in ' + m + ':' + (s < 10 ? '0' + s : s);
+                    }
+                }
+                if (remaining <= 0) complete();
+            }
+
+            function complete() {
+                if (!videoTimers[step]) return;
+                if (videoTimers[step].interval) clearInterval(videoTimers[step].interval);
+                delete videoTimers[step];
+                if (watchedVideos[step]) return;
+                watchedVideos[step] = true;
+
+                if (countdownEl) countdownEl.classList.add('done');
+
+                var badge = document.getElementById('course-badge-' + step);
+                if (badge) badge.classList.add('show');
+
+                var quiz = document.getElementById('course-quiz-' + step);
+                if (quiz) quiz.classList.add('show');
+
+                checkCourseStepCompletion(step);
+                saveProgress();
+            }
+
+            videoTimers[step] = {
+                startedAt: startedAt,
+                duration: duration,
+                interval: setInterval(render, 500),
+                render: render,
+                complete: complete
+            };
+            render();
+        }
+
+        function cancelCourseVideoTimer(step) {
+            if (videoTimers[step]) {
+                if (videoTimers[step].interval) clearInterval(videoTimers[step].interval);
+                delete videoTimers[step];
+            }
+        }
+
+        // iOS Safari throttles setInterval when tab/video is backgrounded or fullscreen.
+        // When the page becomes visible again, force every active timer to re-check
+        // against wall-clock time so a user who watched the full video in fullscreen
+        // isn't stuck on "Watch the video first…".
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) return;
+            Object.keys(videoTimers).forEach(function(step) {
+                var t = videoTimers[step];
+                if (t && typeof t.render === 'function') t.render();
+            });
+        });
+
+        function checkCourseStepCompletion(step) {
+            var videoWatched = watchedVideos[step];
+            var checks = checkedItems[step] || {};
+            var checkedCount = Object.values(checks).filter(function(v) { return v; }).length;
+            var required = requiredChecks[step];
+
+            var btn = document.getElementById('course-btn-' + step);
+            var hint = document.getElementById('course-hint-' + step);
+            if (!btn || !hint) return;
+
+            if (completedSteps.includes(step)) {
+                btn.disabled = true;
+                btn.textContent = 'Completed';
+                hint.style.display = 'none';
+                return;
+            }
+
+            if (videoWatched && checkedCount >= required) {
+                btn.disabled = false;
+                btn.textContent = step < totalSteps ? 'Complete & Continue' : 'Complete & Finish';
+                hint.style.display = 'none';
+            } else {
+                btn.disabled = true;
+                if (!videoWatched) {
+                    btn.textContent = 'Watch the video first...';
+                } else {
+                    btn.textContent = 'Complete All Checkboxes to Continue';
+                }
+                hint.style.display = 'block';
+            }
+        }
+
+        async function completeCourseStep(step) {
+            if (completedSteps.includes(step)) return;
+
+            completedSteps.push(step);
+            cancelCourseVideoTimer(step);
+
+            // Update this step's button
+            var btn = document.getElementById('course-btn-' + step);
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Completed';
+            }
+            var hint = document.getElementById('course-hint-' + step);
+            if (hint) hint.style.display = 'none';
+
+            await saveProgress();
+
+            showToast('Step ' + step + ' completed!');
+
+            if (completedSteps.length >= totalSteps) {
+                // All steps done!
+                try {
+                    if (window.markOnboardingComplete) {
+                        await window.markOnboardingComplete(currentUser.id);
+                    } else {
+                        await window.supabaseClient
+                            .from('users')
+                            .update({ status: 'member' })
+                            .eq('id', currentUser.id);
+                    }
+                } catch (err) {
+                    console.error('Error marking onboarding complete:', err);
+                }
+
+                showConfetti();
+                showBookingCard();
+                updateCourseHeader(totalSteps);
+
+                // Scroll to booking card
+                setTimeout(function() {
+                    var bookingCard = document.getElementById('booking-card');
+                    if (bookingCard) {
+                        bookingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 500);
+            } else {
+                // Go to next lesson
+                var nextStep = step + 1;
+
+                // Hide current lesson
+                document.querySelectorAll('.lesson-screen').forEach(function(el) {
+                    el.classList.remove('active');
+                });
+
+                var nextLesson = document.getElementById('lesson-' + nextStep);
+                if (nextLesson) {
+                    nextLesson.classList.add('active');
+                    startCourseVideoTimer(nextStep);
+                    updateCourseHeader(nextStep);
+
+                    // Scroll to top of lesson
+                    setTimeout(function() {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 100);
+                }
+            }
+        }
+
+        function showBookingCard() {
+            var bookingCard = document.getElementById('booking-card');
+            if (bookingCard) {
+                bookingCard.style.display = 'block';
+                bookingCard.classList.add('unlocked');
+            }
+
+            // Show portal continue button and bookmark notice
+            var portalContinue = document.getElementById('portal-continue');
+            if (portalContinue) portalContinue.classList.add('show');
+            var bookmarkNotice = document.getElementById('bookmark-notice');
+            if (bookmarkNotice) bookmarkNotice.classList.add('show');
+
+            // Set the bookmark URL
+            var bookmarkEl = document.getElementById('bookmark-url');
+            if (bookmarkEl) {
+                bookmarkEl.textContent = window.location.origin + '/auth/';
+            }
+
+            // Hide all lesson screens
+            document.querySelectorAll('.lesson-screen').forEach(function(el) {
+                el.classList.remove('active');
+            });
+        }
+
+        // ============================================
+        // PROGRESS PERSISTENCE
+        // ============================================
+        async function saveProgress() {
+            if (!currentUser) return;
+
+            try {
+                var result = await window.supabaseClient
+                    .from('onboarding_progress')
+                    .upsert({
+                        user_id: currentUser.id,
+                        completed_steps: JSON.stringify(completedSteps),
+                        watched_videos: JSON.stringify(watchedVideos),
+                        checked_items: JSON.stringify(checkedItems),
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id'
+                    });
+
+                if (result.error) {
+                    console.error('Error saving progress:', result.error);
+                }
+            } catch (error) {
+                console.error('Error saving progress:', error);
+            }
+        }
+
+        async function loadProgress() {
+            if (!currentUser) return;
+
+            try {
+                var result = await window.supabaseClient
+                    .from('onboarding_progress')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .single();
+
+                if (result.error && result.error.code !== 'PGRST116') {
+                    console.error('Error loading progress:', result.error);
+                    return;
+                }
+
+                if (result.data) {
+                    var loadedSteps, loadedVideos, loadedChecked;
+                    try { loadedSteps = JSON.parse(result.data.completed_steps || '[]'); }
+                    catch (e) { loadedSteps = result.data.completed_steps || []; }
+                    try { loadedVideos = JSON.parse(result.data.watched_videos || '{}'); }
+                    catch (e) { loadedVideos = result.data.watched_videos || {}; }
+                    try { loadedChecked = JSON.parse(result.data.checked_items || '{}'); }
+                    catch (e) { loadedChecked = result.data.checked_items || {}; }
+
+                    // If the user was reset back to onboarding by an admin, their old progress
+                    // will show all steps complete. Wipe it so they go through from the start.
+                    if (totalSteps > 0 && loadedSteps.length >= totalSteps) {
+                        completedSteps = [];
+                        watchedVideos = {};
+                        checkedItems = {};
+                        // Best-effort delete — don't let RLS failure block the course from loading
+                        try {
+                            await window.supabaseClient
+                                .from('onboarding_progress')
+                                .delete()
+                                .eq('user_id', currentUser.id);
+                        } catch (delErr) { /* will be overwritten on next saveProgress */ }
+                    } else {
+                        completedSteps = loadedSteps;
+                        watchedVideos = loadedVideos;
+                        checkedItems = loadedChecked;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading progress:', error);
+            }
+        }
+
+        // ============================================
+        // UI HELPERS
+        // ============================================
+        function showToast(message) {
+            var toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.add('show');
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showConfetti() {
+            var container = document.getElementById('confetti-container');
+            var colors = ['#3b6dff', '#9dbcff', '#22c55e', '#ffffff', '#fbbf24'];
+            for (var i = 0; i < 100; i++) {
+                var confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = confetti.style.width;
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.animation = 'confettiFall ' + (Math.random() * 3 + 2) + 's linear forwards';
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                container.appendChild(confetti);
+                (function(el) {
+                    setTimeout(function() { el.remove(); }, 5000);
+                })(confetti);
+            }
+        }
+    </script>
+</body>
+</html>

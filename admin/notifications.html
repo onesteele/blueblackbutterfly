@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Notifications</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+            --sidebar-width: 60px;
+            --sidebar-expanded: 240px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           BACKGROUND ANIMATION
+           ============================================================ */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            /* filter blur removed for performance */
+            opacity: 0.3;
+            /* animation: floatOrb */ animation: none 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -100px; right: -100px;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, 30px) scale(1.05); }
+        }
+
+        /* ============================================================
+           SIDEBAR NAVIGATION
+           ============================================================ */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: #111111;
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        .sidebar:hover {
+            width: var(--sidebar-expanded);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 14px;
+            border-bottom: 1px solid var(--border);
+            min-height: 60px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+
+        .sidebar-logo-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;}
+
+        .sidebar:hover .sidebar-logo-text {
+            opacity: 1;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 12px 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 18px;
+            margin: 2px 8px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            position: relative;
+            border-left: 3px solid transparent;
+            margin-left: 0;
+            padding-left: 15px;
+        }
+
+        .nav-item:hover {
+            background: rgba(59, 109, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+
+        .nav-item.active .nav-icon svg {
+            color: var(--accent);
+        }
+
+        .nav-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .nav-icon svg {
+            width: 20px;
+            height: 20px;
+            color: currentColor;
+            transition: color 0.2s ease;
+        }
+
+        .nav-label {
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;
+        }
+
+        .sidebar:hover .nav-label {
+            opacity: 1;
+        }
+
+        .sidebar-bottom {
+            border-top: 1px solid var(--border);
+            padding: 12px 0;
+            flex-shrink: 0;
+        }
+
+        .nav-item.signout-item {
+            color: var(--text-muted);
+        }
+
+        .nav-item.signout-item:hover {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        /* ============================================================
+           HAMBURGER MENU (MOBILE)
+           ============================================================ */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 200;
+            width: 40px;
+            height: 40px;
+            background: #111111;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .hamburger-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            /* backdrop-filter removed for performance */
+            z-index: 90;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 10, 10, 0.8);
+            /* backdrop-filter removed for performance */
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-style: italic;}
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .admin-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.3);
+            padding: 5px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ============================================================
+           PAGE BODY
+           ============================================================ */
+        .dashboard-body {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
+           BUTTONS
+           ============================================================ */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            border: none;
+            border-radius: 10px;
+            color: #06070c;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(59, 109, 255, 0.3);
+        }
+
+        .btn-primary svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.25);
+            border-radius: 10px;
+            color: var(--accent);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(59, 109, 255, 0.25);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(59, 109, 255, 0.15);
+        }
+
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 8px;
+            color: var(--error);
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--error);
+        }
+
+        .btn-danger svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* ============================================================
+           CARDS
+           ============================================================ */
+        .section-card {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(59, 109, 255, 0.03);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .card-body {
+            padding: 0;
+        }
+
+        /* ============================================================
+           NOTIFICATION ITEMS
+           ============================================================ */
+        .notification-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .notification-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .notification-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item:hover {
+            background: rgba(59, 109, 255, 0.03);
+        }
+
+        .notification-icon-wrap {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--accent-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-icon-wrap svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+        }
+
+        .notification-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .notification-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 100px;
+        }
+
+        .meta-tag.target {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+        }
+
+        .meta-tag.date {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+        }
+
+        .meta-tag.reads {
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--success);
+        }
+
+        .meta-tag.expired {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--error);
+        }
+
+        .notification-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           COLLAPSED SECTION
+           ============================================================ */
+        .collapsed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            user-select: none;
+        }
+
+        .collapsed-header:hover {
+            background: rgba(59, 109, 255, 0.03);
+        }
+
+        .collapsed-header .card-title {
+            font-size: 16px;
+        }
+
+        .collapse-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .collapse-toggle svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .collapse-toggle.open svg {
+            transform: rotate(180deg);
+        }
+
+        .collapsed-body {
+            display: none;
+            border-top: 1px solid var(--border);
+        }
+
+        .collapsed-body.open {
+            display: block;
+        }
+
+        /* ============================================================
+           MODAL
+           ============================================================ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            /* backdrop-filter removed for performance */
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 95%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), 0 0 60px rgba(59, 109, 255, 0.05);
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .modal::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .modal-close svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .modal-body {
+            padding: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-label .optional {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 109, 255, 0.1);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+            cursor: pointer;
+        }
+
+        .form-select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .user-search-wrapper {
+            display: none;
+            margin-top: 10px;
+            position: relative;
+        }
+
+        .user-search-wrapper.show {
+            display: block;
+        }
+
+        .user-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 10;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .user-search-results.show {
+            display: block;
+        }
+
+        .user-search-results::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .user-search-results::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .user-search-result-item {
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background 0.15s ease;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .user-search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-search-result-item:hover {
+            background: rgba(59, 109, 255, 0.06);
+            color: var(--text-primary);
+        }
+
+        .user-search-result-item .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-search-result-item .user-email {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .selected-user-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.3);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-top: 8px;
+        }
+
+        .selected-user-tag .remove-user {
+            cursor: pointer;
+            display: flex;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+        }
+
+        .selected-user-tag .remove-user:hover {
+            opacity: 1;
+        }
+
+        .selected-user-tag .remove-user svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .modal-footer {
+            padding: 0 28px 28px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-cancel {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--text-muted);
+        }
+
+        /* ============================================================
+           CONFIRM DIALOG
+           ============================================================ */
+        .confirm-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            /* backdrop-filter removed for performance */
+            z-index: 600;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirm-overlay.show {
+            display: flex;
+        }
+
+        .confirm-dialog {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .confirm-dialog .confirm-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .confirm-dialog .confirm-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--error);
+        }
+
+        .confirm-dialog h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .confirm-dialog p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn-confirm-delete {
+            padding: 10px 24px;
+            background: var(--error);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-confirm-delete:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        /* ============================================================
+           EMPTY STATE
+           ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           LOADING STATE
+           ============================================================ */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============================================================
+           TOAST
+           ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            z-index: 700;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+            box-shadow: 0 4px 24px rgba(34, 197, 94, 0.3);
+        }
+
+        .toast.error {
+            background: var(--error);
+            box-shadow: 0 4px 24px rgba(239, 68, 68, 0.3);
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-expanded);
+                z-index: 150;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar.mobile-open .nav-label,
+            .sidebar.mobile-open .sidebar-logo-text {
+                opacity: 1;
+            }
+
+            .hamburger-btn {
+                display: flex;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .top-bar {
+                padding: 16px 16px 16px 64px;
+            }
+
+            .dashboard-body {
+                padding: 20px 16px;
+            }
+
+            .page-title {
+                font-size: 22px;
+            }
+
+            .notification-item {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .notification-actions {
+                flex-direction: row;
+            }
+
+            .notification-meta {
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-bar-right {
+                display: none;
+            }
+
+            .modal {
+                width: 98%;
+                border-radius: 16px;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Mobile Hamburger Button -->
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="../logo.png" alt="VantageQuant">
+            <span class="sidebar-logo-text">VantageQuant</span>
+        </div>
+
+        <div class="sidebar-nav">
+            <!-- Dashboard -->
+            <a href="/admin/" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+
+            <!-- Customers -->
+            <a href="/admin/customers.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Customers</span>
+            </a>
+
+            <!-- Content -->
+            <a href="/admin/content.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Content</span>
+            </a>
+
+            <!-- Announcements -->
+            <a href="/admin/announcements.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Announcements</span>
+            </a>
+
+            <!-- Conversations -->
+            <a href="/admin/conversations.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Conversations</span>
+            </a>
+
+            <!-- Workflows -->
+            <a href="/admin/workflows.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Workflows</span>
+            </a>
+
+            <!-- Notifications (ACTIVE) -->
+            <a href="/admin/notifications.html" class="nav-item active">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                </span>
+                <span class="nav-label">Notifications</span>
+            </a>
+
+            <!-- Settings -->
+            <a href="/admin/settings.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Settings</span>
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a class="nav-item" onclick="window.toggleTheme()" style="cursor:pointer;">
+                <span class="nav-icon"><span class="theme-toggle-icon"></span></span>
+                <span class="nav-label theme-toggle-label"></span>
+            </a>
+            <a class="nav-item signout-item" onclick="window.signOut()" style="cursor:pointer;">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </span>
+                <span class="nav-label">Sign Out</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <h1 class="page-title">Notifications</h1>
+            </div>
+            <div class="top-bar-right">
+                <span class="admin-name" id="admin-name">Loading...</span>
+                <span class="admin-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Admin
+                </span>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="dashboard-body">
+            <!-- Top Action Bar -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <p style="font-size:14px; color:var(--text-secondary);">Manage and send push notifications to your users.</p>
+                </div>
+                <button class="btn-primary" onclick="openCreateModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Send Notification
+                </button>
+            </div>
+
+            <!-- Active Notifications -->
+            <div class="section-card">
+                <div class="card-header">
+                    <h2 class="card-title">Active Notifications</h2>
+                    <span id="active-count" style="font-size:12px; font-weight:700; color:var(--text-muted);"></span>
+                </div>
+                <div class="card-body">
+                    <div class="notification-list" id="active-notifications">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expired Notifications (collapsed by default) -->
+            <div class="section-card">
+                <div class="collapsed-header" onclick="toggleExpiredSection()">
+                    <h2 class="card-title">Expired Notifications</h2>
+                    <span class="collapse-toggle" id="expired-toggle">
+                        <span id="expired-count" style="font-size:12px; font-weight:700; color:var(--text-muted);"></span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </span>
+                </div>
+                <div class="collapsed-body" id="expired-body">
+                    <div class="notification-list" id="expired-notifications">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Notification Modal -->
+    <div class="modal-overlay" id="create-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Send Notification</h2>
+                <button class="modal-close" onclick="closeCreateModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="notif-title">Title</label>
+                    <input type="text" class="form-input" id="notif-title" placeholder="Notification title...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="notif-message">Message</label>
+                    <textarea class="form-textarea" id="notif-message" placeholder="Write your notification message..." rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="notif-target">Target Audience</label>
+                    <select class="form-select" id="notif-target" onchange="onTargetChange()">
+                        <option value="all">All Users</option>
+                        <option value="active">Active Users</option>
+                        <option value="onboarding">Onboarding Users</option>
+                        <option value="specific">Specific User</option>
+                    </select>
+                    <div class="user-search-wrapper" id="user-search-wrapper">
+                        <input type="text" class="form-input" id="user-search-input" placeholder="Search by name or email..." oninput="searchUsers()" onfocus="searchUsers()">
+                        <div class="user-search-results" id="user-search-results"></div>
+                        <div id="selected-user-display"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="notif-expiry">Expiration Date <span class="optional">(optional)</span></label>
+                    <input type="date" class="form-input" id="notif-expiry">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeCreateModal()">Cancel</button>
+                <button class="btn-primary" id="send-btn" onclick="sendNotification()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <div class="confirm-overlay" id="confirm-delete">
+        <div class="confirm-dialog">
+            <div class="confirm-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <h3>Delete Notification</h3>
+            <p>Are you sure you want to delete this notification? This action cannot be undone.</p>
+            <div class="confirm-actions">
+                <button class="btn-cancel" onclick="closeConfirmDelete()">Cancel</button>
+                <button class="btn-confirm-delete" id="confirm-delete-btn" onclick="confirmDeleteNotification()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+    <script>
+        /* ============================================================
+           MOBILE SIDEBAR TOGGLE
+           ============================================================ */
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const btn = document.getElementById('hamburger-btn');
+
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('show');
+
+            if (sidebar.classList.contains('mobile-open')) {
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>';
+            } else {
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>';
+            }
+        }
+
+        /* ============================================================
+           ACCESS CONTROL + INITIALIZATION
+           ============================================================ */
+        let adminProfile = null;
+        let allUsers = [];
+        let allNotifications = [];
+        let deleteTargetId = null;
+        let selectedUserId = null;
+
+        (async function init() {
+            try {
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                const user = await window.getCurrentUser();
+                if (!user) {
+                    window.location.href = '/auth';
+                    return;
+                }
+
+                const profile = await window.getUserProfile(user.id);
+                if (!profile || !window.hasAdminAccess(profile)) {
+                    alert('Access denied. Admin privileges required.');
+                    await window.supabaseClient.auth.signOut();
+                    window.location.href = '/auth';
+                    return;
+                }
+
+                // Notifications management requires admin+ role
+                if (!window.canManageContent(profile)) {
+                    window.location.href = '/admin/customers.html';
+                    return;
+                }
+
+                adminProfile = profile;
+                document.getElementById('admin-name').textContent = `${profile.first_name} ${profile.last_name}`;
+
+                // Load permissions and apply role-based sidebar
+                await window.loadRolePermissions();
+                window.applySidebarRole(profile, 'notifications');
+
+                await Promise.all([
+                    loadUsers(),
+                    loadNotifications()
+                ]);
+
+            } catch (error) {
+                console.error('Admin init error:', error);
+                window.location.href = '/auth';
+            }
+        })();
+
+        /* ============================================================
+           30-MINUTE INACTIVITY AUTO-LOGOUT
+           ============================================================ */
+        (function() {
+            let inactivityTimer;
+            const TIMEOUT = 30 * 60 * 1000;
+
+            function resetTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => {
+                    console.log('Auto-logout: 30 minutes of inactivity');
+                    window.signOut();
+                }, TIMEOUT);
+            }
+
+            ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
+                document.addEventListener(evt, resetTimer, true);
+            });
+
+            resetTimer();
+        })();
+
+        /* ============================================================
+           LOAD USERS
+           ============================================================ */
+        async function loadUsers() {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('users')
+                    .select('id, first_name, last_name, email, status, onboarding_completed')
+                    .eq('is_admin', false);
+
+                if (error) throw error;
+                allUsers = data || [];
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        /* ============================================================
+           LOAD NOTIFICATIONS
+           ============================================================ */
+        async function loadNotifications() {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('push_notifications')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                allNotifications = data || [];
+
+                renderNotifications();
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                document.getElementById('active-notifications').innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p>Unable to load notifications</p>
+                    </div>`;
+            }
+        }
+
+        /* ============================================================
+           RENDER NOTIFICATIONS
+           ============================================================ */
+        function renderNotifications() {
+            const now = new Date();
+            const active = [];
+            const expired = [];
+
+            allNotifications.forEach(n => {
+                if (n.expires_at && new Date(n.expires_at) < now) {
+                    expired.push(n);
+                } else {
+                    active.push(n);
+                }
+            });
+
+            // Active Notifications
+            const activeContainer = document.getElementById('active-notifications');
+            document.getElementById('active-count').textContent = active.length > 0 ? `${active.length} active` : '';
+
+            if (active.length === 0) {
+                activeContainer.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <p>No active notifications. Click "Send Notification" to create one.</p>
+                    </div>`;
+            } else {
+                activeContainer.innerHTML = active.map(n => renderNotificationItem(n, false)).join('');
+            }
+
+            // Expired Notifications
+            const expiredContainer = document.getElementById('expired-notifications');
+            document.getElementById('expired-count').textContent = expired.length > 0 ? `${expired.length} expired` : '0 expired';
+
+            if (expired.length === 0) {
+                expiredContainer.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p>No expired notifications</p>
+                    </div>`;
+            } else {
+                expiredContainer.innerHTML = expired.map(n => renderNotificationItem(n, true)).join('');
+            }
+        }
+
+        function renderNotificationItem(n, isExpired) {
+            const targetLabel = getTargetLabel(n.target_audience, n.target_user_id);
+            const createdDate = n.created_at
+                ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'N/A';
+            const readCount = n.read_count || 0;
+            const totalUsers = getTotalTargetUsers(n.target_audience);
+            const messagePreview = n.message || '';
+
+            return `
+                <div class="notification-item">
+                    <div class="notification-icon-wrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </div>
+                    <div class="notification-details">
+                        <div class="notification-title">${escapeHtml(n.title || 'Untitled')}</div>
+                        <div class="notification-message">${escapeHtml(messagePreview)}</div>
+                        <div class="notification-meta">
+                            <span class="meta-tag target">${escapeHtml(targetLabel)}</span>
+                            <span class="meta-tag date">${createdDate}</span>
+                            <span class="meta-tag reads">${readCount} / ${totalUsers} read</span>
+                            ${isExpired ? '<span class="meta-tag expired">Expired</span>' : ''}
+                            ${n.expires_at && !isExpired ? `<span class="meta-tag date">Expires: ${new Date(n.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="notification-actions">
+                        <button class="btn-danger" onclick="openConfirmDelete('${n.id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
+                </div>`;
+        }
+
+        function getTargetLabel(target, userId) {
+            switch (target) {
+                case 'all': return 'All Users';
+                case 'active': return 'Active Users';
+                case 'onboarding': return 'Onboarding Users';
+                case 'specific':
+                    const user = allUsers.find(u => u.id === userId);
+                    return user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email : 'Specific User';
+                default: return target || 'All Users';
+            }
+        }
+
+        function getTotalTargetUsers(target) {
+            switch (target) {
+                case 'all': return allUsers.length;
+                case 'active': return allUsers.filter(u => u.status === 'active').length;
+                case 'onboarding': return allUsers.filter(u => !u.onboarding_completed).length;
+                case 'specific': return 1;
+                default: return allUsers.length;
+            }
+        }
+
+        /* ============================================================
+           MODAL CONTROLS
+           ============================================================ */
+        function openCreateModal() {
+            document.getElementById('create-modal').classList.add('show');
+            document.getElementById('notif-title').value = '';
+            document.getElementById('notif-message').value = '';
+            document.getElementById('notif-target').value = 'all';
+            document.getElementById('notif-expiry').value = '';
+            document.getElementById('user-search-wrapper').classList.remove('show');
+            document.getElementById('user-search-input').value = '';
+            document.getElementById('user-search-results').classList.remove('show');
+            document.getElementById('selected-user-display').innerHTML = '';
+            selectedUserId = null;
+        }
+
+        function closeCreateModal() {
+            document.getElementById('create-modal').classList.remove('show');
+        }
+
+        function onTargetChange() {
+            const target = document.getElementById('notif-target').value;
+            const wrapper = document.getElementById('user-search-wrapper');
+            if (target === 'specific') {
+                wrapper.classList.add('show');
+            } else {
+                wrapper.classList.remove('show');
+                selectedUserId = null;
+                document.getElementById('selected-user-display').innerHTML = '';
+            }
+        }
+
+        /* ============================================================
+           USER SEARCH (for specific target)
+           ============================================================ */
+        function searchUsers() {
+            const query = document.getElementById('user-search-input').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('user-search-results');
+
+            if (!query) {
+                // Show first 10 users
+                const subset = allUsers.slice(0, 10);
+                if (subset.length === 0) {
+                    resultsContainer.classList.remove('show');
+                    return;
+                }
+                resultsContainer.innerHTML = subset.map(u => userResultItem(u)).join('');
+                resultsContainer.classList.add('show');
+                return;
+            }
+
+            const matches = allUsers.filter(u => {
+                const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
+                const email = (u.email || '').toLowerCase();
+                return fullName.includes(query) || email.includes(query);
+            }).slice(0, 10);
+
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = '<div style="padding:12px 14px; font-size:13px; color:var(--text-muted);">No users found</div>';
+                resultsContainer.classList.add('show');
+                return;
+            }
+
+            resultsContainer.innerHTML = matches.map(u => userResultItem(u)).join('');
+            resultsContainer.classList.add('show');
+        }
+
+        function userResultItem(u) {
+            const name = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unnamed';
+            return `
+                <div class="user-search-result-item" onclick="selectUser('${u.id}', '${escapeHtml(name)}', '${escapeHtml(u.email || '')}')">
+                    <div class="user-name">${escapeHtml(name)}</div>
+                    <div class="user-email">${escapeHtml(u.email || '')}</div>
+                </div>`;
+        }
+
+        function selectUser(id, name, email) {
+            selectedUserId = id;
+            document.getElementById('user-search-results').classList.remove('show');
+            document.getElementById('user-search-input').value = '';
+            document.getElementById('selected-user-display').innerHTML = `
+                <div class="selected-user-tag">
+                    ${name} (${email})
+                    <span class="remove-user" onclick="clearSelectedUser()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </span>
+                </div>`;
+        }
+
+        function clearSelectedUser() {
+            selectedUserId = null;
+            document.getElementById('selected-user-display').innerHTML = '';
+        }
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('user-search-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('user-search-results').classList.remove('show');
+            }
+        });
+
+        /* ============================================================
+           SEND NOTIFICATION
+           ============================================================ */
+        async function sendNotification() {
+            const title = document.getElementById('notif-title').value.trim();
+            const message = document.getElementById('notif-message').value.trim();
+            const target = document.getElementById('notif-target').value;
+            const expiry = document.getElementById('notif-expiry').value;
+
+            if (!title) {
+                showToast('Please enter a notification title.', 'error');
+                return;
+            }
+            if (!message) {
+                showToast('Please enter a notification message.', 'error');
+                return;
+            }
+            if (target === 'specific' && !selectedUserId) {
+                showToast('Please select a specific user.', 'error');
+                return;
+            }
+
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.disabled = true;
+            sendBtn.style.opacity = '0.6';
+
+            try {
+                const payload = {
+                    title: title,
+                    message: message,
+                    target: target === 'specific' ? selectedUserId : target,
+                    expires_at: expiry || null,
+                    author_id: adminProfile.id
+                };
+
+                const { data, error } = await window.supabaseClient
+                    .from('push_notifications')
+                    .insert([payload])
+                    .select();
+
+                if (error) throw error;
+
+                showToast('Notification sent successfully!', 'success');
+                closeCreateModal();
+                await loadNotifications();
+
+            } catch (error) {
+                console.error('Error sending notification:', error);
+                showToast('Failed to send notification. Please try again.', 'error');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.style.opacity = '1';
+            }
+        }
+
+        /* ============================================================
+           DELETE NOTIFICATION
+           ============================================================ */
+        function openConfirmDelete(id) {
+            deleteTargetId = id;
+            document.getElementById('confirm-delete').classList.add('show');
+        }
+
+        function closeConfirmDelete() {
+            deleteTargetId = null;
+            document.getElementById('confirm-delete').classList.remove('show');
+        }
+
+        async function confirmDeleteNotification() {
+            if (!deleteTargetId) return;
+
+            const btn = document.getElementById('confirm-delete-btn');
+            btn.disabled = true;
+            btn.textContent = 'Deleting...';
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('push_notifications')
+                    .delete()
+                    .eq('id', deleteTargetId);
+
+                if (error) throw error;
+
+                showToast('Notification deleted.', 'success');
+                closeConfirmDelete();
+                await loadNotifications();
+
+            } catch (error) {
+                console.error('Error deleting notification:', error);
+                showToast('Failed to delete notification.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Delete';
+            }
+        }
+
+        /* ============================================================
+           EXPIRED SECTION TOGGLE
+           ============================================================ */
+        function toggleExpiredSection() {
+            const body = document.getElementById('expired-body');
+            const toggle = document.getElementById('expired-toggle');
+            body.classList.toggle('open');
+            toggle.classList.toggle('open');
+        }
+
+        /* ============================================================
+           TOAST
+           ============================================================ */
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        /* ============================================================
+           UTILITY FUNCTIONS
+           ============================================================ */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - VantageQuant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            /* filter blur removed for performance */
+            opacity: 0.5;
+            /* animation: floatOrb */ animation: none 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -100px; left: -100px;
+        }
+
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(59, 109, 255, 0.25) 0%, transparent 70%);
+            bottom: -50px; right: -100px;
+            animation-delay: -7s;
+            animation-duration: 25s;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 10px) scale(1.02); }
+        }
+
+        .auth-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            padding: 24px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 60px; height: 60px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 20px var(--accent-glow));
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { filter: drop-shadow(0 0 20px var(--accent-glow)); }
+            50% { filter: drop-shadow(0 0 30px var(--accent-glow)) drop-shadow(0 0 40px rgba(59, 109, 255, 0.2)); }
+        }
+
+        .brand-name {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-style: italic;}
+
+        .auth-card {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(59, 109, 255, 0.05);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 32px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-style: italic;}
+
+        .auth-subtitle {
+            background: linear-gradient(135deg, var(--text-secondary) 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 15px;}
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            background: linear-gradient(135deg, rgba(59, 109, 255, 0.7) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;}
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 3px var(--accent-dim), 0 0 20px rgba(59, 109, 255, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 24px;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .submit-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--error);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--success);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--bg-dark);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .back-link a {
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;}
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .auth-container {
+                padding: 16px;
+            }
+
+            .auth-card {
+                padding: 28px 20px;
+            }
+
+            .brand-name {
+                font-size: 24px;
+            }
+
+            .auth-title {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <div class="auth-container">
+        <div class="brand-header">
+            <img src="../logo.png" alt="VantageQuant" class="logo">
+            <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:26px;width:auto;max-width:100%;object-fit:contain;display:inline-block;vertical-align:middle;">
+        </div>
+
+        <div class="auth-card">
+            <div class="error-message" id="error-message"></div>
+            <div class="success-message" id="success-message"></div>
+
+            <!-- Reset Password Form -->
+            <form id="reset-password-form">
+                <div class="auth-header">
+                    <h1 class="auth-title">Set New Password</h1>
+                    <p class="auth-subtitle">Enter your new password below</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="new-password">New Password</label>
+                    <input type="password" id="new-password" class="form-input" placeholder="••••••••" required minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirm-password">Confirm Password</label>
+                    <input type="password" id="confirm-password" class="form-input" placeholder="••••••••" required minlength="6">
+                </div>
+
+                <button type="submit" class="submit-btn" id="reset-btn">
+                    Update Password
+                </button>
+            </form>
+
+            <div class="back-link">
+                <a href="/auth">Back to sign in</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+    <script>
+        // Initialize Supabase (fallback if supabase-client.js doesn't load)
+        if (typeof window.supabaseClient === 'undefined') {
+            const SUPABASE_URL = 'https://vnhrwcerlaoipycsbigi.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuaHJ3Y2VybGFvaXB5Y3NiaWdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNTA3NTksImV4cCI6MjA4NDkyNjc1OX0.LOlRKqiOzsCBX2R6qcYukt3IG5onX3e4O-RIjcWWMnU';
+            window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function hideError() {
+            const errorEl = document.getElementById('error-message');
+            errorEl.classList.remove('show');
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('success-message');
+            successEl.textContent = message;
+            successEl.classList.add('show');
+        }
+
+        function hideSuccess() {
+            const successEl = document.getElementById('success-message');
+            successEl.classList.remove('show');
+        }
+
+        var recoverySessionReady = false;
+
+        // Disable submit until session is confirmed
+        document.getElementById('reset-btn').disabled = true;
+
+        // Implicit flow: Supabase auto-detects #access_token in URL and fires PASSWORD_RECOVERY
+        window.supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                recoverySessionReady = true;
+                document.getElementById('reset-btn').disabled = false;
+                hideError();
+            } else if (event === 'SIGNED_IN' && !recoverySessionReady) {
+                // Signed in normally (not a recovery) — redirect to dashboard
+                window.location.href = '/onboarding';
+            }
+        });
+
+        // Fallback: if no hash token detected after a short delay, show error
+        setTimeout(async function() {
+            if (!recoverySessionReady) {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (session) {
+                    // Has a session but not a recovery — redirect
+                    window.location.href = '/onboarding';
+                } else {
+                    showError('Invalid or expired reset link. Please request a new one.');
+                }
+            }
+        }, 2000);
+
+        // Handle password reset form submission
+        document.getElementById('reset-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+            hideSuccess();
+
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const btn = document.getElementById('reset-btn');
+
+            if (newPassword !== confirmPassword) {
+                showError('Passwords do not match. Please try again.');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showError('Password must be at least 6 characters long.');
+                return;
+            }
+
+            if (!recoverySessionReady) {
+                // Try to verify session exists before proceeding
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    showError('Reset session expired. Please request a new password reset link.');
+                    return;
+                }
+                recoverySessionReady = true;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>Updating Password...';
+
+            try {
+                const { error: updateError } = await window.supabaseClient.auth.updateUser({
+                    password: newPassword
+                });
+
+                if (updateError) throw updateError;
+
+                showSuccess('Password updated successfully! Redirecting to sign in...');
+
+                setTimeout(async () => {
+                    await window.supabaseClient.auth.signOut();
+                    window.location.href = '/auth';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Password reset error:', error);
+                showError(error.message || 'Failed to update password. The reset link may have expired.');
+                btn.disabled = false;
+                btn.innerHTML = 'Update Password';
+            }
+        });
+    </script>
+</body>
+</html>

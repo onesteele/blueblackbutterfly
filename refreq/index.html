@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refund Request - VantageQuant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --bg-secondary: #f7f7f8;
+            --bg-tertiary: #f0f0f2;
+            --surface: #ffffff;
+            --border: #e5e5e7;
+            --border-hover: #d1d1d4;
+            --text: #0e0e0f;
+            --text-secondary: #6b6b6f;
+            --text-muted: #9b9ba0;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-bg: rgba(59, 109, 255, 0.08);
+            --accent-border: rgba(59, 109, 255, 0.2);
+            --success: #00b341;
+            --success-bg: rgba(0, 179, 65, 0.08);
+            --success-border: rgba(0, 179, 65, 0.2);
+            --error: #e5484d;
+            --error-bg: rgba(229, 72, 77, 0.06);
+            --warning: #f5a623;
+            --warning-bg: rgba(245, 166, 35, 0.08);
+            --warning-border: rgba(245, 166, 35, 0.25);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Layout ── */
+        .page-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px 80px;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            text-align: center;
+            margin-bottom: 24px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .whop-logo {
+            height: 28px;
+            opacity: 0.85;
+        }
+
+        .logo-x {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .pi-logo {
+            height: 32px;
+            border-radius: 6px;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* ── Progress ── */
+        .progress-container {
+            width: 100%;
+            max-width: 540px;
+            margin-bottom: 24px;
+            animation: fadeIn 0.5s ease 0.05s both;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .progress-step {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 4px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ── Card ── */
+        .form-card {
+            width: 100%;
+            max-width: 540px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 36px 32px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease 0.1s both;
+        }
+
+        /* ── Step Animations ── */
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+            animation: stepIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .step.slide-out {
+            animation: stepOut 0.25s ease forwards;
+        }
+
+        @keyframes stepIn {
+            from { opacity: 0; transform: translateX(24px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes stepOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-24px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.85); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        /* ── Step Header ── */
+        .step-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            background: var(--accent-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+            animation: scaleIn 0.35s ease 0.1s both;
+        }
+
+        .step-icon svg {
+            width: 22px;
+            height: 22px;
+            color: var(--accent);
+        }
+
+        .step h2 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            margin-bottom: 4px;
+        }
+
+        .step .step-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.55;
+        }
+
+        /* ── Form Elements ── */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .form-group label .required {
+            color: var(--error);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.15s ease;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-bg);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239b9ba0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* ── Upload Zone ── */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-secondary);
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent);
+            background: var(--accent-bg);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-bg);
+            transform: scale(1.005);
+        }
+
+        .upload-zone.has-file {
+            border-color: var(--success);
+            border-style: solid;
+            background: var(--success-bg);
+        }
+
+        .upload-zone input[type="file"] { display: none; }
+
+        .upload-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 10px;
+            background: var(--accent-bg);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .upload-zone:hover .upload-icon {
+            transform: translateY(-2px);
+        }
+
+        .upload-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+        }
+
+        .upload-zone.has-file .upload-icon {
+            background: var(--success-bg);
+        }
+
+        .upload-zone.has-file .upload-icon svg {
+            color: var(--success);
+        }
+
+        .upload-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .upload-sublabel {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .upload-filename {
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--success);
+            font-weight: 600;
+            display: none;
+        }
+
+        .upload-zone.has-file .upload-filename { display: block; }
+
+        .file-preview-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .file-preview-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--success);
+            font-weight: 500;
+            animation: fadeUp 0.25s ease;
+        }
+
+        .file-preview-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .file-preview-item .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-preview-item .file-remove { cursor: pointer; color: var(--text-muted); transition: color 0.15s; flex-shrink: 0; font-size: 16px; line-height: 1; }
+        .file-preview-item .file-remove:hover { color: var(--error); }
+
+        /* ── Option Items ── */
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .option-item:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-secondary);
+        }
+
+        .option-item.selected {
+            border-color: var(--accent);
+            background: var(--accent-bg);
+        }
+
+        .option-item input { display: none; }
+
+        .option-radio {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .option-item.selected .option-radio { border-color: var(--accent); }
+
+        .option-radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            transform: scale(0);
+            transition: transform 0.15s ease;
+        }
+
+        .option-item.selected .option-radio::after { transform: scale(1); }
+        .option-text { font-size: 14px; font-weight: 500; }
+
+        /* ── ID Verification Tabs ── */
+        .verify-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 18px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .verify-tab {
+            flex: 1;
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--bg);
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+            border-right: 1px solid var(--border);
+        }
+
+        .verify-tab:last-child { border-right: none; }
+
+        .verify-tab:hover { background: var(--bg-secondary); }
+
+        .verify-tab.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .verify-panel { display: none; }
+        .verify-panel.active { display: block; animation: fadeUp 0.3s ease; }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 24px;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s ease;
+        }
+
+        .btn svg { width: 16px; height: 16px; }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-light);
+            box-shadow: 0 4px 12px rgba(59, 109, 255, 0.25);
+        }
+
+        .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--border-hover);
+            color: var(--text);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .btn-row .btn-secondary { width: auto; }
+        .btn-row .btn-primary { flex: 1; }
+
+        /* ── Info/Warning Boxes ── */
+        .info-box {
+            background: var(--accent-bg);
+            border: 1px solid var(--accent-border);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .info-box svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+        .info-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+        .clause-ref { display: inline-block; margin-top: 6px; font-size: 11px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.2px; }
+        .clause-ref strong { color: var(--text-secondary); font-weight: 600; }
+
+        .compliance-alert {
+            background: var(--error-bg);
+            border: 1px solid var(--error);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 16px;
+        }
+
+        .compliance-alert-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .compliance-alert-header svg {
+            width: 22px;
+            height: 22px;
+            color: var(--error);
+            flex-shrink: 0;
+        }
+
+        .compliance-alert-header strong {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--error);
+        }
+
+        .compliance-alert p {
+            font-size: 13px;
+            line-height: 1.65;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .compliance-alert p:last-child { margin-bottom: 0; }
+
+        .compliance-alert strong { color: var(--text); font-weight: 600; }
+
+        .compliance-alert ul {
+            margin: 8px 0 12px 18px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .compliance-alert ul li { margin-bottom: 4px; }
+        .compliance-alert ul li strong { color: var(--error); }
+
+        .warning-box {
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .warning-box svg { width: 16px; height: 16px; color: var(--warning); flex-shrink: 0; margin-top: 2px; }
+        .warning-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+        /* ── Confirm Grid ── */
+        .confirm-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .confirm-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+        }
+
+        .confirm-item.full-width { grid-column: 1 / -1; }
+
+        .confirm-item .ci-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .confirm-item .ci-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* ── Review Summary ── */
+        .summary-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }
+
+        .summary-card h4 {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .summary-row + .summary-row { border-top: 1px solid var(--border); }
+        .summary-row .label { font-size: 13px; color: var(--text-secondary); }
+        .summary-row .value { font-size: 13px; font-weight: 600; color: var(--text); text-align: right; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .summary-row .value.file-attached { color: var(--success); }
+
+        /* ── Success Screen ── */
+        .success-screen { text-align: center; padding: 16px 0; }
+
+        .success-icon-wrapper {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+        }
+
+        .success-icon-wrapper .ring {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--success);
+            animation: pulse-ring 1.5s ease-out infinite;
+        }
+
+        .success-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--success-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .success-icon svg {
+            width: 32px;
+            height: 32px;
+            color: var(--success);
+            animation: checkPop 0.5s ease 0.3s both;
+        }
+
+        .success-screen h2 { font-size: 20px; margin-bottom: 6px; }
+        .success-screen .success-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+        .success-ref {
+            display: inline-block;
+            background: var(--accent-bg);
+            border: 1px solid var(--accent-border);
+            border-radius: var(--radius-sm);
+            padding: 10px 20px;
+            margin: 14px 0 20px;
+            font-size: 13px;
+            color: var(--accent);
+        }
+
+        .success-ref strong { font-weight: 600; letter-spacing: 0.5px; }
+
+        /* ── Errors ── */
+        .field-error { font-size: 12px; color: var(--error); margin-top: 4px; display: none; }
+        .form-group.has-error input,
+        .form-group.has-error select,
+        .form-group.has-error textarea { border-color: var(--error); }
+        .form-group.has-error .field-error { display: block; }
+
+        /* ── Live Camera / Selfie ── */
+        .camera-container {
+            text-align: center;
+        }
+
+        .camera-viewfinder {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #0e0e0f;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 2px solid var(--border);
+        }
+
+        .camera-viewfinder video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .camera-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .face-guide {
+            width: 160px;
+            height: 200px;
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 50%;
+        }
+
+        .camera-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #9b9ba0;
+            font-size: 13px;
+            background: #0e0e0f;
+        }
+
+        .camera-loading svg {
+            width: 32px;
+            height: 32px;
+            animation: pulse 1.5s ease infinite;
+        }
+
+        .camera-loading.hidden { display: none; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .camera-capture-btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            background: transparent;
+            cursor: pointer;
+            margin: 16px auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .camera-capture-btn:hover {
+            border-color: var(--accent-light);
+            transform: scale(1.05);
+        }
+
+        .camera-capture-btn:active {
+            transform: scale(0.95);
+        }
+
+        .capture-ring {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: block;
+            transition: all 0.15s ease;
+        }
+
+        .camera-capture-btn:hover .capture-ring {
+            background: var(--accent-light);
+        }
+
+        .camera-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .camera-preview {
+            text-align: center;
+        }
+
+        .camera-preview img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+            border-radius: var(--radius);
+            border: 2px solid var(--success-border);
+            transform: scaleX(-1);
+        }
+
+        .camera-preview-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+
+        .btn-retake {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-retake svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-retake:hover {
+            background: var(--border);
+        }
+
+        .camera-preview-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .camera-preview-check svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .camera-error {
+            padding: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .camera-error svg {
+            width: 32px;
+            height: 32px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        /* ── Eligibility Warning Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            /* backdrop-filter removed for performance */
+            -webkit-/* backdrop-filter removed for performance */
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: modalFadeIn 0.25s ease;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(16px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-box {
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+            max-width: 440px;
+            width: 100%;
+            padding: 28px;
+            animation: modalSlideUp 0.3s ease;
+            position: relative;
+        }
+
+        .modal-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--warning);
+        }
+
+        .modal-box h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+            letter-spacing: -0.2px;
+        }
+
+        .modal-box .modal-body {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.65;
+            margin-bottom: 22px;
+        }
+
+        .modal-box .modal-body strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btns .btn-modal {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s ease;
+        }
+
+        .modal-btns .btn-modal-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text);
+        }
+
+        .modal-btns .btn-modal-secondary:hover {
+            background: var(--border);
+        }
+
+        .modal-btns .btn-modal-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .modal-btns .btn-modal-primary:hover {
+            background: var(--accent-light);
+        }
+
+        /* ── Footer ── */
+        .page-footer {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .page-footer a { color: var(--accent); text-decoration: none; }
+        .page-footer a:hover { text-decoration: underline; }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .page-wrapper { padding: 24px 16px 48px; }
+            .form-card { padding: 24px 18px; }
+            .form-row { grid-template-columns: 1fr; }
+            .confirm-grid { grid-template-columns: 1fr; }
+            .page-header h1 { font-size: 20px; }
+            .step h2 { font-size: 18px; }
+            .btn-row { flex-direction: column-reverse; }
+            .btn-row .btn-secondary { width: 100%; }
+            .verify-tab { font-size: 12px; padding: 10px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="logo-row">
+            <svg class="whop-logo" viewBox="0 0 2367 632" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1154.02 497.979H1223.16L1301.49 287.982H1302.36L1380.25 497.979H1450.27L1527.29 193.004H1459.02L1406.95 403.872H1406.07L1331.68 193.004H1272.61L1198.21 403.872H1197.34L1145.7 193.004H1077L1154.02 497.979Z" fill="#0E0E0F"/>
+                <path d="M1546.9 497.979H1611.67V374.682C1611.67 341.135 1637.05 318.044 1674.68 318.044C1712.31 318.044 1735.07 339.392 1735.07 374.682V497.979H1799.83V365.968C1799.83 303.667 1755.2 260.534 1688.68 260.534C1658.05 260.534 1631.8 270.555 1612.54 288.853H1611.67V186H1546.9V497.979Z" fill="#0E0E0F"/>
+                <path d="M1953.81 504.514C2030.39 504.514 2084.65 451.361 2084.65 382.524C2084.65 313.687 2030.39 260.534 1953.81 260.534C1877.67 260.534 1822.97 313.687 1822.97 382.524C1822.97 451.361 1877.67 504.514 1953.81 504.514ZM1953.81 447.876C1913.55 447.876 1887.73 419.992 1887.73 382.524C1887.73 345.056 1913.55 317.173 1953.81 317.173C1994.07 317.173 2019.89 345.056 2019.89 382.524C2019.89 419.992 1994.07 447.876 1953.81 447.876Z" fill="#0E0E0F"/>
+                <path d="M2108.82 584H2173.58V480.116H2174.46C2189.34 494.493 2218.22 504.514 2247.1 504.514C2315.8 504.514 2367 452.233 2367 382.524C2367 313.251 2315.36 260.534 2246.66 260.534C2216.9 260.534 2189.77 269.248 2171.83 287.546H2170.96V267.07H2108.82V584ZM2237.03 447.876C2201.15 447.876 2173.58 424.785 2173.58 396.902V367.711C2173.58 340.699 2202.46 317.608 2236.6 317.608C2275.54 317.608 2302.24 343.749 2302.24 382.524C2302.24 421.299 2275.1 447.876 2237.03 447.876Z" fill="#0E0E0F"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M276.62 160.782L138.31 299.092L0.266129 160.515C67.5354 93.2462 188.277 72.4398 276.62 160.782Z" fill="#3b6dff"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M304.282 465.064L594.733 174.613C523.829 103.709 415.402 77.323 311.168 181.558L165.971 326.754L304.282 465.064Z" fill="#3b6dff"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M622.127 479.16L926.675 174.613C862.514 110.452 742.643 82.0246 636.489 188.179L331.941 492.726C401.096 561.881 521.142 580.146 622.127 479.16Z" fill="#3b6dff"/>
+            </svg>
+            <span class="logo-x">x</span>
+            <img src="../logo.png" alt="VantageQuant" class="pi-logo">
+        </div>
+        <h1>Refund Request</h1>
+        <p>VantageQuant - 90-Day Guarantee Claim</p>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-container" id="progress-container">
+        <div class="progress-info">
+            <span class="progress-label" id="progress-label">Getting Started</span>
+            <span class="progress-step" id="progress-step">1 / 13</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-fill" style="width: 7.7%"></div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+
+        <!-- ═══ STEP 1: Email ═══ -->
+        <div class="step active" id="step-1">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <h2>Let's get started</h2>
+            <p class="step-desc">Enter the email address associated with your VantageQuant account to begin your refund request.</p>
+
+            <div class="info-box">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>Per your signed agreement, refund requests must be submitted formally through this process and our team will have 10 business days to review. All refund claims are governed exclusively by the terms of your Trading Algorithm Customer Agreement.<br><span class="clause-ref">Ref: <strong>Section 8.1</strong> (Refund Guarantee), <strong>Section 15.1</strong> (Pre-Dispute Notice &amp; Cure Period), <strong>Annex B</strong></span></p>
+            </div>
+
+            <div class="form-group">
+                <label>Email Address <span class="required">*</span></label>
+                <input type="email" id="f-email" placeholder="your@email.com" autocomplete="email">
+                <div class="field-error" id="err-email">Please enter a valid email address</div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="nextStep(1)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 2: Personal Info ═══ -->
+        <div class="step" id="step-2">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </div>
+            <h2>Personal Information</h2>
+            <p class="step-desc">Provide your full legal name and contact details as they appear on your account.</p>
+
+            <div class="form-row">
+                <div class="form-group"><label>First Name <span class="required">*</span></label><input type="text" id="f-first" placeholder="John"><div class="field-error" id="err-first">Required</div></div>
+                <div class="form-group"><label>Last Name <span class="required">*</span></label><input type="text" id="f-last" placeholder="Doe"><div class="field-error" id="err-last">Required</div></div>
+            </div>
+            <div class="form-group"><label>Phone Number <span class="required">*</span></label><input type="tel" id="f-phone" placeholder="+1 (555) 000-0000"><div class="field-error" id="err-phone">Required</div></div>
+            <div class="form-group"><label>Mailing Address</label><input type="text" id="f-address" placeholder="Street, City, State, ZIP"></div>
+
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(2)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(2)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 3: Confirm Info ═══ -->
+        <div class="step" id="step-3">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h2>Confirm Your Details</h2>
+            <p class="step-desc">Please verify that the information below is correct before continuing.</p>
+            <div class="confirm-grid" id="confirm-grid"></div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(3)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Edit</button>
+                <button class="btn btn-primary" onclick="nextStep(3)">Looks Good <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 4: Identity Verification (ID or Selfie) ═══ -->
+        <div class="step" id="step-4">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+            </div>
+            <h2>Identity Verification</h2>
+            <p class="step-desc">Verify your identity to protect against fraudulent requests. Choose one option below.</p>
+
+            <div class="verify-tabs">
+                <div class="verify-tab active" onclick="switchVerifyTab('id')">Photo ID</div>
+                <div class="verify-tab" onclick="switchVerifyTab('selfie')">Selfie Photo</div>
+            </div>
+
+            <!-- Panel: Photo ID -->
+            <div class="verify-panel active" id="vp-id">
+                <div class="info-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p>Upload a photo of your government-issued ID. Accepted: driver's license, passport, or national ID card. Identity verification is required to process your claim and prevent fraud.<br><span class="clause-ref">Ref: <strong>Section 15.4</strong> (Evidence and Cooperation for Dispute Defense)</span></p>
+                </div>
+                <div class="form-group">
+                    <label>Photo ID (front) <span class="required">*</span></label>
+                    <div class="upload-zone" id="uz-id" onclick="document.getElementById('f-id').click()">
+                        <input type="file" id="f-id" accept="image/*,.pdf" onchange="handleFileUpload(this, 'uz-id')">
+                        <div class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                        <div class="upload-label">Click to upload or drag and drop</div>
+                        <div class="upload-sublabel">JPG, PNG, or PDF up to 10MB</div>
+                        <div class="upload-filename" id="fn-id"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel: Selfie (Live Camera) -->
+            <div class="verify-panel" id="vp-selfie">
+                <div class="info-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p>Position your face in the frame and take a photo. Make sure your face is well-lit and clearly visible.</p>
+                </div>
+                <div class="form-group">
+                    <label>Face Photo <span class="required">*</span></label>
+
+                    <!-- Camera viewfinder -->
+                    <div class="camera-container" id="camera-container">
+                        <div class="camera-viewfinder" id="camera-viewfinder">
+                            <video id="selfie-video" autoplay playsinline muted></video>
+                            <canvas id="selfie-canvas" style="display:none"></canvas>
+                            <div class="camera-overlay">
+                                <div class="face-guide"></div>
+                            </div>
+                            <div class="camera-loading" id="camera-loading">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                <span>Starting camera...</span>
+                            </div>
+                        </div>
+                        <button type="button" class="camera-capture-btn" id="btn-capture" onclick="captureSelfie()">
+                            <span class="capture-ring"></span>
+                        </button>
+                        <p class="camera-hint">Tap the button to take your photo</p>
+                    </div>
+
+                    <!-- Captured preview (hidden until photo taken) -->
+                    <div class="camera-preview" id="camera-preview" style="display:none">
+                        <img id="selfie-preview-img" alt="Captured selfie">
+                        <div class="camera-preview-actions">
+                            <button type="button" class="btn-retake" onclick="retakeSelfie()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Retake Photo
+                            </button>
+                            <span class="camera-preview-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                Photo captured
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-error" id="err-verify" style="margin-bottom:8px">Please upload a photo ID or take a selfie</div>
+
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(4)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(4)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 5: Purchase Details ═══ -->
+        <div class="step" id="step-5">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h2>Purchase Details</h2>
+            <p class="step-desc">Provide details about your original purchase of the VantageQuant algorithm. Accurate information is required per your signed agreement.</p>
+            <div class="info-box" style="margin-bottom:16px">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>The refund guarantee applies to the license fee paid per Section 7.1. All fees are non-refundable except through the process outlined in Annex B of your agreement.<br><span class="clause-ref">Ref: <strong>Section 7.3</strong> (No Refunds Except as Provided), <strong>Section 8.1</strong> (Guarantee Overview), <strong>Annex B</strong></span></p>
+            </div>
+
+            <div class="form-group"><label>Amount Paid (USD) <span class="required">*</span></label><input type="number" id="f-amount" placeholder="3000.00" step="0.01" min="0"><div class="field-error" id="err-amount">Required</div></div>
+            <div class="form-group"><label>Date of Purchase <span class="required">*</span></label><input type="date" id="f-purchase-date"><div class="field-error" id="err-purchase-date">Required</div></div>
+            <div class="form-group"><label>Payment Method Used <span class="required">*</span></label>
+                <select id="f-payment-method"><option value="">Select payment method...</option><option value="credit_card">Credit Card</option><option value="debit_card">Debit Card</option><option value="bank_transfer">Bank Transfer / ACH</option><option value="klarna">Klarna</option><option value="split_it">Split It</option><option value="in_house">In-House Financing</option><option value="other">Other</option></select>
+                <div class="field-error" id="err-payment-method">Required</div>
+            </div>
+            <div class="form-group"><label>Date You Started Using the Algorithm <span class="required">*</span></label><input type="date" id="f-start-date"><div class="field-error" id="err-start-date">Required</div></div>
+
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(5)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(5)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 6: Upload Signed Agreement ═══ -->
+        <div class="step" id="step-6">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <h2>Signed Refund Agreement</h2>
+            <p class="step-desc">Upload a copy of your signed 90-Day Refund Protection Agreement. This was provided during your onboarding.</p>
+
+            <div class="info-box">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>Your signed Trading Algorithm Customer Agreement is a required document for processing any refund claim. You are contractually obligated to maintain and provide all records and documentation upon request.<br><span class="clause-ref">Ref: <strong>Section 5.4(b)(c)</strong> (Maintain &amp; Provide Documentation), <strong>Section 15.4</strong> (Evidence &amp; Cooperation)</span></p>
+            </div>
+
+            <div class="form-group">
+                <label>Signed Agreement <span class="required">*</span></label>
+                <div class="upload-zone" id="uz-agreement" onclick="document.getElementById('f-agreement').click()">
+                    <input type="file" id="f-agreement" accept=".pdf,image/*" onchange="handleFileUpload(this, 'uz-agreement')">
+                    <div class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg></div>
+                    <div class="upload-label">Upload signed agreement</div>
+                    <div class="upload-sublabel">PDF or image, up to 10MB</div>
+                    <div class="upload-filename" id="fn-agreement"></div>
+                </div>
+                <div class="field-error" id="err-agreement">Please upload your signed agreement</div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(6)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(6)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 7: Setup Compliance ═══ -->
+        <div class="step" id="step-7">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <h2>Setup & Configuration</h2>
+            <p class="step-desc">Did you follow all setup and configuration instructions provided during onboarding?</p>
+            <div class="info-box" style="margin-bottom:16px">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>Your agreement requires that you follow all setup and configuration instructions provided during onboarding, and use the Software in strict accordance with the prescribed conditions to remain eligible for the refund guarantee.<br><span class="clause-ref">Ref: <strong>Section 5.1(d)</strong> (Follow Setup Instructions), <strong>Section 5.4(a)</strong> (Strict Accordance with Annex B Conditions)</span></p>
+            </div>
+            <div class="option-group" id="og-setup">
+                <label class="option-item" onclick="selectOption(this,'og-setup')"><input type="radio" name="setup" value="yes"><span class="option-radio"></span><span class="option-text">Yes, I followed all instructions exactly</span></label>
+                <label class="option-item" onclick="selectOption(this,'og-setup')"><input type="radio" name="setup" value="mostly"><span class="option-radio"></span><span class="option-text">I followed most instructions but made some changes</span></label>
+                <label class="option-item" onclick="selectOption(this,'og-setup')"><input type="radio" name="setup" value="no"><span class="option-radio"></span><span class="option-text">No, I used a different configuration</span></label>
+            </div>
+            <div class="field-error" id="err-setup" style="margin-top:-8px;margin-bottom:8px">Please select an option</div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(7)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(7)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 8: Usage Duration ═══ -->
+        <div class="step" id="step-8">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h2>Usage Duration</h2>
+            <p class="step-desc">How long did you run the algorithm continuously?</p>
+            <div class="info-box" style="margin-bottom:16px">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>The refund guarantee is based on the Software's profitability over the full <strong>90-day Evaluation Period</strong> as defined in your agreement. Continuous use during the entire evaluation window is required for your claim to be eligible.<br><span class="clause-ref">Ref: <strong>Section 1.1</strong> ("Evaluation Period" Definition), <strong>Section 8.1</strong> (Guarantee Overview), <strong>Annex B</strong> (Full Evaluation Terms)</span></p>
+            </div>
+            <div class="option-group" id="og-duration">
+                <label class="option-item" onclick="selectOption(this,'og-duration')"><input type="radio" name="duration" value="90+"><span class="option-radio"></span><span class="option-text">90 days or more (full evaluation period)</span></label>
+                <label class="option-item" onclick="selectOption(this,'og-duration')"><input type="radio" name="duration" value="60-89"><span class="option-radio"></span><span class="option-text">60 - 89 days</span></label>
+                <label class="option-item" onclick="selectOption(this,'og-duration')"><input type="radio" name="duration" value="30-59"><span class="option-radio"></span><span class="option-text">30 - 59 days</span></label>
+                <label class="option-item" onclick="selectOption(this,'og-duration')"><input type="radio" name="duration" value="<30"><span class="option-radio"></span><span class="option-text">Less than 30 days</span></label>
+            </div>
+            <div class="field-error" id="err-duration" style="margin-top:-8px;margin-bottom:8px">Please select an option</div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(8)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(8)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 9: Platform & Broker ═══ -->
+        <div class="step" id="step-9">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            </div>
+            <h2>Platform & Broker</h2>
+            <p class="step-desc">Confirm the platforms you used during the evaluation period.</p>
+            <div class="info-box" style="margin-bottom:16px">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>Your agreement requires the use of <strong>TradePost</strong> as the designated platform for connecting the algorithm to your brokerage account. TradePost activity records serve as the primary means of verifying algorithm performance.<br><span class="clause-ref">Ref: <strong>Section 5.1(b)(c)</strong> (Active TradePost Account &amp; Connection), <strong>Section 6.1</strong> (TradePost Integration), <strong>Section 10.2(d)</strong> (Data Used to Verify Refund Claims)</span></p>
+            </div>
+            <div class="form-group"><label>Did you use TradePost to connect the algorithm? <span class="required">*</span></label>
+                <div class="option-group" id="og-tradepost">
+                    <label class="option-item" onclick="selectOption(this,'og-tradepost')"><input type="radio" name="tradepost" value="yes"><span class="option-radio"></span><span class="option-text">Yes</span></label>
+                    <label class="option-item" onclick="selectOption(this,'og-tradepost')"><input type="radio" name="tradepost" value="no"><span class="option-radio"></span><span class="option-text">No</span></label>
+                </div>
+                <div class="field-error" id="err-tradepost">Required</div>
+            </div>
+            <div class="form-group"><label>Broker Name <span class="required">*</span></label><input type="text" id="f-broker" placeholder="e.g. NinjaTrader, Tradovate, AMP..."><div class="field-error" id="err-broker">Required</div></div>
+            <div class="form-group"><label>Brokerage Account ID</label><input type="text" id="f-broker-id" placeholder="Optional - helps us verify faster"></div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(9)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(9)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 10: Trading P&L Screenshots ═══ -->
+        <div class="step" id="step-10">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <h2>Trading Performance Evidence</h2>
+            <p class="step-desc">Upload screenshots showing your trading results during the evaluation period, including your P&L statement from your broker.</p>
+            <div class="info-box" style="margin-bottom:16px">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>You are contractually required to maintain trading logs and performance records, and to provide them to the Company upon request. Broker P&L statements are necessary to verify your claim.<br><span class="clause-ref">Ref: <strong>Section 5.4(b)(c)</strong> (Maintain &amp; Provide Logs/Records), <strong>Section 15.4</strong> (Provide Broker Statements, Logs, Screenshots)</span></p>
+            </div>
+            <div class="form-group"><label>P&L / Broker Statements <span class="required">*</span></label>
+                <div class="upload-zone" id="uz-pnl" onclick="document.getElementById('f-pnl').click()">
+                    <input type="file" id="f-pnl" accept="image/*,.pdf" multiple onchange="handleMultiUpload(this,'uz-pnl','fl-pnl')">
+                    <div class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg></div>
+                    <div class="upload-label">Upload broker statements & P&L screenshots</div>
+                    <div class="upload-sublabel">Multiple files allowed. JPG, PNG, or PDF.</div>
+                </div>
+                <div class="file-preview-list" id="fl-pnl"></div>
+                <div class="field-error" id="err-pnl">Please upload at least one file</div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(10)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(10)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 11: Algorithm Activity ═══ -->
+        <div class="step" id="step-11">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <h2>Algorithm Activity Proof</h2>
+            <p class="step-desc">Upload screenshots showing the algorithm was actively running. TradePost dashboards, execution logs, or signal history are all accepted.</p>
+            <div class="info-box" style="margin-bottom:16px">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>Proof of continuous algorithm activity is essential to your claim. Your agreement requires that the Software was used in strict accordance with the conditions outlined in Annex B throughout the full Evaluation Period.<br><span class="clause-ref">Ref: <strong>Section 5.4(a)</strong> (Strict Accordance with Annex B), <strong>Section 5.1(f)</strong> (Monitor Software Operation), <strong>Section 15.4</strong> (Configuration Screenshots &amp; Read-Only Data Access)</span></p>
+            </div>
+            <div class="form-group"><label>Activity Screenshots <span class="required">*</span></label>
+                <div class="upload-zone" id="uz-activity" onclick="document.getElementById('f-activity').click()">
+                    <input type="file" id="f-activity" accept="image/*,.pdf" multiple onchange="handleMultiUpload(this,'uz-activity','fl-activity')">
+                    <div class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg></div>
+                    <div class="upload-label">Upload activity proof screenshots</div>
+                    <div class="upload-sublabel">Multiple files allowed. JPG, PNG, or PDF.</div>
+                </div>
+                <div class="file-preview-list" id="fl-activity"></div>
+                <div class="field-error" id="err-activity">Please upload at least one file</div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(11)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(11)">Continue <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 12: Describe Issue ═══ -->
+        <div class="step" id="step-12">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </div>
+            <h2>Describe Your Issue</h2>
+            <p class="step-desc">Explain in detail why you believe you are entitled to a refund under the 90-Day Profitability Guarantee.</p>
+            <div class="info-box" style="margin-bottom:16px">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p>Per Section 15.1 of your agreement, your written request must include a clear description of the dispute, all supporting evidence, and your contact information. This is a required condition before any claim can proceed.<br><span class="clause-ref">Ref: <strong>Section 15.1</strong> (Pre-Dispute Written Notice), <strong>Section 8.2</strong> (Annex B as Exclusive Remedy)</span></p>
+            </div>
+
+            <div class="form-group"><label>Reason for Refund Request <span class="required">*</span></label>
+                <select id="f-reason"><option value="">Select primary reason...</option><option value="not_profitable">Algorithm was not profitable over 90-day period</option><option value="significant_losses">Experienced significant trading losses</option><option value="not_working">Software did not function as described</option><option value="connection_issues">Persistent connection/technical issues</option><option value="other">Other</option></select>
+                <div class="field-error" id="err-reason">Required</div>
+            </div>
+            <div class="form-group"><label>Detailed Explanation <span class="required">*</span></label><textarea id="f-explanation" placeholder="Describe the problems you experienced, how the software performed, and any steps you took to resolve issues. Be as specific as possible." rows="5"></textarea><div class="field-error" id="err-explanation">Please provide a detailed explanation (at least 50 characters)</div></div>
+            <div class="form-group"><label>Additional Supporting Screenshots</label>
+                <div class="upload-zone" id="uz-extra" onclick="document.getElementById('f-extra').click()">
+                    <input type="file" id="f-extra" accept="image/*,.pdf" multiple onchange="handleMultiUpload(this,'uz-extra','fl-extra')">
+                    <div class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg></div>
+                    <div class="upload-label">Upload additional evidence (optional)</div>
+                    <div class="upload-sublabel">Error messages, chat logs, emails, etc.</div>
+                </div>
+                <div class="file-preview-list" id="fl-extra"></div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(12)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(12)">Review Submission <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 13: Review & Submit ═══ -->
+        <div class="step" id="step-13">
+            <div class="step-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            </div>
+            <h2>Review & Submit</h2>
+            <p class="step-desc">Please review your refund request before submitting. Once submitted, our team will review within 10 business days.</p>
+            <div id="review-summary"></div>
+            <div class="warning-box" style="margin-top:4px">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <p>By submitting, you certify that all information provided is true and accurate. Misrepresentations may result in denial of your claim and constitute a breach of your agreement <strong>(Section 13.1(f))</strong>. Our team will review and respond within <strong>10 business days</strong> to the email you provided per <strong>Section 15.1</strong>.</p>
+            </div>
+            <div id="compliance-warning"></div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="prevStep(13)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back</button>
+                <button class="btn btn-primary" id="btn-submit" onclick="submitRequest()">Submit Refund Request <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></button>
+            </div>
+        </div>
+
+        <!-- ═══ SUCCESS ═══ -->
+        <div class="step" id="step-success">
+            <div class="success-screen">
+                <div class="success-icon-wrapper">
+                    <div class="ring"></div>
+                    <div class="success-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                </div>
+                <h2>Request Submitted</h2>
+                <p class="success-desc">Your refund request has been received. Our team will review your submission and respond within <strong>10 business days</strong> to the email address you provided.</p>
+                <div class="success-ref">Reference: <strong id="ref-number">RR-000000</strong></div>
+                <p class="success-desc" style="font-size:12px;color:var(--text-muted)">Save this reference number. For follow-up, contact <strong style="color:var(--text-secondary)">clientsupport@vantagequant.com</strong> with your reference number.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eligibility Warning Modal -->
+    <div class="modal-overlay" id="eligibility-modal">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h3 id="modal-title">Eligibility Notice</h3>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-btns">
+                <button class="btn-modal btn-modal-secondary" id="modal-btn-back" onclick="closeModal(false)">Go Back</button>
+                <button class="btn-modal btn-modal-primary" id="modal-btn-continue" onclick="closeModal(true)">Continue Anyway</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-footer">
+        <p>&copy; 2026 VantageQuant - RP Profits. All rights reserved.</p>
+        <p style="margin-top:4px"><a href="/legal/contract.html" target="_blank">Customer Agreement</a></p>
+    </div>
+</div>
+
+<script>
+    var TOTAL_STEPS = 13;
+    var currentStep = 1;
+    var multiFiles = { pnl: [], activity: [], extra: [] };
+    var activeVerifyTab = 'id';
+
+    var stepLabels = {
+        1:'Getting Started',2:'Personal Info',3:'Confirm Details',4:'Identity Verification',
+        5:'Purchase Details',6:'Signed Agreement',7:'Setup Compliance',8:'Usage Duration',
+        9:'Platform & Broker',10:'Trading Evidence',11:'Activity Proof',12:'Describe Issue',13:'Review & Submit'
+    };
+
+    function goToStep(n) {
+        var cur = document.getElementById('step-' + currentStep);
+        var next = document.getElementById('step-' + n);
+        if (!cur || !next) return;
+        // Stop camera when leaving step 4
+        if (currentStep === 4 && n !== 4) stopCamera();
+        cur.classList.add('slide-out');
+        setTimeout(function() {
+            cur.classList.remove('active','slide-out');
+            next.classList.add('active');
+            currentStep = n;
+            updateProgress();
+            window.scrollTo({top:0,behavior:'smooth'});
+        }, 240);
+    }
+
+    var pendingStep = null;
+    var modalResolve = null;
+
+    function nextStep(from) {
+        if (!validateStep(from)) return;
+
+        var warning = checkEligibilityWarning(from);
+        if (warning) {
+            showEligibilityModal(warning, function(proceed) {
+                if (proceed) {
+                    if (from === 2) populateConfirmGrid();
+                    if (from === 12) populateReview();
+                    goToStep(from + 1);
+                }
+            });
+            return;
+        }
+
+        if (from === 2) populateConfirmGrid();
+        if (from === 12) populateReview();
+        goToStep(from + 1);
+    }
+
+    // Track non-compliant selections for final review
+    var complianceFlags = [];
+
+    function checkEligibilityWarning(step) {
+        if (step === 5) {
+            var startDate = document.getElementById('f-start-date').value;
+            if (startDate) {
+                var start = new Date(startDate);
+                var today = new Date();
+                var diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+                if (diffDays < 90) {
+                    if (complianceFlags.indexOf('duration_start') === -1) complianceFlags.push('duration_start');
+                    return {
+                        title: 'Contractual Eligibility Notice',
+                        body: 'Based on the start date you provided, it appears the <strong>90-day Evaluation Period</strong> has not yet been completed.' +
+                              '<br><br>Per <strong>Section 1.1</strong> and <strong>Section 8.1</strong> of your Trading Algorithm Customer Agreement, the refund guarantee is contingent upon the Software being evaluated over the full 90-day period as defined in <strong>Annex B</strong>. Claims submitted before the completion of the Evaluation Period <strong>do not meet the contractual requirements for approval</strong>.' +
+                              '<br><br>You are welcome to continue submitting your request, however please understand that because this does not currently align with the terms of your signed agreement, <strong>your claim is unlikely to be approved</strong>. Our team will still review all submissions received.' +
+                              '<br><br>Would you like to proceed?'
+                    };
+                } else {
+                    var idx = complianceFlags.indexOf('duration_start');
+                    if (idx !== -1) complianceFlags.splice(idx, 1);
+                }
+            }
+        }
+
+        if (step === 7) {
+            var setup = getRadioValue('setup');
+            if (setup === 'no') {
+                if (complianceFlags.indexOf('setup') === -1) complianceFlags.push('setup');
+                return {
+                    title: 'Setup Compliance Notice',
+                    body: 'You\'ve indicated that you used a <strong>different configuration</strong> than what was provided during onboarding.' +
+                          '<br><br>Per <strong>Section 5.1(d)</strong> of your agreement, you are required to follow all setup and configuration instructions provided by the Company. Additionally, <strong>Section 5.4(a)</strong> requires use of the Software in <strong>strict accordance</strong> with the conditions outlined in Annex B to remain eligible for the refund guarantee.' +
+                          '<br><br>Using a non-prescribed configuration means your usage <strong>falls outside the contractual conditions for a refund</strong>. You may still submit your request, but please be aware that claims that do not meet the terms of the signed agreement are <strong>unlikely to be approved</strong>.' +
+                          '<br><br>Would you like to continue?'
+                };
+            } else {
+                var idx = complianceFlags.indexOf('setup');
+                if (idx !== -1) complianceFlags.splice(idx, 1);
+            }
+        }
+
+        if (step === 8) {
+            var duration = getRadioValue('duration');
+            if (duration === '<30' || duration === '30-59' || duration === '60-89') {
+                if (complianceFlags.indexOf('duration') === -1) complianceFlags.push('duration');
+                var durationLabels = {'<30': 'less than 30 days', '30-59': '30 to 59 days', '60-89': '60 to 89 days'};
+                return {
+                    title: 'Evaluation Period Not Met',
+                    body: 'You\'ve indicated the algorithm was run for <strong>' + durationLabels[duration] + '</strong>.' +
+                          '<br><br>Per <strong>Section 1.1</strong>, <strong>Section 8.1</strong>, and <strong>Annex B</strong> of your Trading Algorithm Customer Agreement, the refund guarantee requires the Software to have been used continuously for the full <strong>90-day Evaluation Period</strong>. Running the algorithm for less than 90 days means the contractual threshold for a refund claim <strong>has not been met</strong>.' +
+                          '<br><br>You may still continue with your submission, but because this falls outside the terms of your signed agreement, <strong>your claim is unlikely to be approved</strong>. Per <strong>Section 8.3</strong>, no refunds are issued for any reason outside the conditions outlined in Annex B.' +
+                          '<br><br>Would you like to proceed?'
+                };
+            } else {
+                var idx = complianceFlags.indexOf('duration');
+                if (idx !== -1) complianceFlags.splice(idx, 1);
+            }
+        }
+
+        if (step === 9) {
+            var tradepost = getRadioValue('tradepost');
+            if (tradepost === 'no') {
+                if (complianceFlags.indexOf('tradepost') === -1) complianceFlags.push('tradepost');
+                return {
+                    title: 'Required Platform Not Used',
+                    body: 'You\'ve indicated that <strong>TradePost</strong> was not used to connect the algorithm.' +
+                          '<br><br>Per <strong>Section 5.1(b)</strong> and <strong>Section 5.1(c)</strong> of your agreement, you are required to establish and maintain an active TradePost account and correctly connect your brokerage account through TradePost. <strong>Section 6.1</strong> designates TradePost as the platform through which the Software is delivered. Per <strong>Section 10.2(d)</strong>, TradePost data is used to verify refund claims.' +
+                          '<br><br>Without TradePost usage, the Company cannot verify algorithm activity through the contractually designated channel, which means your claim <strong>does not meet the requirements for approval</strong>. You may still submit your request, but please be aware that it is <strong>unlikely to be approved</strong> under these circumstances.' +
+                          '<br><br>Would you like to proceed?'
+                };
+            } else {
+                var idx = complianceFlags.indexOf('tradepost');
+                if (idx !== -1) complianceFlags.splice(idx, 1);
+            }
+        }
+
+        return null;
+    }
+
+    function showEligibilityModal(warning, callback) {
+        document.getElementById('modal-title').textContent = warning.title;
+        document.getElementById('modal-body').innerHTML = warning.body;
+        document.getElementById('eligibility-modal').classList.add('visible');
+        document.body.style.overflow = 'hidden';
+        modalResolve = callback;
+    }
+
+    function closeModal(proceed) {
+        document.getElementById('eligibility-modal').classList.remove('visible');
+        document.body.style.overflow = '';
+        if (modalResolve) {
+            var cb = modalResolve;
+            modalResolve = null;
+            cb(proceed);
+        }
+    }
+
+    function prevStep(from) { goToStep(from - 1); }
+
+    function updateProgress() {
+        var pct = (currentStep / TOTAL_STEPS) * 100;
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('progress-step').textContent = currentStep + ' / ' + TOTAL_STEPS;
+        document.getElementById('progress-label').textContent = stepLabels[currentStep] || '';
+    }
+
+    // ── Selfie Camera ──
+    var selfieStream = null;
+    var selfieBlob = null;
+
+    function startCamera() {
+        var video = document.getElementById('selfie-video');
+        var loading = document.getElementById('camera-loading');
+        var container = document.getElementById('camera-container');
+        var preview = document.getElementById('camera-preview');
+
+        // Reset to camera view
+        container.style.display = '';
+        preview.style.display = 'none';
+        loading.classList.remove('hidden');
+        selfieBlob = null;
+
+        if (selfieStream) {
+            selfieStream.getTracks().forEach(function(t) { t.stop(); });
+            selfieStream = null;
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false })
+            .then(function(stream) {
+                selfieStream = stream;
+                video.srcObject = stream;
+                video.onloadedmetadata = function() {
+                    loading.classList.add('hidden');
+                };
+            })
+            .catch(function(err) {
+                console.error('Camera error:', err);
+                loading.innerHTML = '<div class="camera-error"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg><br>Unable to access your camera.<br>Please allow camera permissions in your browser and try again.</div>';
+            });
+    }
+
+    function stopCamera() {
+        if (selfieStream) {
+            selfieStream.getTracks().forEach(function(t) { t.stop(); });
+            selfieStream = null;
+        }
+        var video = document.getElementById('selfie-video');
+        if (video) video.srcObject = null;
+    }
+
+    function captureSelfie() {
+        var video = document.getElementById('selfie-video');
+        var canvas = document.getElementById('selfie-canvas');
+        if (!video || !video.srcObject) return;
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        var ctx = canvas.getContext('2d');
+        // Mirror the capture to match the mirrored preview
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0);
+
+        // Stop camera
+        stopCamera();
+
+        // Convert to blob
+        canvas.toBlob(function(blob) {
+            selfieBlob = blob;
+
+            // Show preview
+            var img = document.getElementById('selfie-preview-img');
+            img.src = URL.createObjectURL(blob);
+            document.getElementById('camera-container').style.display = 'none';
+            document.getElementById('camera-preview').style.display = 'block';
+        }, 'image/jpeg', 0.92);
+    }
+
+    function retakeSelfie() {
+        selfieBlob = null;
+        startCamera();
+    }
+
+    // ── Verify Tab Switch ──
+    function switchVerifyTab(tab) {
+        activeVerifyTab = tab;
+        document.querySelectorAll('.verify-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.verify-panel').forEach(function(p) { p.classList.remove('active'); });
+        if (tab === 'id') {
+            document.querySelectorAll('.verify-tab')[0].classList.add('active');
+            document.getElementById('vp-id').classList.add('active');
+            stopCamera();
+        } else {
+            document.querySelectorAll('.verify-tab')[1].classList.add('active');
+            document.getElementById('vp-selfie').classList.add('active');
+            startCamera();
+        }
+    }
+
+    // ── Validation ──
+    function validateStep(step) {
+        clearErrors();
+        var valid = true;
+
+        if (step === 1) {
+            var email = document.getElementById('f-email').value.trim();
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('email'); valid = false; }
+        }
+        if (step === 2) {
+            if (!document.getElementById('f-first').value.trim()) { showError('first'); valid = false; }
+            if (!document.getElementById('f-last').value.trim()) { showError('last'); valid = false; }
+            if (!document.getElementById('f-phone').value.trim()) { showError('phone'); valid = false; }
+        }
+        if (step === 4) {
+            var hasId = document.getElementById('f-id').files.length > 0;
+            var hasSelfie = !!selfieBlob;
+            if (!hasId && !hasSelfie) { document.getElementById('err-verify').style.display = 'block'; valid = false; }
+        }
+        if (step === 5) {
+            if (!document.getElementById('f-amount').value) { showError('amount'); valid = false; }
+            if (!document.getElementById('f-purchase-date').value) { showError('purchase-date'); valid = false; }
+            if (!document.getElementById('f-payment-method').value) { showError('payment-method'); valid = false; }
+            if (!document.getElementById('f-start-date').value) { showError('start-date'); valid = false; }
+        }
+        if (step === 6) { if (!document.getElementById('f-agreement').files.length) { showError('agreement'); valid = false; } }
+        if (step === 7) { if (!getRadioValue('setup')) { showError('setup'); valid = false; } }
+        if (step === 8) { if (!getRadioValue('duration')) { showError('duration'); valid = false; } }
+        if (step === 9) {
+            if (!getRadioValue('tradepost')) { showError('tradepost'); valid = false; }
+            if (!document.getElementById('f-broker').value.trim()) { showError('broker'); valid = false; }
+        }
+        if (step === 10) { if (multiFiles.pnl.length === 0) { showError('pnl'); valid = false; } }
+        if (step === 11) { if (multiFiles.activity.length === 0) { showError('activity'); valid = false; } }
+        if (step === 12) {
+            if (!document.getElementById('f-reason').value) { showError('reason'); valid = false; }
+            if (document.getElementById('f-explanation').value.trim().length < 50) { showError('explanation'); valid = false; }
+        }
+        return valid;
+    }
+
+    function showError(id) {
+        var el = document.getElementById('err-' + id);
+        if (el) el.style.display = 'block';
+        var fg = el ? el.closest('.form-group') : null;
+        if (fg) fg.classList.add('has-error');
+    }
+
+    function clearErrors() {
+        document.querySelectorAll('.field-error').forEach(function(el) { el.style.display = 'none'; });
+        document.querySelectorAll('.form-group.has-error').forEach(function(el) { el.classList.remove('has-error'); });
+    }
+
+    function getRadioValue(name) {
+        var el = document.querySelector('input[name="' + name + '"]:checked');
+        return el ? el.value : '';
+    }
+
+    // ── File Upload ──
+    function handleFileUpload(input, zoneId) {
+        var zone = document.getElementById(zoneId);
+        var fnEl = zone.querySelector('.upload-filename');
+        if (input.files.length > 0) { zone.classList.add('has-file'); fnEl.textContent = input.files[0].name; }
+        else { zone.classList.remove('has-file'); fnEl.textContent = ''; }
+    }
+
+    function handleMultiUpload(input, zoneId, listId) {
+        var key = listId.replace('fl-','');
+        multiFiles[key] = multiFiles[key].concat(Array.from(input.files));
+        renderFileList(key, listId);
+        if (multiFiles[key].length > 0) document.getElementById(zoneId).classList.add('has-file');
+    }
+
+    function renderFileList(key, listId) {
+        var c = document.getElementById(listId);
+        c.innerHTML = '';
+        multiFiles[key].forEach(function(file, i) {
+            var d = document.createElement('div');
+            d.className = 'file-preview-item';
+            d.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="file-name">' + file.name + '</span><span class="file-remove" onclick="removeFile(\'' + key + '\',' + i + ',\'' + listId + '\')">&times;</span>';
+            c.appendChild(d);
+        });
+    }
+
+    function removeFile(key, i, listId) {
+        multiFiles[key].splice(i, 1);
+        renderFileList(key, listId);
+        if (multiFiles[key].length === 0) { var z = document.getElementById('uz-' + key); if (z) z.classList.remove('has-file'); }
+    }
+
+    // ── Drag & Drop ──
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.upload-zone').forEach(function(zone) {
+            zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', function() { zone.classList.remove('dragover'); });
+            zone.addEventListener('drop', function(e) { e.preventDefault(); zone.classList.remove('dragover'); var inp = zone.querySelector('input[type="file"]'); if (inp && e.dataTransfer.files.length) { inp.files = e.dataTransfer.files; inp.dispatchEvent(new Event('change')); } });
+        });
+        document.getElementById('f-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); nextStep(1); } });
+        document.getElementById('eligibility-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(false); });
+    });
+
+    // ── Option Select ──
+    function selectOption(item, groupId) {
+        var group = document.getElementById(groupId) || item.closest('.option-group');
+        if (group) group.querySelectorAll('.option-item').forEach(function(el) { el.classList.remove('selected'); });
+        item.classList.add('selected');
+        var r = item.querySelector('input[type="radio"]'); if (r) r.checked = true;
+    }
+
+    // ── Confirm Grid ──
+    function populateConfirmGrid() {
+        var g = document.getElementById('confirm-grid');
+        g.innerHTML = '';
+        [{l:'First Name',v:document.getElementById('f-first').value},{l:'Last Name',v:document.getElementById('f-last').value},{l:'Email',v:document.getElementById('f-email').value,f:true},{l:'Phone',v:document.getElementById('f-phone').value},{l:'Address',v:document.getElementById('f-address').value||'Not provided'}].forEach(function(item) {
+            var d = document.createElement('div'); d.className = 'confirm-item' + (item.f ? ' full-width' : '');
+            d.innerHTML = '<div class="ci-label">' + item.l + '</div><div class="ci-value">' + item.v + '</div>'; g.appendChild(d);
+        });
+    }
+
+    // ── Review ──
+    function populateReview() {
+        var c = document.getElementById('review-summary');
+        var pm = {credit_card:'Credit Card',debit_card:'Debit Card',bank_transfer:'Bank Transfer / ACH',klarna:'Klarna',split_it:'Split It',in_house:'In-House Financing',other:'Other'};
+        var rl = {not_profitable:'Not profitable over 90 days',significant_losses:'Significant trading losses',not_working:'Software did not function as described',connection_issues:'Persistent technical issues',other:'Other'};
+        var sl = {yes:'Followed all instructions',mostly:'Mostly followed, some changes',no:'Used different configuration'};
+        var dl = {'90+':'90+ days','60-89':'60-89 days','30-59':'30-59 days','<30':'Less than 30 days'};
+
+        var hasId = document.getElementById('f-id').files.length > 0;
+        var hasSelfie = !!selfieBlob;
+        var verifyFile = hasId ? document.getElementById('f-id').files[0].name : (hasSelfie ? 'selfie-capture.jpg' : 'None');
+        var verifyType = hasId ? 'Photo ID' : 'Selfie';
+
+        var h = '';
+        h += '<div class="summary-card"><h4>Personal Information</h4>';
+        h += R('Name', document.getElementById('f-first').value + ' ' + document.getElementById('f-last').value);
+        h += R('Email', document.getElementById('f-email').value);
+        h += R('Phone', document.getElementById('f-phone').value) + '</div>';
+
+        h += '<div class="summary-card"><h4>Purchase Details</h4>';
+        h += R('Amount Paid', '$' + parseFloat(document.getElementById('f-amount').value||0).toFixed(2));
+        h += R('Purchase Date', document.getElementById('f-purchase-date').value);
+        h += R('Payment Method', pm[document.getElementById('f-payment-method').value]||'');
+        h += R('Algorithm Start Date', document.getElementById('f-start-date').value) + '</div>';
+
+        h += '<div class="summary-card"><h4>Usage & Compliance</h4>';
+        h += R('Setup Compliance', sl[getRadioValue('setup')]||'');
+        h += R('Duration', dl[getRadioValue('duration')]||'');
+        h += R('Used TradePost', getRadioValue('tradepost')==='yes'?'Yes':'No');
+        h += R('Broker', document.getElementById('f-broker').value) + '</div>';
+
+        h += '<div class="summary-card"><h4>Documents</h4>';
+        h += R('Verification (' + verifyType + ')', verifyFile, true);
+        h += R('Signed Agreement', document.getElementById('f-agreement').files.length?document.getElementById('f-agreement').files[0].name:'None', true);
+        h += R('P&L / Statements', multiFiles.pnl.length + ' file(s)', multiFiles.pnl.length>0);
+        h += R('Activity Proof', multiFiles.activity.length + ' file(s)', multiFiles.activity.length>0);
+        h += R('Extra Evidence', multiFiles.extra.length>0?multiFiles.extra.length+' file(s)':'None', multiFiles.extra.length>0) + '</div>';
+
+        h += '<div class="summary-card"><h4>Refund Reason</h4>';
+        h += R('Primary Reason', rl[document.getElementById('f-reason').value]||'') + '</div>';
+        c.innerHTML = h;
+
+        // Build compliance warning for final review
+        buildComplianceWarning();
+    }
+
+    function buildComplianceWarning() {
+        var cw = document.getElementById('compliance-warning');
+
+        // Re-check flags based on current form data
+        complianceFlags = [];
+        var startDate = document.getElementById('f-start-date').value;
+        if (startDate) {
+            var diffDays = Math.floor((new Date() - new Date(startDate)) / (1000 * 60 * 60 * 24));
+            if (diffDays < 90) complianceFlags.push('duration_start');
+        }
+        if (getRadioValue('setup') === 'no') complianceFlags.push('setup');
+        var dur = getRadioValue('duration');
+        if (dur === '<30' || dur === '30-59' || dur === '60-89') complianceFlags.push('duration');
+        if (getRadioValue('tradepost') === 'no') complianceFlags.push('tradepost');
+
+        if (complianceFlags.length === 0) {
+            cw.innerHTML = '';
+            return;
+        }
+
+        var issueLabels = {
+            duration_start: 'Start date indicates the 90-day Evaluation Period is not yet complete <strong>(Section 1.1, 8.1, Annex B)</strong>',
+            setup: 'Algorithm was not used with the prescribed setup configuration <strong>(Section 5.1(d), 5.4(a))</strong>',
+            duration: 'Algorithm was not run for the full 90-day Evaluation Period <strong>(Section 1.1, 8.1, 8.3, Annex B)</strong>',
+            tradepost: 'TradePost was not used as the designated delivery platform <strong>(Section 5.1(b)(c), 6.1, 10.2(d))</strong>'
+        };
+
+        var html = '<div class="compliance-alert">';
+        html += '<div class="compliance-alert-header"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
+        html += '<strong>Your Request Does Not Meet Contractual Requirements</strong></div>';
+
+        html += '<p>Based on your responses, your refund request contains <strong>' + complianceFlags.length + ' item(s)</strong> that do not align with the terms of your signed Trading Algorithm Customer Agreement:</p>';
+        html += '<ul>';
+        for (var i = 0; i < complianceFlags.length; i++) {
+            html += '<li>' + issueLabels[complianceFlags[i]] + '</li>';
+        }
+        html += '</ul>';
+
+        html += '<p>Per <strong>Section 8.2</strong>, the Annex B refund guarantee is your <strong>sole and exclusive remedy</strong> for any performance-related claims. Per <strong>Section 8.3</strong>, <strong>no refunds are issued for any reason outside the conditions outlined in Annex B</strong> — including dissatisfaction, market conditions, or trading losses.</p>';
+
+        html += '<p>Because your submission does not currently satisfy the contractual conditions, the <strong>likelihood of approval is very low</strong>. You may still submit for review, but we want to be transparent about this outcome.</p>';
+
+        html += '<p style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(229,72,77,0.15)"><strong style="color:var(--error)">Important Legal Notice:</strong> Per <strong>Section 15.1</strong>, this formal refund request process is the required first step before pursuing any dispute. Initiating a payment dispute or chargeback with your bank without first completing this process and allowing the Company 10 business days to respond constitutes a <strong>material breach</strong> of your agreement <strong>(Section 15.2, 15.3)</strong>.</p>';
+
+        html += '<p>Under <strong>Section 15.3</strong>, unauthorized chargebacks may result in: <strong>(a)</strong> immediate and permanent termination of your license, <strong>(b)</strong> referral to third-party collections, <strong>(c)</strong> legal action for recovery of all amounts plus damages, <strong>(d)</strong> filing of liens and pursuit of asset recovery, and <strong>(e)</strong> reporting to credit bureaus and fraud-prevention networks. The <strong>prevailing party</strong> in any dispute is entitled to full recovery of attorneys\' fees and all associated costs <strong>(Section 15.5)</strong>.</p>';
+
+        html += '<p>All disputes are subject to <strong>mandatory binding arbitration</strong> in Miami-Dade County, Florida <strong>(Section 15.7)</strong>. You have waived your right to a jury trial and to participate in any class action <strong>(Section 15.8)</strong>.</p>';
+
+        html += '</div>';
+        cw.innerHTML = html;
+    }
+
+    function R(l, v, f) { return '<div class="summary-row"><span class="label">' + l + '</span><span class="value' + (f?' file-attached':'') + '">' + v + '</span></div>'; }
+
+    // ── Submit ──
+    // ── Supabase Client ──
+    var sbClient = window.supabase.createClient(
+        'https://vnhrwcerlaoipycsbigi.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuaHJ3Y2VybGFvaXB5Y3NiaWdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzNTA3NTksImV4cCI6MjA4NDkyNjc1OX0.LOlRKqiOzsCBX2R6qcYukt3IG5onX3e4O-RIjcWWMnU'
+    );
+
+    // ── Upload a single file to Supabase storage ──
+    async function uploadFile(refNumber, file, subfolder) {
+        if (!file) return null;
+        var ext = file.name ? file.name.split('.').pop() : 'jpg';
+        var safeName = subfolder + '_' + Date.now() + '.' + ext;
+        var path = refNumber + '/' + safeName;
+
+        // Never let a storage failure (bad mime, RLS, network) throw out and abort
+        // the whole submission — a dropped file is logged and skipped instead.
+        try {
+            var { data, error } = await sbClient.storage
+                .from('refund-files')
+                .upload(path, file, {
+                    contentType: file.type || 'application/octet-stream',
+                    upsert: false
+                });
+
+            if (error) {
+                console.error('Upload error (' + subfolder + '):', error);
+                return null;
+            }
+            return path;
+        } catch (e) {
+            console.error('Upload threw (' + subfolder + '):', e);
+            return null;
+        }
+    }
+
+    // ── Upload multiple files ──
+    async function uploadMultipleFiles(refNumber, files, subfolder) {
+        var paths = [];
+        for (var i = 0; i < files.length; i++) {
+            var path = await uploadFile(refNumber, files[i], subfolder + '_' + (i + 1));
+            if (path) paths.push(path);
+        }
+        return paths;
+    }
+
+    // ── Submit to Supabase ──
+    async function submitRequest() {
+        var btn = document.getElementById('btn-submit');
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83"/></svg> Submitting...</span>';
+
+        var ref = 'RR-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2,6).toUpperCase();
+
+        try {
+            // Guard: if the Supabase library didn't load (CDN blocked/slow, offline),
+            // sbClient is undefined and every call below would throw a cryptic error.
+            if (typeof sbClient === 'undefined' || !sbClient || !window.supabase) {
+                throw new Error('Connection to our servers could not be established (the secure client failed to load). Please refresh the page and try again, or check your internet connection.');
+            }
+
+            // 1. Upload all files
+            btn.innerHTML = 'Uploading files...';
+            var hasId = document.getElementById('f-id').files.length > 0;
+            var filePaths = {};
+
+            // ID or selfie
+            if (hasId) {
+                var idPath = await uploadFile(ref, document.getElementById('f-id').files[0], 'photo_id');
+                if (idPath) filePaths.photo_id = idPath;
+            } else if (selfieBlob) {
+                var selfieFile = new File([selfieBlob], 'selfie-capture.jpg', { type: 'image/jpeg' });
+                var selfiePath = await uploadFile(ref, selfieFile, 'selfie');
+                if (selfiePath) filePaths.selfie = selfiePath;
+            }
+
+            // Signed agreement
+            if (document.getElementById('f-agreement').files.length) {
+                var agPath = await uploadFile(ref, document.getElementById('f-agreement').files[0], 'agreement');
+                if (agPath) filePaths.agreement = agPath;
+            }
+
+            // P&L files
+            if (multiFiles.pnl.length > 0) {
+                filePaths.pnl = await uploadMultipleFiles(ref, multiFiles.pnl, 'pnl');
+            }
+
+            // Activity proof files
+            if (multiFiles.activity.length > 0) {
+                filePaths.activity = await uploadMultipleFiles(ref, multiFiles.activity, 'activity');
+            }
+
+            // Extra evidence files
+            if (multiFiles.extra.length > 0) {
+                filePaths.extra = await uploadMultipleFiles(ref, multiFiles.extra, 'extra');
+            }
+
+            // 2. Insert the refund request record
+            btn.innerHTML = 'Saving request...';
+            var { data, error } = await sbClient
+                .from('refund_requests')
+                .insert({
+                    reference_number: ref,
+                    email: document.getElementById('f-email').value.trim(),
+                    first_name: document.getElementById('f-first').value.trim(),
+                    last_name: document.getElementById('f-last').value.trim(),
+                    phone: document.getElementById('f-phone').value.trim(),
+                    address: document.getElementById('f-address').value.trim(),
+                    amount_paid: parseFloat(document.getElementById('f-amount').value) || 0,
+                    purchase_date: document.getElementById('f-purchase-date').value || null,
+                    payment_method: document.getElementById('f-payment-method').value,
+                    start_date: document.getElementById('f-start-date').value || null,
+                    setup_compliance: getRadioValue('setup'),
+                    usage_duration: getRadioValue('duration'),
+                    used_tradepost: getRadioValue('tradepost') === 'yes',
+                    broker: document.getElementById('f-broker').value.trim(),
+                    broker_id: document.getElementById('f-broker-id').value.trim(),
+                    reason: document.getElementById('f-reason').value,
+                    explanation: document.getElementById('f-explanation').value.trim(),
+                    verification_type: hasId ? 'photo_id' : 'selfie',
+                    compliance_flags: complianceFlags.slice(),
+                    compliant: complianceFlags.length === 0,
+                    file_paths: filePaths,
+                    status: 'pending'
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // 3. Show success
+            document.getElementById('ref-number').textContent = ref;
+            document.getElementById('progress-container').style.display = 'none';
+            var cur = document.getElementById('step-13');
+            cur.classList.add('slide-out');
+            setTimeout(function() {
+                cur.classList.remove('active', 'slide-out');
+                document.getElementById('step-success').classList.add('active');
+            }, 240);
+
+        } catch (err) {
+            // Surface the real cause so failures are diagnosable instead of generic.
+            var detail = (err && (err.message || err.error_description || err.error)) || 'Unknown error';
+            if (err && err.code) detail += ' (code ' + err.code + ')';
+            if (err && err.details) detail += ' — ' + err.details;
+            if (err && err.hint) detail += ' [hint: ' + err.hint + ']';
+            console.error('Submission error:', err, '| detail:', detail);
+
+            btn.disabled = false;
+            btn.innerHTML = 'Submit Refund Request <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+
+            // Show error to user
+            var errDiv = document.createElement('div');
+            errDiv.className = 'warning-box';
+            errDiv.style.marginTop = '12px';
+            errDiv.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
+                + '<p>There was an error submitting your request. Please try again. If this issue persists, contact <strong>clientsupport@vantagequant.com</strong>.</p>'
+                + '<p style="margin-top:8px;font-size:12px;opacity:0.8">Details: ' + escapeHtmlRR(detail) + '</p>';
+
+            var existing = document.querySelector('#step-13 .submit-error');
+            if (existing) existing.remove();
+            errDiv.classList.add('submit-error');
+            btn.parentElement.after(errDiv);
+        }
+    }
+
+    // Small HTML escaper for surfaced error text.
+    function escapeHtmlRR(s) {
+        return String(s).replace(/[&<>"']/g, function(c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+</script>
+</body>
+</html>

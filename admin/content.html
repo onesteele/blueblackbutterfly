@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Content Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+            --sidebar-width: 60px;
+            --sidebar-expanded: 240px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           BACKGROUND ANIMATION
+           ============================================================ */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            /* filter blur removed for performance */
+            opacity: 0.3;
+            /* animation: floatOrb */ animation: none 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            top: -100px; right: -100px;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, 30px) scale(1.05); }
+        }
+
+        /* ============================================================
+           SIDEBAR NAVIGATION
+           ============================================================ */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: #111111;
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        .sidebar:hover {
+            width: var(--sidebar-expanded);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 14px;
+            border-bottom: 1px solid var(--border);
+            min-height: 60px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+
+        .sidebar-logo-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;}
+
+        .sidebar:hover .sidebar-logo-text {
+            opacity: 1;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 12px 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 18px;
+            margin: 2px 8px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            position: relative;
+            border-left: 3px solid transparent;
+            margin-left: 0;
+            padding-left: 15px;
+        }
+
+        .nav-item:hover {
+            background: rgba(59, 109, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+
+        .nav-item.active .nav-icon svg {
+            color: var(--accent);
+        }
+
+        .nav-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .nav-icon svg {
+            width: 20px;
+            height: 20px;
+            color: currentColor;
+            transition: color 0.2s ease;
+        }
+
+        .nav-label {
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;
+        }
+
+        .sidebar:hover .nav-label {
+            opacity: 1;
+        }
+
+        .sidebar-bottom {
+            border-top: 1px solid var(--border);
+            padding: 12px 0;
+            flex-shrink: 0;
+        }
+
+        .nav-item.signout-item {
+            color: var(--text-muted);
+        }
+
+        .nav-item.signout-item:hover {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        /* ============================================================
+           HAMBURGER MENU (MOBILE)
+           ============================================================ */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 200;
+            width: 40px;
+            height: 40px;
+            background: #111111;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .hamburger-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            /* backdrop-filter removed for performance */
+            z-index: 90;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 10, 10, 0.8);
+            /* backdrop-filter removed for performance */
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-style: italic;}
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .admin-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.3);
+            padding: 5px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ============================================================
+           PAGE BODY
+           ============================================================ */
+        .page-body {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
+           ACTION BAR
+           ============================================================ */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .action-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .content-count {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .content-count strong {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            border: none;
+            border-radius: 10px;
+            color: #06070c;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(59, 109, 255, 0.35);
+        }
+
+        .btn-primary svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ============================================================
+           CONTENT TABLE
+           ============================================================ */
+        .content-card {
+            background: rgba(20, 20, 20, 0.8);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(59, 109, 255, 0.03);
+        }
+
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .content-table thead {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .content-table th {
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 500;
+            background: linear-gradient(135deg, rgba(59, 109, 255, 0.5) 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);}
+
+        .content-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .content-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .content-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .content-table tbody tr:hover {
+            background: rgba(59, 109, 255, 0.04);
+        }
+
+        .content-title-cell {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .content-title-cell .content-desc {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .category-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+        }
+
+        .category-badge.general { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+        .category-badge.tutorial { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .category-badge.update { background: rgba(59, 109, 255, 0.15); color: #3b6dff; }
+        .category-badge.strategy { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-badge.published {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.draft {
+            background: rgba(107, 114, 128, 0.15);
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .btn-icon.delete:hover {
+            border-color: var(--error);
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .btn-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ============================================================
+           EMPTY & LOADING STATES
+           ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 56px;
+            height: 56px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============================================================
+           MODAL OVERLAY
+           ============================================================ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            /* backdrop-filter removed for performance */
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5), 0 0 60px rgba(59, 109, 255, 0.05);
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .modal::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            border-color: var(--error);
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .modal-close svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .modal-body {
+            padding: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+
+        .form-select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        /* Toggle Switch */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toggle-label-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--border);
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: "";
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--accent);
+        }
+
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(22px);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            padding: 20px 28px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            color: var(--error);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--error);
+        }
+
+        .btn-danger svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .modal-footer-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ============================================================
+           TOAST NOTIFICATION
+           ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            z-index: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--success);
+        }
+
+        .toast.error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--error);
+        }
+
+        .toast svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-expanded);
+                z-index: 150;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar.mobile-open .nav-label,
+            .sidebar.mobile-open .sidebar-logo-text {
+                opacity: 1;
+            }
+
+            .hamburger-btn {
+                display: flex;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .top-bar {
+                padding: 16px 16px 16px 64px;
+            }
+
+            .page-body {
+                padding: 20px 16px;
+            }
+
+            .page-title {
+                font-size: 22px;
+            }
+
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .content-table th:nth-child(4),
+            .content-table td:nth-child(4) {
+                display: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                max-width: 100%;
+                border-radius: 16px;
+            }
+
+            .top-bar-right {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .content-table th:nth-child(3),
+            .content-table td:nth-child(3) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Mobile Hamburger Button -->
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="../logo.png" alt="VantageQuant">
+            <span class="sidebar-logo-text">VantageQuant</span>
+        </div>
+
+        <div class="sidebar-nav">
+            <!-- Dashboard -->
+            <a href="/admin/" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+
+            <!-- Customers -->
+            <a href="/admin/customers.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Customers</span>
+            </a>
+
+            <!-- Content (ACTIVE) -->
+            <a href="/admin/content.html" class="nav-item active">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Content</span>
+            </a>
+
+            <!-- Announcements -->
+            <a href="/admin/announcements.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Announcements</span>
+            </a>
+
+            <!-- Conversations -->
+            <a href="/admin/conversations.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Conversations</span>
+            </a>
+
+            <!-- Workflows -->
+            <a href="/admin/workflows.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Workflows</span>
+            </a>
+
+            <!-- Notifications -->
+            <a href="/admin/notifications.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                </span>
+                <span class="nav-label">Notifications</span>
+            </a>
+
+            <!-- Settings -->
+            <a href="/admin/settings.html" class="nav-item">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </span>
+                <span class="nav-label">Settings</span>
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a class="nav-item" onclick="window.toggleTheme()" style="cursor:pointer;">
+                <span class="nav-icon"><span class="theme-toggle-icon"></span></span>
+                <span class="nav-label theme-toggle-label"></span>
+            </a>
+            <a class="nav-item signout-item" onclick="window.signOut()" style="cursor:pointer;">
+                <span class="nav-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </span>
+                <span class="nav-label">Sign Out</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <h1 class="page-title">Content Manager</h1>
+            </div>
+            <div class="top-bar-right">
+                <span class="admin-name" id="admin-name">Loading...</span>
+                <span class="admin-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Admin
+                </span>
+            </div>
+        </div>
+
+        <!-- Page Body -->
+        <div class="page-body">
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <div class="action-bar-left">
+                    <span class="content-count" id="content-count">Loading content...</span>
+                </div>
+                <button class="btn-primary" onclick="openCreateModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    New Content
+                </button>
+            </div>
+
+            <!-- Content Table -->
+            <div class="content-card">
+                <div id="content-list">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create / Edit Modal -->
+    <div class="modal-overlay" id="content-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">New Content</h2>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="content-id">
+
+                <div class="form-group">
+                    <label for="content-title">Title</label>
+                    <input type="text" class="form-input" id="content-title" placeholder="Enter content title...">
+                </div>
+
+                <div class="form-group">
+                    <label for="content-description">Description</label>
+                    <textarea class="form-textarea" id="content-description" placeholder="Enter a description..." rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="content-video-url">Video URL (Loom or YouTube)</label>
+                    <input type="text" class="form-input" id="content-video-url" placeholder="https://www.loom.com/share/... or https://youtu.be/...">
+                </div>
+
+                <div class="form-group">
+                    <label for="content-thumbnail-url">Thumbnail URL <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                    <input type="text" class="form-input" id="content-thumbnail-url" placeholder="https://example.com/thumbnail.jpg">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="content-category">Category</label>
+                        <select class="form-select" id="content-category">
+                            <option value="General">General</option>
+                            <option value="Tutorial">Tutorial</option>
+                            <option value="Update">Update</option>
+                            <option value="Strategy">Strategy</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="content-sort-order">Sort Order</label>
+                        <input type="number" class="form-input" id="content-sort-order" placeholder="0" min="0" value="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="toggle-row">
+                        <span class="toggle-label-text">Published</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="content-published">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div>
+                    <button class="btn-danger" id="btn-delete" style="display:none;" onclick="deleteContent()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                    </button>
+                </div>
+                <div class="modal-footer-right">
+                    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn-primary" onclick="saveContent()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <span id="toast-msg"></span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-client.js"></script>
+    <script>
+        /* ============================================================
+           MOBILE SIDEBAR TOGGLE
+           ============================================================ */
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const btn = document.getElementById('hamburger-btn');
+
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('show');
+
+            if (sidebar.classList.contains('mobile-open')) {
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>';
+            } else {
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>';
+            }
+        }
+
+        /* ============================================================
+           30-MINUTE INACTIVITY AUTO-LOGOUT
+           ============================================================ */
+        (function() {
+            let inactivityTimer;
+            const TIMEOUT = 30 * 60 * 1000;
+
+            function resetTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => {
+                    console.log('Auto-logout: 30 minutes of inactivity');
+                    window.signOut();
+                }, TIMEOUT);
+            }
+
+            ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
+                document.addEventListener(evt, resetTimer, true);
+            });
+
+            resetTimer();
+        })();
+
+        /* ============================================================
+           STATE
+           ============================================================ */
+        let allContent = [];
+        let editingId = null;
+
+        /* ============================================================
+           INIT & AUTH CHECK
+           ============================================================ */
+        (async function init() {
+            try {
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                const user = await window.getCurrentUser();
+                if (!user) {
+                    window.location.href = '/auth';
+                    return;
+                }
+
+                const profile = await window.getUserProfile(user.id);
+                if (!profile || !window.hasAdminAccess(profile)) {
+                    alert('Access denied. Admin privileges required.');
+                    await window.supabaseClient.auth.signOut();
+                    window.location.href = '/auth';
+                    return;
+                }
+
+                // Content management requires admin+ role
+                if (!window.canManageContent(profile)) {
+                    window.location.href = '/admin/customers.html';
+                    return;
+                }
+
+                document.getElementById('admin-name').textContent = `${profile.first_name} ${profile.last_name}`;
+
+                // Load permissions and apply role-based sidebar
+                await window.loadRolePermissions();
+                window.applySidebarRole(profile, 'content');
+
+                await loadContent();
+            } catch (error) {
+                console.error('Admin init error:', error);
+                window.location.href = '/auth';
+            }
+        })();
+
+        /* ============================================================
+           LOAD CONTENT
+           ============================================================ */
+        async function loadContent() {
+            const container = document.getElementById('content-list');
+            container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('content_posts')
+                    .select('*')
+                    .order('sort_order', { ascending: true })
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allContent = data || [];
+                renderContentTable();
+            } catch (error) {
+                console.error('Error loading content:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.832c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <h3>Error Loading Content</h3>
+                        <p>Please try refreshing the page.</p>
+                    </div>`;
+            }
+        }
+
+        /* ============================================================
+           RENDER TABLE
+           ============================================================ */
+        function renderContentTable() {
+            const container = document.getElementById('content-list');
+            const countEl = document.getElementById('content-count');
+
+            countEl.innerHTML = `Showing <strong>${allContent.length}</strong> content item${allContent.length !== 1 ? 's' : ''}`;
+
+            if (allContent.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3>No Content Yet</h3>
+                        <p>Create your first content post to get started.</p>
+                        <button class="btn-primary" onclick="openCreateModal()" style="margin-top: 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            New Content
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            let html = `
+                <table class="content-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            allContent.forEach(item => {
+                const statusClass = item.is_published ? 'published' : 'draft';
+                const statusLabel = item.is_published ? 'Published' : 'Draft';
+                const categoryClass = (item.category || 'general').toLowerCase();
+                const createdDate = item.created_at
+                    ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    : 'N/A';
+                const desc = item.description ? item.description.substring(0, 80) : '';
+
+                html += `
+                    <tr>
+                        <td>
+                            <div class="content-title-cell">
+                                ${escapeHtml(item.title || 'Untitled')}
+                                ${desc ? `<div class="content-desc">${escapeHtml(desc)}</div>` : ''}
+                            </div>
+                        </td>
+                        <td><span class="category-badge ${categoryClass}">${escapeHtml(item.category || 'General')}</span></td>
+                        <td><span class="status-badge ${statusClass}"><span class="status-dot"></span>${statusLabel}</span></td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-icon" title="Edit" onclick="openEditModal('${item.id}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                                <button class="btn-icon delete" title="Delete" onclick="confirmDeleteFromTable('${item.id}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        /* ============================================================
+           MODAL CONTROLS
+           ============================================================ */
+        function openCreateModal() {
+            editingId = null;
+            document.getElementById('modal-title').textContent = 'New Content';
+            document.getElementById('content-id').value = '';
+            document.getElementById('content-title').value = '';
+            document.getElementById('content-description').value = '';
+            document.getElementById('content-video-url').value = '';
+            document.getElementById('content-thumbnail-url').value = '';
+            document.getElementById('content-category').value = 'General';
+            document.getElementById('content-sort-order').value = '0';
+            document.getElementById('content-published').checked = false;
+            document.getElementById('btn-delete').style.display = 'none';
+
+            document.getElementById('content-modal').classList.add('show');
+        }
+
+        function openEditModal(id) {
+            const item = allContent.find(c => c.id === id);
+            if (!item) return;
+
+            editingId = id;
+            document.getElementById('modal-title').textContent = 'Edit Content';
+            document.getElementById('content-id').value = id;
+            document.getElementById('content-title').value = item.title || '';
+            document.getElementById('content-description').value = item.description || '';
+            document.getElementById('content-video-url').value = item.video_url || '';
+            document.getElementById('content-thumbnail-url').value = item.thumbnail_url || '';
+            document.getElementById('content-category').value = item.category || 'General';
+            document.getElementById('content-sort-order').value = item.sort_order || 0;
+            document.getElementById('content-published').checked = item.is_published || false;
+            document.getElementById('btn-delete').style.display = 'inline-flex';
+
+            document.getElementById('content-modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('content-modal').classList.remove('show');
+            editingId = null;
+        }
+
+        // Close modal on overlay click
+        document.getElementById('content-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        /* ============================================================
+           SAVE (CREATE / UPDATE)
+           ============================================================ */
+        async function saveContent() {
+            const title = document.getElementById('content-title').value.trim();
+            const description = document.getElementById('content-description').value.trim();
+            const videoUrl = document.getElementById('content-video-url').value.trim();
+            const thumbnailUrl = document.getElementById('content-thumbnail-url').value.trim();
+            const category = document.getElementById('content-category').value;
+            const sortOrder = parseInt(document.getElementById('content-sort-order').value) || 0;
+            const isPublished = document.getElementById('content-published').checked;
+
+            if (!title) {
+                showToast('Please enter a title.', 'error');
+                return;
+            }
+
+            const payload = {
+                title,
+                description,
+                video_url: videoUrl || null,
+                thumbnail_url: thumbnailUrl || null,
+                category,
+                sort_order: sortOrder,
+                is_published: isPublished
+            };
+
+            try {
+                let result;
+                if (editingId) {
+                    // Update
+                    result = await window.supabaseClient
+                        .from('content_posts')
+                        .update(payload)
+                        .eq('id', editingId)
+                        .select();
+                } else {
+                    // Insert
+                    result = await window.supabaseClient
+                        .from('content_posts')
+                        .insert(payload)
+                        .select();
+                }
+
+                if (result.error) throw result.error;
+
+                showToast(editingId ? 'Content updated successfully.' : 'Content created successfully.', 'success');
+                closeModal();
+                await loadContent();
+            } catch (error) {
+                console.error('Error saving content:', error);
+                showToast('Error saving content. Please try again.', 'error');
+            }
+        }
+
+        /* ============================================================
+           DELETE
+           ============================================================ */
+        async function deleteContent() {
+            if (!editingId) return;
+
+            const item = allContent.find(c => c.id === editingId);
+            const name = item ? item.title : 'this content';
+
+            if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('content_posts')
+                    .delete()
+                    .eq('id', editingId);
+
+                if (error) throw error;
+
+                showToast('Content deleted successfully.', 'success');
+                closeModal();
+                await loadContent();
+            } catch (error) {
+                console.error('Error deleting content:', error);
+                showToast('Error deleting content. Please try again.', 'error');
+            }
+        }
+
+        function confirmDeleteFromTable(id) {
+            const item = allContent.find(c => c.id === id);
+            const name = item ? item.title : 'this content';
+
+            if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            (async () => {
+                try {
+                    const { error } = await window.supabaseClient
+                        .from('content_posts')
+                        .delete()
+                        .eq('id', id);
+
+                    if (error) throw error;
+
+                    showToast('Content deleted successfully.', 'success');
+                    await loadContent();
+                } catch (error) {
+                    console.error('Error deleting content:', error);
+                    showToast('Error deleting content. Please try again.', 'error');
+                }
+            })();
+        }
+
+        /* ============================================================
+           TOAST
+           ============================================================ */
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toast-msg');
+
+            msg.textContent = message;
+            toast.className = 'toast ' + type;
+
+            // Update icon based on type
+            if (type === 'success') {
+                toast.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />';
+            } else {
+                toast.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.832c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        /* ============================================================
+           UTILS
+           ============================================================ */
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

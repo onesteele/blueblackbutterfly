@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Copy Trading Account Setup</title>
+    <meta name="description" content="Set up your free, automated copy trading account with VantageQuant. Copy vetted, verified pro traders on a free $100,000 Summit demo account — zero risk, fully hands-free, lifetime access.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.18) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.5;
+        }
+        .orb-1 { width: 400px; height: 400px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); top: -100px; left: -100px; }
+        .orb-2 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(59, 109, 255, 0.25) 0%, transparent 70%); bottom: 20%; right: -50px; }
+        .orb-3 { width: 250px; height: 250px; background: radial-gradient(circle, rgba(59, 109, 255, 0.2) 0%, transparent 70%); top: 50%; left: 30%; }
+
+        @keyframes vScreenFadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Header */
+        .course-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+        }
+        .course-header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand img { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 0 12px var(--accent-glow)); }
+        .brand span {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px; font-weight: 500; letter-spacing: 0.04em;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;}
+        .header-tag {
+            font-size: 12px; font-weight: 600; color: var(--text-muted);
+            display: flex; align-items: center; gap: 7px;
+        }
+        .header-tag svg { width: 14px; height: 14px; color: var(--accent); }
+        @media (max-width: 560px) { .header-tag { display: none; } }
+
+        /* Stage */
+        .stage {
+            position: relative;
+            z-index: 10;
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 48px 24px 96px;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+            color: var(--accent); text-transform: uppercase;
+            background: var(--accent-dim); padding: 6px 12px; border-radius: 100px; margin-bottom: 16px;
+        }
+        .screen-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 38px; font-weight: 400; line-height: 1.12; margin-bottom: 14px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-style: italic;}
+        .screen-subtitle { color: var(--text-secondary); font-size: 17px; max-width: 660px; margin: 0 auto 28px; line-height: 1.6; }
+        .center { text-align: center; }
+
+        /* Benefit pills */
+        .benefits {
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+            max-width: 760px; margin: 0 auto 8px;
+        }
+        .benefit {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 16px; border-radius: 100px;
+            background: rgba(20, 20, 20, 0.85); border: 1px solid var(--border);
+            font-size: 13.5px; font-weight: 700; color: var(--text-primary);
+        }
+        .benefit svg { width: 15px; height: 15px; color: var(--accent); flex-shrink: 0; }
+
+        /* Trust / verification proof banner */
+        .trust-banner {
+            max-width: 880px; margin: 36px auto 8px;
+            display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center;
+            background: linear-gradient(135deg, rgba(34,197,94,0.07) 0%, rgba(20,20,20,0.85) 60%);
+            border: 1px solid rgba(34,197,94,0.28); border-radius: 16px; padding: 22px 24px;
+        }
+        .trust-badge {
+            width: 54px; height: 54px; border-radius: 14px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
+            box-shadow: 0 0 24px rgba(34,197,94,0.25);
+        }
+        .trust-badge svg { width: 28px; height: 28px; color: #fff; }
+        .trust-text h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 17px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);
+        }
+        .trust-text p { font-size: 14px; color: var(--text-secondary); line-height: 1.55; }
+        @media (max-width: 560px) {
+            .trust-banner { grid-template-columns: 1fr; text-align: center; justify-items: center; gap: 12px; }
+        }
+
+        /* Inline (large) video mount */
+        .video-shell {
+            width: 100%;
+            max-width: 860px;
+            margin: 0 auto 8px;
+        }
+        .pip-window {
+            position: relative;
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+            background: #000;
+        }
+        .pip-body { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+        .pip-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+
+        /* Primary / ghost buttons */
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 10px; justify-content: center;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: var(--bg-dark);
+            font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+            border: none; border-radius: 12px; cursor: pointer;
+            transition: all 0.3s ease; text-decoration: none;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
+        .btn-primary svg { width: 18px; height: 18px; }
+
+        .btn-ghost {
+            display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+            padding: 12px 22px; background: rgba(255,255,255,0.04);
+            color: var(--text-secondary); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+            border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.2s ease; text-decoration: none;
+        }
+        .btn-ghost:hover { color: var(--text-primary); border-color: var(--accent); }
+
+        .hint { font-size: 13px; color: var(--text-muted); margin-top: 14px; }
+
+        /* Section heading */
+        .section-head { text-align: center; max-width: 660px; margin: 72px auto 28px; }
+        .section-head .screen-title { font-size: 28px; }
+        .section-head p { color: var(--text-secondary); font-size: 15.5px; }
+
+        /* ============================================ */
+        /* STEP ROADMAP / TIMELINE                      */
+        /* ============================================ */
+        .roadmap {
+            max-width: 880px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .road-step {
+            position: relative;
+            display: grid;
+            grid-template-columns: 56px 1fr;
+            gap: 20px;
+            padding-bottom: 28px;
+        }
+        .road-step:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 27px; top: 56px; bottom: -4px;
+            width: 2px;
+            background: linear-gradient(var(--accent) 0%, var(--border) 100%);
+            opacity: 0.5;
+        }
+        .road-marker {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 24px; font-weight: 600;
+            color: var(--bg-dark);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            box-shadow: 0 0 24px var(--accent-dim);
+            flex-shrink: 0;
+            z-index: 1;
+        }
+        .road-card {
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 26px;
+            text-align: left;
+        }
+        .road-kicker {
+            font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 6px;
+        }
+        .road-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);
+        }
+        .road-body { color: var(--text-secondary); font-size: 15px; margin-bottom: 18px; line-height: 1.6; }
+        .road-note { font-size: 12.5px; color: var(--text-muted); margin-top: 12px; }
+        .road-card .btn-primary { text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .road-step { grid-template-columns: 44px 1fr; gap: 14px; }
+            .road-marker { width: 44px; height: 44px; font-size: 19px; }
+            .road-step:not(:last-child)::before { left: 21px; top: 44px; }
+            .road-card { padding: 18px 18px; }
+        }
+
+        /* "Why Summit" feature grid */
+        .why-grid {
+            max-width: 880px; margin: 0 auto;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+        }
+        .why-card {
+            background: rgba(20, 20, 20, 0.85); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px;
+        }
+        .why-icon {
+            width: 42px; height: 42px; border-radius: 11px; margin-bottom: 14px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--accent-dim); border: 1px solid rgba(59, 109, 255,0.3);
+        }
+        .why-icon svg { width: 22px; height: 22px; color: var(--accent); }
+        .why-card h4 {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px; font-weight: 600; margin-bottom: 7px; color: var(--text-primary);
+        }
+        .why-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.55; }
+        @media (max-width: 600px) { .why-grid { grid-template-columns: 1fr; } }
+
+        /* Final CTA */
+        .final-cta {
+            max-width: 720px; margin: 64px auto 0; text-align: center;
+            background: rgba(20, 20, 20, 0.85); border: 1px solid var(--border);
+            border-radius: 20px; padding: 40px 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.45), 0 0 40px var(--accent-dim);
+        }
+        .final-cta .screen-title { font-size: 26px; margin-bottom: 10px; }
+        .final-cta p { color: var(--text-secondary); font-size: 15px; margin-bottom: 24px; }
+        .final-cta-buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+        .legal-foot {
+            max-width: 760px; margin: 48px auto 0; text-align: center;
+            font-size: 12px; color: var(--text-muted); line-height: 1.7;
+        }
+
+        @media (max-width: 768px) {
+            .screen-title { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Header -->
+    <div class="course-header">
+        <div class="course-header-inner">
+            <div class="brand">
+                <img src="../logo.png" alt="VantageQuant">
+                <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:26px;width:auto;max-width:100%;object-fit:contain;display:inline-block;vertical-align:middle;">
+            </div>
+            <div class="header-tag">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Copy Trading Setup
+            </div>
+        </div>
+    </div>
+
+    <div class="stage">
+        <!-- HERO -->
+        <div class="center" style="margin-bottom:28px;">
+            <span class="eyebrow">Automated Copy Trading · Free $100K Demo · No Payment</span>
+            <h1 class="screen-title">Set Up Your Automated Copy Trading Account</h1>
+            <p class="screen-subtitle">Copy vetted, verified pro traders — completely automatically. Their live trades mirror straight into your account. No manual copying, no lifting a finger. Watch the walkthrough, then do the 2 steps below.</p>
+
+            <div class="benefits">
+                <span class="benefit"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Free $100K demo</span>
+                <span class="benefit"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Zero risk</span>
+                <span class="benefit"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Fully automatic &amp; hands-free</span>
+                <span class="benefit"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Unlimited &amp; lifetime</span>
+            </div>
+        </div>
+
+        <!-- TRUST / VERIFICATION PROOF -->
+        <div class="trust-banner">
+            <div class="trust-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>
+            </div>
+            <div class="trust-text">
+                <h3>You're copying real, verified traders — not anonymous claims</h3>
+                <p>Summit verifies every trader's broker statements and trades, and publishes their full track record publicly. A trader can't offer copy trading on Summit unless their verified history is public.</p>
+            </div>
+        </div>
+
+        <!-- WALKTHROUGH VIDEO -->
+        <div class="section-head">
+            <span class="eyebrow">Watch First</span>
+            <h2 class="screen-title">The Full Setup Walkthrough</h2>
+            <p>This short video shows the entire setup — creating your free Summit demo account and connecting it to the copy trading hub.</p>
+        </div>
+
+        <div class="video-shell" id="videoShell">
+            <div class="pip-window">
+                <div class="pip-body">
+                    <iframe
+                        src="https://www.loom.com/embed/10664793b6b44febaf9446b02c141a95?hide_owner=true&hide_share=true&hide_title=true"
+                        title="Copy Trading Setup Walkthrough"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEPS -->
+        <div class="section-head">
+            <span class="eyebrow">Go Live In 2 Steps</span>
+            <h2 class="screen-title">Connect Everything &amp; Start Copying</h2>
+            <p>Follow these in order. The whole process runs on Summit — the brokerage built to copy trades automatically and securely.</p>
+        </div>
+
+        <div class="roadmap">
+            <!-- STEP 1 -->
+            <div class="road-step">
+                <div class="road-marker">1</div>
+                <div class="road-card">
+                    <div class="road-kicker">Step 1</div>
+                    <h3 class="road-title">Create your free Summit demo account</h3>
+                    <p class="road-body">Create your free $100,000 Summit demo account — we comp the account, data, and platform fees. No real money on the line. Then come back here for Step 2.</p>
+                    <a class="btn-primary" href="https://dashboard.summit-securities.com/signin?tab=signup" target="_blank" rel="noopener noreferrer">
+                        Create My Free Summit Demo Account
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-9 9M10 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-4"/></svg>
+                    </a>
+                    <p class="road-note">Opens in a new tab. Keep this page open — you'll come back here for Step 2.</p>
+                </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="road-step">
+                <div class="road-marker">2</div>
+                <div class="road-card">
+                    <div class="road-kicker">Step 2</div>
+                    <h3 class="road-title">Connect to the VantageQuant copy trading hub</h3>
+                    <p class="road-body">Connect your Summit account to the copy trading hub and pick your pro trader. Copy trading kicks off automatically — their live trades start mirroring into your account.</p>
+                    <a class="btn-primary" href="https://tradelux.ai/pi/signup" target="_blank" rel="noopener noreferrer">
+                        Connect To The Copy Trading Hub
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-9 9M10 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-4"/></svg>
+                    </a>
+                    <p class="road-note">Opens in a new tab. Pick your pro trader and copy trading starts automatically.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- WHY SUMMIT -->
+        <div class="section-head">
+            <span class="eyebrow">The Why</span>
+            <h2 class="screen-title">Why It Runs On Summit</h2>
+            <p>Copy trading only works when every trade copies directly from the pro trader's account — and that takes a secure link that's hard to automate.</p>
+        </div>
+
+        <div class="why-grid">
+            <div class="why-card">
+                <div class="why-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg></div>
+                <h4>A secure, automated link</h4>
+                <p>Summit is the brokerage with the tech to do professional copy trading — it links directly into accounts and copies the trades for you.</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg></div>
+                <h4>Verified track records, published</h4>
+                <p>Summit verifies every trader's statements and trades and publishes their full portfolio — proven, vetted pros with a transparent history.</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                <h4>Free, zero risk, lifetime</h4>
+                <p>Your demo account is free — we cover the data and platform fees. No real money at stake, and it runs continuously with no expiration.</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg></div>
+                <h4>Move to real money whenever you want</h4>
+                <p>Stay on the free demo as long as you like. Ready for real money? Go live on the same Summit platform — nothing new to set up.</p>
+            </div>
+        </div>
+
+        <!-- FINAL CTA -->
+        <div class="final-cta">
+            <h2 class="screen-title">Ready To Go Hands-Free?</h2>
+            <p>Create your demo account, connect the hub, pick your pro trader — and let it run.</p>
+            <div class="final-cta-buttons">
+                <a class="btn-primary" href="https://dashboard.summit-securities.com/signin?tab=signup" target="_blank" rel="noopener noreferrer">Step 1 — Create Summit Account</a>
+                <a class="btn-ghost" href="https://tradelux.ai/pi/signup" target="_blank" rel="noopener noreferrer">Step 2 — Connect Copy Trading Hub</a>
+            </div>
+        </div>
+
+        <p class="legal-foot">
+            Past results referenced reflect a monthly average of $5k+ for clients and are not a promise or guarantee of future performance. Trading involves risk; the demo account uses simulated funds. Copy trading runs on Summit Securities. VantageQuant is not a broker-dealer or investment adviser and does not provide individualized investment advice.
+        </p>
+    </div>
+
+</body>
+</html>

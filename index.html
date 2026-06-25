@@ -1,0 +1,2725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VantageQuant - Client Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #06070c;
+            --bg-card: #0e1016;
+            --accent: #3b6dff;
+            --accent-light: #9dbcff;
+            --accent-dim: rgba(59, 109, 255, 0.15);
+            --accent-glow: rgba(59, 109, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #1e2433;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ── Background ── */
+        .bg-animation {
+            display: none;
+        }
+
+        .dot-pattern {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(59, 109, 255, 0.12) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 0;
+            transform: translateZ(0);
+            will-change: auto;
+        }
+
+        /* ── Loading screen ── */
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px; height: 50px;
+            border: 4px solid rgba(59, 109, 255, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loader p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ── Dashboard layout ── */
+        .dashboard-page {
+            position: relative;
+            z-index: 10;
+            padding: 48px 56px 80px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* ── Welcome banner ── */
+        .welcome-banner {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for scroll performance */
+            border: 1px solid rgba(42, 42, 42, 0.7);
+            border-radius: 20px;
+            padding: 48px 48px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::after {
+            content: '';
+            position: absolute;
+            top: -40%; right: -5%;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(59, 109, 255, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .welcome-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 36px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 50%, #2a4fd6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            font-style: italic;}
+
+        .welcome-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            line-height: 1.7;
+        }
+
+        /* ── Quick Actions ── */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .action-card {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for scroll performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: transform 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(59, 109, 255, 0.4);
+            box-shadow: 0 8px 30px rgba(59, 109, 255, 0.08);
+        }
+
+        .action-card-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-dim);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-card-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--accent);
+        }
+
+        .action-card-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .action-card-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .action-card-arrow {
+            margin-top: auto;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0;
+            transform: translateX(-4px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .action-card:hover .action-card-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .action-card-arrow svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* ── Section headers ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title svg {
+            width: 22px; height: 22px;
+            color: var(--accent);
+        }
+
+        .section-link {
+            font-size: 13px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s ease;
+        }
+
+        .section-link:hover {
+            opacity: 0.8;
+        }
+
+        .section-link svg {
+            width: 14px; height: 14px;
+        }
+
+        /* ── Two-column layout ── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-section {
+            min-width: 0;
+        }
+
+        /* ── Pinned announcements ── */
+        .pinned-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .pinned-card {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for scroll performance */
+            border: 1px solid rgba(59, 109, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px 28px;
+            position: relative;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        .pinned-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(59, 109, 255, 0.45);
+        }
+
+        .pinned-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 3px 10px;
+            border-radius: 100px;
+            margin-bottom: 12px;
+        }
+
+        .pinned-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .pinned-card-excerpt {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .pinned-card-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+
+        /* ── Content grid ── */
+        .content-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .content-card {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for scroll performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0;
+            color: inherit;
+        }
+
+        .content-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(59, 109, 255, 0.3);
+        }
+
+        .content-thumb {
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .content-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .content-play-icon {
+            position: absolute;
+            width: 36px; height: 36px;
+            background: rgba(59, 109, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .content-card:hover .content-play-icon {
+            transform: scale(1.1);
+        }
+
+        .content-play-icon svg {
+            width: 14px; height: 14px;
+            color: #06070c;
+            margin-left: 2px;
+        }
+
+        .content-info {
+            padding: 16px 22px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .content-category {
+            display: inline-flex;
+            align-self: flex-start;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+
+        .content-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .content-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── Recent announcements list ── */
+        .announcements-section {
+            margin-bottom: 40px;
+        }
+
+        .announcements-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .announcement-item {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for scroll performance */
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px 28px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            transition: border-color 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .announcement-item:hover {
+            border-color: rgba(59, 109, 255, 0.25);
+        }
+
+        .announcement-dot {
+            flex-shrink: 0;
+            width: 8px; height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-top: 7px;
+        }
+
+        .announcement-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .announcement-item-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .announcement-item-excerpt {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .announcement-item-date {
+            flex-shrink: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 40px; height: 40px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* ── Free Trial Dashboard ── */
+        .ft-hero {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for scroll performance */
+            border: 1px solid rgba(42, 42, 42, 0.7);
+            border-radius: 20px;
+            padding: 48px 48px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ft-hero::after {
+            content: '';
+            position: absolute;
+            top: -40%; right: -5%;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .ft-hero-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .ft-hero-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ft-hero-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 32px;
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 50%, #2a4fd6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+            font-style: italic;}
+
+        .ft-hero-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+            position: relative;
+            z-index: 1;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .ft-trial-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            border-radius: 14px;
+            padding: 14px 24px;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: #f87171;
+            margin-bottom: 24px;
+            animation: ftBadgePulse 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+        }
+
+        @keyframes ftBadgePulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.3); border-color: rgba(239, 68, 68, 0.6); }
+        }
+
+        .ft-trial-badge svg {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        .ft-tradelux-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ft-tradelux-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+
+        .ft-tradelux-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Terminal animation */
+        .ft-terminal {
+            background: #0c0c0c;
+            border: 1px solid #1e2433;
+            border-radius: 12px;
+            overflow: hidden;
+            width: 380px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ft-terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 16px;
+            background: #161616;
+            border-bottom: 1px solid #1e2433;
+        }
+
+        .ft-terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .ft-terminal-dot.red { background: #ef4444; }
+        .ft-terminal-dot.yellow { background: #3b6dff; }
+        .ft-terminal-dot.green { background: #22c55e; }
+
+        .ft-terminal-label {
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 8px;
+        }
+
+        .ft-terminal-body {
+            padding: 20px;
+            min-height: 180px;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .ft-terminal-line {
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .ft-terminal-line .prompt {
+            color: #22c55e;
+        }
+
+        .ft-terminal-line .text {
+            color: #4ade80;
+        }
+
+        .ft-terminal-line.completed .text {
+            color: var(--text-muted);
+        }
+
+        .ft-terminal-line.active .text {
+            color: #4ade80;
+        }
+
+        .ft-terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #4ade80;
+            vertical-align: text-bottom;
+            animation: ftBlink 1s step-end infinite;
+        }
+
+        @keyframes ftBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .ft-terminal-line.status-ready .text {
+            color: #22c55e;
+            font-weight: 700;
+        }
+
+        /* Content highlight card */
+        .ft-content-highlight {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for scroll performance */
+            border: 1px solid rgba(59, 109, 255, 0.25);
+            border-radius: 20px;
+            padding: 36px 40px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 32px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.3s ease;
+        }
+
+        .ft-content-highlight:hover {
+            transform: translateY(-2px);
+            border-color: rgba(59, 109, 255, 0.45);
+        }
+
+        .ft-content-highlight::after {
+            content: '';
+            position: absolute;
+            top: -40%; right: -10%;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(59, 109, 255, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .ft-content-info {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ft-content-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 4px 12px;
+            border-radius: 100px;
+            margin-bottom: 14px;
+        }
+
+        .ft-content-eyebrow svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .ft-content-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .ft-content-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 500px;
+        }
+
+        .ft-content-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59, 109, 255, 0.3);
+            color: var(--accent);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ft-content-cta:hover {
+            transform: translateY(-2px);
+            background: rgba(59, 109, 255, 0.2);
+            border-color: rgba(59, 109, 255, 0.5);
+        }
+
+        .ft-content-cta svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ── Free Trial EXPIRED Dashboard ── */
+        .fte-hero {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for scroll performance */
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 20px;
+            padding: 48px 48px;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .fte-hero::after {
+            content: '';
+            position: absolute;
+            top: -40%; left: 50%;
+            transform: translateX(-50%);
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .fte-expired-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 100px;
+            color: #f87171;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .fte-expired-badge svg {
+            width: 16px; height: 16px;
+        }
+
+        .fte-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .fte-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1.7;
+            max-width: 600px;
+            margin: 0 auto 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .fte-cta-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        .fte-purchase-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 36px;
+            background: linear-gradient(135deg, var(--accent), #2a4fd6);
+            color: #000;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .fte-purchase-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59, 109, 255, 0.3);
+        }
+
+        .fte-purchase-btn svg {
+            width: 18px; height: 18px;
+        }
+
+        .fte-secondary-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .fte-secondary-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .fte-secondary-btn svg {
+            width: 16px; height: 16px;
+        }
+
+        /* Stats row */
+        .fte-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .fte-stat-card {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .fte-stat-value {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .fte-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Content section for expired users */
+        .fte-content-section {
+            margin-bottom: 32px;
+        }
+
+        .fte-content-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .fte-video-card {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for performance */
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s ease, border-color 0.3s ease;
+        }
+
+        .fte-video-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(59, 109, 255, 0.3);
+        }
+
+        .fte-video-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+            padding: 3px 10px;
+            border-radius: 100px;
+            width: fit-content;
+        }
+
+        .fte-video-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .fte-video-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* ── Trial Progress Bar ── */
+        .ft-progress-wrapper {
+            margin-bottom: 24px;
+        }
+
+        .ft-progress-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .ft-progress-label span {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        #ftProgressDay {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .ft-progress-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(42, 42, 42, 0.6);
+            border-radius: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #ftProgressBar {
+            height: 100%;
+            border-radius: 100px;
+            background: #22c55e;
+            transition: width 0.8s ease, background 0.5s ease, box-shadow 0.5s ease;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+
+        #ftProgressBar.progress-yellow {
+            background: #3b6dff;
+            box-shadow: 0 0 12px rgba(59, 109, 255, 0.4);
+        }
+
+        #ftProgressBar.progress-red {
+            background: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        }
+
+        /* ── Login Streak ── */
+        #ftStreakContainer {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ft-streak-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .ft-streak-dots {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ft-streak-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .ft-streak-dot.filled {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: #22c55e;
+        }
+
+        .ft-streak-dot.filled svg {
+            color: #22c55e;
+        }
+
+        .ft-streak-dot.today {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(59, 109, 255, 0.3);
+        }
+
+        .ft-streak-dot svg {
+            width: 14px;
+            height: 14px;
+            color: var(--text-muted);
+        }
+
+        .ft-streak-dot .ft-day-num {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .ft-streak-dot.filled .ft-day-num {
+            display: none;
+        }
+
+        .ft-streak-dot.filled .ft-check-icon {
+            display: block;
+        }
+
+        .ft-streak-dot .ft-check-icon {
+            display: none;
+        }
+
+        /* ── Pulse Stats ── */
+        #ftPulseStats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ft-pulse-card {
+            background: rgba(12, 12, 12, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .ft-pulse-card:hover {
+            border-color: rgba(59, 109, 255, 0.3);
+        }
+
+        .ft-pulse-card.profits { }
+        .ft-pulse-card.members { }
+        .ft-pulse-card.winrate { }
+
+        .ft-pulse-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ft-pulse-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .ft-pulse-card.profits .ft-pulse-icon {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .ft-pulse-card.members .ft-pulse-icon {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .ft-pulse-card.winrate .ft-pulse-icon {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .ft-pulse-value {
+            font-family: 'Inter', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+
+        .ft-pulse-card.profits .ft-pulse-value {
+            color: #22c55e;
+        }
+
+        .ft-pulse-card.members .ft-pulse-value {
+            color: var(--accent);
+        }
+
+        .ft-pulse-card.winrate .ft-pulse-value {
+            color: #3b82f6;
+        }
+
+        .ft-pulse-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* ── Today's Briefing Card ── */
+        #ftBriefingCard {
+            background: rgba(18, 18, 18, 0.85);
+            /* backdrop-filter removed for scroll performance */
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px 40px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #ftBriefingCard::after {
+            content: '';
+            position: absolute;
+            top: -40%; right: -10%;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .ft-briefing-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ft-briefing-header svg {
+            width: 22px;
+            height: 22px;
+            color: #3b82f6;
+        }
+
+        .ft-briefing-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .ft-briefing-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            margin-left: auto;
+        }
+
+        .ft-briefing-badge.today-badge {
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .ft-briefing-badge.latest-badge {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        #ftBriefingContent {
+            position: relative;
+            z-index: 1;
+        }
+
+        .ft-briefing-video-wrap {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            background: #0c0c0c;
+        }
+
+        .ft-briefing-video-wrap iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+        }
+
+        .ft-briefing-post-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .ft-briefing-post-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .ft-briefing-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 3px 10px;
+            border-radius: 100px;
+        }
+
+        .ft-briefing-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .ft-briefing-empty svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .ft-briefing-empty p {
+            font-size: 14px;
+        }
+
+        /* ── Social Proof FOMO Banner ── */
+        #ftSocialProof {
+            background: linear-gradient(90deg, rgba(59, 109, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 50%, rgba(59, 109, 255, 0.08) 100%);
+            border: 1px solid rgba(59, 109, 255, 0.3);
+            border-radius: 14px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            min-height: 56px;
+            position: relative;
+            overflow: hidden;
+            animation: ftFomoBorderPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes ftFomoBorderPulse {
+            0%, 100% { border-color: rgba(59, 109, 255, 0.3); box-shadow: 0 0 20px rgba(59, 109, 255, 0.06); }
+            50% { border-color: rgba(255, 255, 255, 0.35); box-shadow: 0 0 24px rgba(255, 255, 255, 0.08); }
+        }
+
+        .ft-proof-live-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+            animation: ftLiveDotPulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 8px rgba(59, 109, 255, 0.6);
+        }
+
+        @keyframes ftLiveDotPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+        }
+
+        .ft-proof-live-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 1.5px;
+            background: rgba(59, 109, 255, 0.12);
+            padding: 3px 10px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        #ftProofText {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            transition: opacity 0.5s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ft-hero-top {
+                flex-direction: column;
+            }
+
+            .ft-terminal {
+                width: 100%;
+            }
+
+            #ftPulseStats {
+                grid-template-columns: 1fr;
+            }
+
+            .fte-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .fte-content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-page {
+                padding: 24px 20px 50px;
+            }
+
+            .welcome-banner {
+                padding: 32px 24px;
+                border-radius: 16px;
+            }
+
+            .welcome-title {
+                font-size: 26px;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .content-card {
+                flex-direction: column;
+            }
+
+            .content-thumb {
+                width: 100%;
+                height: 140px;
+            }
+
+            .announcement-item {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .announcement-item-date {
+                margin-top: 0;
+            }
+
+            .ft-hero {
+                padding: 32px 24px;
+                border-radius: 16px;
+            }
+
+            .ft-hero-title {
+                font-size: 24px;
+            }
+
+            .ft-hero-top {
+                flex-direction: column;
+            }
+
+            .ft-terminal {
+                width: 100%;
+            }
+
+            .ft-content-highlight {
+                flex-direction: column;
+                padding: 28px 24px;
+                border-radius: 16px;
+                text-align: center;
+            }
+
+            .ft-content-desc {
+                max-width: 100%;
+            }
+
+            .ft-content-eyebrow {
+                justify-content: center;
+            }
+
+            /* New feature responsive styles */
+            #ftStreakContainer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .ft-streak-dots {
+                gap: 6px;
+            }
+
+            .ft-streak-dot {
+                width: 24px;
+                height: 24px;
+            }
+
+            .ft-streak-dot svg {
+                width: 12px;
+                height: 12px;
+            }
+
+            .ft-streak-dot .ft-day-num {
+                font-size: 9px;
+            }
+
+            #ftPulseStats {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .ft-pulse-value {
+                font-size: 20px;
+            }
+
+            #ftBriefingCard {
+                padding: 24px 20px;
+                border-radius: 16px;
+            }
+
+            .ft-briefing-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .ft-briefing-badge {
+                margin-left: 0;
+            }
+
+            #ftSocialProof {
+                padding: 12px 16px;
+                gap: 8px;
+            }
+
+            .ft-proof-live-label {
+                font-size: 9px;
+                padding: 2px 7px;
+            }
+
+            #ftProofText {
+                font-size: 13px;
+                white-space: normal;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="dot-pattern"></div>
+
+    <!-- Loading screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader">
+            <div class="spinner"></div>
+            <p>Loading your portal...</p>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main dashboard content -->
+    <div class="cs-main-content" id="mainContent" style="display:none;">
+        <div class="dashboard-page">
+
+            <!-- Welcome banner -->
+            <div class="welcome-banner">
+                <h1 class="welcome-title" id="welcomeTitle">Welcome back!</h1>
+                <p class="welcome-subtitle" id="welcomeSubtitle">Your VantageQuant member portal</p>
+                <div style="margin-top: 24px; position: relative; z-index: 1;">
+                    <a href="https://tradelux.ai/join/8A97B0EA" target="_blank" class="ft-tradelux-btn" id="memberTradeluxBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Open TradeLux
+                    </a>
+                </div>
+            </div>
+
+            <!-- Free Trial Dashboard -->
+            <div id="freeTrialDashboard" style="display:none;">
+                <!-- FOMO Social Proof Banner -->
+                <div id="ftSocialProof">
+                    <div class="ft-proof-live-dot"></div>
+                    <span class="ft-proof-live-label">LIVE</span>
+                    <span id="ftProofText">Loading...</span>
+                </div>
+
+                <!-- Trial Progress Bar -->
+                <div class="ft-progress-wrapper">
+                    <div class="ft-progress-label">
+                        <span id="ftProgressDay">Day 1 of 7</span>
+                        <span>Free Trial</span>
+                    </div>
+                    <div class="ft-progress-track">
+                        <div id="ftProgressBar" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Algorithm Hype Hero -->
+                <div class="ft-hero">
+                    <div class="ft-hero-top">
+                        <div class="ft-hero-left">
+                            <h1 class="ft-hero-title" id="ftWelcomeTitle">Welcome back!</h1>
+                            <p class="ft-hero-subtitle">Your algorithm is being calibrated. Explore your trial dashboard below.</p>
+                            <div class="ft-trial-badge" id="ftTrialBadge">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                <span id="ftTrialDays">7 DAYS LEFT</span>
+                            </div>
+                            <!-- Daily Login Streak -->
+                            <div id="ftStreakContainer">
+                                <span class="ft-streak-label">Login Streak:</span>
+                                <div class="ft-streak-dots">
+                                    <div class="ft-streak-dot" data-day="1"><span class="ft-day-num">1</span><svg class="ft-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                    <div class="ft-streak-dot" data-day="2"><span class="ft-day-num">2</span><svg class="ft-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                    <div class="ft-streak-dot" data-day="3"><span class="ft-day-num">3</span><svg class="ft-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                    <div class="ft-streak-dot" data-day="4"><span class="ft-day-num">4</span><svg class="ft-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                    <div class="ft-streak-dot" data-day="5"><span class="ft-day-num">5</span><svg class="ft-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                    <div class="ft-streak-dot" data-day="6"><span class="ft-day-num">6</span><svg class="ft-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                    <div class="ft-streak-dot" data-day="7"><span class="ft-day-num">7</span><svg class="ft-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                </div>
+                            </div>
+
+                            <a id="ftTradeluxBtn" href="https://tradelux.ai/join/8A97B0EA" target="_blank" class="ft-tradelux-btn">
+                                Open TradeLux
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            </a>
+                        </div>
+                        <div class="ft-terminal" id="ftTerminal">
+                            <div class="ft-terminal-header">
+                                <div class="ft-terminal-dot red"></div>
+                                <div class="ft-terminal-dot yellow"></div>
+                                <div class="ft-terminal-dot green"></div>
+                                <span class="ft-terminal-label">algo_scanner.sh</span>
+                            </div>
+                            <div class="ft-terminal-body" id="ftTerminalBody">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Stats -->
+                    <div id="ftPulseStats">
+                        <div class="ft-pulse-card profits">
+                            <div class="ft-pulse-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            </div>
+                            <div>
+                                <div class="ft-pulse-value" id="ftLiveProfitsVal">$0</div>
+                                <div class="ft-pulse-label">Member Profits Generated Today</div>
+                            </div>
+                        </div>
+                        <div class="ft-pulse-card members">
+                            <div class="ft-pulse-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            </div>
+                            <div>
+                                <div class="ft-pulse-value" id="ftActiveMembersVal">0</div>
+                                <div class="ft-pulse-label">Active Members on Dashboard</div>
+                            </div>
+                        </div>
+                        <div class="ft-pulse-card winrate">
+                            <div class="ft-pulse-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            </div>
+                            <div>
+                                <div class="ft-pulse-value" id="ftPulseWinrateVal">79.73%</div>
+                                <div class="ft-pulse-label">Algorithm Win Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Briefing Card -->
+                <div id="ftBriefingCard">
+                    <div class="ft-briefing-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                        <span class="ft-briefing-title">Today's Briefing</span>
+                        <span class="ft-briefing-badge today-badge" id="ftBriefingBadge">TODAY</span>
+                    </div>
+                    <div id="ftBriefingContent">
+                        <div class="ft-briefing-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                            <p>Loading briefing...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Library Highlight -->
+                <a href="/portal/content.html" class="ft-content-highlight" style="text-decoration:none; color:inherit;">
+                    <div class="ft-content-info">
+                        <div class="ft-content-eyebrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                            Fresh Content
+                        </div>
+                        <div class="ft-content-title">New Videos Added Daily</div>
+                        <div class="ft-content-desc" id="ftContentDesc">Explore the full content library with exclusive trading strategies, market analysis, and algorithm breakdowns.</div>
+                    </div>
+                    <div class="ft-content-cta">
+                        Browse Library
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </a>
+
+            </div>
+
+            <!-- Free Trial EXPIRED Dashboard -->
+            <div id="expiredTrialDashboard" style="display:none;">
+                <!-- Expired Hero -->
+                <div class="fte-hero">
+                    <div class="fte-expired-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Your 7-day free trial has ended
+                    </div>
+                    <h1 class="fte-title" id="fteTitle">Don't Miss Out on the Algorithm</h1>
+                    <p class="fte-subtitle">Your free trial has expired, but the algorithm keeps running. Members are seeing real results every day. Upgrade now to keep your access and start trading live.</p>
+                    <div class="fte-cta-group">
+                        <span class="fte-purchase-btn" style="cursor:default;opacity:0.85;">
+                            Contact Sales to Upgrade
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        </span>
+                        <a href="https://tradelux.ai/join/8A97B0EA" target="_blank" class="fte-secondary-btn">
+                            Open TradeLux
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Success Stories / Content Section -->
+                <div class="fte-content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                            Latest Videos & Content
+                        </h2>
+                        <a href="/portal/content.html" class="section-link">
+                            View all
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </div>
+                    <div class="fte-content-grid" id="fteContentGrid">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                            <p>Content loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions" id="quickActions">
+                <a href="/portal/performance.html" class="action-card">
+                    <div class="action-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <div class="action-card-title">My Performance</div>
+                    <div class="action-card-desc">Track your progress and view your latest metrics.</div>
+                    <div class="action-card-arrow">
+                        View details
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </a>
+                <a href="/portal/content.html" class="action-card">
+                    <div class="action-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    </div>
+                    <div class="action-card-title">Browse Content</div>
+                    <div class="action-card-desc" id="cardDescContent">Watch exclusive videos and explore the content library.</div>
+                    <div class="action-card-arrow">
+                        Explore
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </a>
+                <a href="/portal/chat.html" class="action-card">
+                    <div class="action-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <div class="action-card-title">Get Support</div>
+                    <div class="action-card-desc" id="cardDescSupport">Chat with our team or get instant AI-powered answers.</div>
+                    <div class="action-card-arrow">
+                        Start chat
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Two-column grid: Pinned + Content side by side -->
+            <div class="dashboard-grid">
+                <!-- Left: Pinned Announcements -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                            Pinned Announcements
+                        </h2>
+                        <a href="/portal/announcements.html" class="section-link">
+                            View all
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </div>
+                    <div class="pinned-list" id="pinnedGrid">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                            <p>No pinned announcements.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Recent Content -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                            Recent Content
+                        </h2>
+                        <a href="/portal/content.html" class="section-link">
+                            View all
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </div>
+                    <div class="content-list" id="contentGrid">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                            <p>No content available yet. Check back soon.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent announcements (full width) -->
+            <div class="announcements-section" id="announcementsSection">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        Recent Announcements
+                    </h2>
+                    <a href="/portal/announcements.html" class="section-link">
+                        View all
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                </div>
+                <div class="announcements-list" id="announcementsList">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <p>No announcements yet.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- External scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="activity-tracker.js"></script>
+
+    <script>
+        // ============================================================
+        // CLIENT PORTAL DASHBOARD
+        // ============================================================
+
+        let currentUser = null;
+        let currentProfile = null;
+        let inactivityTimer = null;
+        const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+        // ── Access control & initialization ──
+        (async function init() {
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    window.location.href = '/auth';
+                    return;
+                }
+
+                currentUser = session.user;
+
+                const profile = await window.getUserProfile(currentUser.id);
+                if (!profile) {
+                    window.location.href = '/auth';
+                    return;
+                }
+
+                if (window.hasAdminAccess && window.hasAdminAccess(profile)) {
+                    window.location.href = '/admin';
+                    return;
+                }
+
+                let userStatus = (profile.status || 'onboarding').toLowerCase();
+                if (userStatus === 'onboarding') {
+                    window.location.href = '/onboarding';
+                    return;
+                }
+                if (userStatus === 'free_trial' && !profile.onboarding_completed) {
+                    window.location.href = '/trial/';
+                    return;
+                }
+                // Auto-expire free trial after 7 days
+                if (userStatus === 'free_trial' && profile.created_at) {
+                    var trialElapsed = Math.floor((new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24));
+                    if (trialElapsed >= 7) {
+                        await window.supabaseClient
+                            .from('users')
+                            .update({ status: 'free_trial_expired' })
+                            .eq('id', currentUser.id);
+                        profile.status = 'free_trial_expired';
+                    }
+                }
+                userStatus = (profile.status || 'onboarding').toLowerCase();
+                if (!['member', 'verified_member', 'active', 'free_trial', 'free_trial_expired'].includes(userStatus)) {
+                    window.location.href = '/onboarding';
+                    return;
+                }
+
+                currentProfile = profile;
+                var previousLastLogin = profile.last_login || null;
+                window.updateLastLogin(currentUser.id);
+
+                // Log login activity
+                if (window.trackActivity) {
+                    window.trackActivity('login', '/', { status: profile.status });
+                }
+
+                renderDashboard();
+                loadDashboardData(previousLastLogin);
+                startInactivityTimer();
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                window.location.href = '/auth';
+            }
+        })();
+
+        // ── Render dashboard shell ──
+        function renderDashboard() {
+            const firstName = currentProfile.first_name || currentProfile.email?.split('@')[0] || 'Member';
+            document.getElementById('welcomeTitle').textContent = 'Welcome back, ' + firstName + '!';
+
+            // Dynamic time-of-day subtitle
+            const hour = new Date().getHours();
+            let timeGreeting;
+            if (hour < 12) {
+                timeGreeting = 'Good morning! Here\u2019s what\u2019s happening in your portal today.';
+            } else if (hour < 17) {
+                timeGreeting = 'Good afternoon! Here\u2019s what\u2019s happening in your portal today.';
+            } else {
+                timeGreeting = 'Good evening! Here\u2019s what\u2019s happening in your portal today.';
+            }
+            document.getElementById('welcomeSubtitle').textContent = timeGreeting;
+
+            window.injectClientSidebar('dashboard', 'logo.png', currentProfile.status);
+
+            // Free trial: show new free trial dashboard, hide normal welcome banner and quick actions
+            if (currentProfile.status === 'free_trial') {
+                // Hide normal welcome banner
+                document.querySelector('.welcome-banner').style.display = 'none';
+                // Hide quick actions entirely for free trial
+                document.getElementById('quickActions').style.display = 'none';
+
+                // Show free trial dashboard
+                var ftDashboard = document.getElementById('freeTrialDashboard');
+                ftDashboard.style.display = '';
+
+                // Set welcome title
+                document.getElementById('ftWelcomeTitle').textContent = 'Welcome back, ' + firstName + '!';
+
+                // Calculate trial days remaining (7-day trial from created_at)
+                var trialDays = 7;
+                var remaining = trialDays;
+                var currentDay = 1;
+                if (currentProfile.created_at) {
+                    var createdDate = new Date(currentProfile.created_at);
+                    var now = new Date();
+                    var elapsed = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
+                    remaining = Math.max(0, trialDays - elapsed);
+                    currentDay = Math.min(elapsed + 1, 7);
+                    var badgeEl = document.getElementById('ftTrialDays');
+                    if (remaining <= 2) {
+                        badgeEl.textContent = remaining + ' DAY' + (remaining !== 1 ? 'S' : '') + ' LEFT — TRIAL ENDING SOON';
+                    } else {
+                        badgeEl.textContent = remaining + ' DAY' + (remaining !== 1 ? 'S' : '') + ' LEFT';
+                    }
+                }
+
+                // Set TradeLux URL (default already set in HTML, override from config if available)
+                window.getFreeTrialConfig().then(function(config) {
+                    if (config && config.tradelink_url) {
+                        document.getElementById('ftTradeluxBtn').href = config.tradelink_url;
+                    }
+                });
+
+                // Start terminal animation
+                startTerminalAnimation();
+
+                // Initialize new dashboard enhancements
+                initTrialProgressBar(remaining);
+                initLoginStreak(currentUser.id, currentProfile.created_at);
+                initPulseStats();
+                loadTodaysBriefing();
+                initSocialProof(firstName);
+            }
+
+            // Free trial EXPIRED: locked-out dashboard with purchase CTA + content
+            if (currentProfile.status === 'free_trial_expired') {
+                // Hide normal welcome banner and quick actions
+                document.querySelector('.welcome-banner').style.display = 'none';
+                document.getElementById('quickActions').style.display = 'none';
+                // Hide the normal dashboard grid and announcements for expired users
+                var dashGrid = document.querySelector('.dashboard-grid');
+                if (dashGrid) dashGrid.style.display = 'none';
+                var annSection = document.getElementById('announcementsSection');
+                if (annSection) annSection.style.display = 'none';
+
+                // Show expired dashboard
+                document.getElementById('expiredTrialDashboard').style.display = '';
+
+                // Track that the expired user visited the dashboard
+                if (window.trackActivity) {
+                    window.trackActivity(currentUser.id, 'expired_dashboard_visit', { timestamp: new Date().toISOString() });
+                }
+
+                // Load recent content for the expired grid
+                loadExpiredContent();
+            }
+
+            document.getElementById('mainContent').style.display = '';
+            document.getElementById('loadingScreen').classList.add('hidden');
+        }
+
+        // ── Load content for expired trial users ──
+        async function loadExpiredContent() {
+            try {
+                var { data, error } = await window.supabaseClient
+                    .from('content_posts')
+                    .select('*')
+                    .eq('is_published', true)
+                    .order('created_at', { ascending: false })
+                    .limit(6);
+
+                if (error) throw error;
+                if (!data || data.length === 0) return;
+
+                var grid = document.getElementById('fteContentGrid');
+                if (!grid) return;
+
+                grid.innerHTML = data.map(function(post) {
+                    var cat = (post.category || 'General').toLowerCase();
+                    var badgeLabel = cat === 'strategy' ? 'Strategy' : cat === 'tutorial' ? 'Tutorial' : cat === 'update' ? 'Update' : 'General';
+                    var desc = post.description || '';
+                    var date = new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    return '<a href="/portal/content.html" class="fte-video-card">' +
+                        '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+                            '<div class="fte-video-badge">' + badgeLabel + '</div>' +
+                            '<span style="font-size:11px;color:var(--text-muted);">' + date + '</span>' +
+                        '</div>' +
+                        '<div class="fte-video-title">' + (post.title || 'Untitled') + '</div>' +
+                        (desc ? '<div class="fte-video-desc">' + desc + '</div>' : '') +
+                    '</a>';
+                }).join('');
+            } catch (err) {
+                console.error('Error loading expired content:', err);
+            }
+        }
+
+        // ── Terminal animation for free trial ──
+        var terminalAnimationTimer = null;
+
+        function startTerminalAnimation() {
+            var messages = [
+                { text: 'Scanning MNQ futures...', delay: 60 },
+                { text: 'Analyzing MES contracts...', delay: 60 },
+                { text: 'Monitoring NQ price action...', delay: 60 },
+                { text: 'Evaluating ES volatility...', delay: 60 },
+                { text: 'Calibrating entry signals...', delay: 60 },
+                { text: 'Algorithm ready.', delay: 80, isReady: true }
+            ];
+
+            var body = document.getElementById('ftTerminalBody');
+            if (!body) return;
+
+            function runCycle() {
+                body.innerHTML = '';
+                var msgIndex = 0;
+
+                function typeNextMessage() {
+                    if (msgIndex >= messages.length) {
+                        // Pause then restart
+                        terminalAnimationTimer = setTimeout(function() {
+                            runCycle();
+                        }, 3000);
+                        return;
+                    }
+
+                    var msg = messages[msgIndex];
+                    var lineEl = document.createElement('div');
+                    lineEl.className = 'ft-terminal-line active';
+                    if (msg.isReady) lineEl.className += ' status-ready';
+
+                    var promptSpan = document.createElement('span');
+                    promptSpan.className = 'prompt';
+                    promptSpan.textContent = '> ';
+
+                    var textSpan = document.createElement('span');
+                    textSpan.className = 'text';
+                    textSpan.textContent = '';
+
+                    var cursorSpan = document.createElement('span');
+                    cursorSpan.className = 'ft-terminal-cursor';
+
+                    lineEl.appendChild(promptSpan);
+                    lineEl.appendChild(textSpan);
+                    lineEl.appendChild(cursorSpan);
+                    body.appendChild(lineEl);
+
+                    // Scroll to bottom
+                    body.scrollTop = body.scrollHeight;
+
+                    var charIndex = 0;
+                    var fullText = msg.text;
+
+                    function typeChar() {
+                        if (charIndex < fullText.length) {
+                            textSpan.textContent = fullText.substring(0, charIndex + 1);
+                            charIndex++;
+                            terminalAnimationTimer = setTimeout(typeChar, msg.delay);
+                        } else {
+                            // Typing done for this line
+                            cursorSpan.remove();
+                            lineEl.classList.remove('active');
+                            lineEl.classList.add('completed');
+                            if (msg.isReady) lineEl.classList.add('status-ready');
+                            msgIndex++;
+                            terminalAnimationTimer = setTimeout(typeNextMessage, 400);
+                        }
+                    }
+
+                    typeChar();
+                }
+
+                typeNextMessage();
+            }
+
+            runCycle();
+        }
+
+        // ── Trial Progress Bar ──
+        function initTrialProgressBar(remaining) {
+            var bar = document.getElementById('ftProgressBar');
+            var dayText = document.getElementById('ftProgressDay');
+            if (!bar || !dayText) return;
+
+            var total = 7;
+            var currentDay = Math.max(1, total - remaining + 1);
+            var pct = Math.round((remaining / total) * 100);
+
+            dayText.textContent = 'Day ' + currentDay + ' of ' + total;
+            bar.style.width = pct + '%';
+
+            // Remove old classes
+            bar.classList.remove('progress-yellow', 'progress-red');
+
+            if (remaining <= 2) {
+                bar.classList.add('progress-red');
+            } else if (remaining <= 4) {
+                bar.classList.add('progress-yellow');
+            }
+            // else default green
+        }
+
+        // ── Today's Briefing ──
+        async function loadTodaysBriefing() {
+            var card = document.getElementById('ftBriefingCard');
+            var content = document.getElementById('ftBriefingContent');
+            var badge = document.getElementById('ftBriefingBadge');
+            var titleEl = card ? card.querySelector('.ft-briefing-title') : null;
+            if (!card || !content) return;
+
+            try {
+                var { data, error } = await window.supabaseClient
+                    .from('content_posts')
+                    .select('*')
+                    .eq('is_published', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    content.innerHTML = '<div class="ft-briefing-empty">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
+                        '<p>No briefing available yet — check back soon</p>' +
+                        '</div>';
+                    return;
+                }
+
+                var post = data[0];
+
+                // Check if posted today
+                var postDate = new Date(post.created_at);
+                var today = new Date();
+                var isToday = postDate.toDateString() === today.toDateString();
+
+                if (titleEl) {
+                    titleEl.textContent = isToday ? "Today's Briefing" : "Latest Briefing";
+                }
+                if (badge) {
+                    if (isToday) {
+                        badge.textContent = 'TODAY';
+                        badge.className = 'ft-briefing-badge today-badge';
+                    } else {
+                        var dateStr = postDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        badge.textContent = dateStr;
+                        badge.className = 'ft-briefing-badge latest-badge';
+                    }
+                }
+
+                // Build embed
+                var embedHtml = '';
+                var videoUrl = post.video_url || '';
+                if (videoUrl) {
+                    var embedSrc = '';
+
+                    // Loom
+                    if (videoUrl.includes('loom.com')) {
+                        var loomMatch = videoUrl.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/);
+                        if (loomMatch) {
+                            embedSrc = 'https://www.loom.com/embed/' + loomMatch[1];
+                        }
+                    }
+
+                    // YouTube
+                    if (!embedSrc && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
+                        var videoId = '';
+                        var ytLong = videoUrl.match(/youtube\.com\/watch\?v=([^&]+)/);
+                        var ytShort = videoUrl.match(/youtu\.be\/([^?&]+)/);
+                        var ytEmbed = videoUrl.match(/youtube\.com\/embed\/([^?&]+)/);
+                        if (ytLong) videoId = ytLong[1];
+                        else if (ytShort) videoId = ytShort[1];
+                        else if (ytEmbed) videoId = ytEmbed[1];
+                        if (videoId) {
+                            embedSrc = 'https://www.youtube.com/embed/' + videoId;
+                        }
+                    }
+
+                    // Fallback
+                    if (!embedSrc) {
+                        embedSrc = videoUrl;
+                    }
+
+                    embedHtml = '<div class="ft-briefing-video-wrap">' +
+                        '<iframe src="' + escapeHtml(embedSrc) + '" allowfullscreen allow="autoplay; encrypted-media" loading="lazy"></iframe>' +
+                        '</div>';
+                }
+
+                var catLabel = (post.category || 'General');
+                var descText = post.description || '';
+
+                content.innerHTML = embedHtml +
+                    '<div class="ft-briefing-post-title">' + escapeHtml(post.title || 'Untitled') + '</div>' +
+                    (descText ? '<div class="ft-briefing-post-desc">' + escapeHtml(descText) + '</div>' : '') +
+                    '<span class="ft-briefing-category">' + escapeHtml(catLabel) + '</span>';
+
+            } catch (err) {
+                console.error('Error loading briefing:', err);
+                content.innerHTML = '<div class="ft-briefing-empty">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
+                    '<p>No briefing available yet — check back soon</p>' +
+                    '</div>';
+            }
+        }
+
+        // ── Login Streak ──
+        function initLoginStreak(userId, createdAt) {
+            var container = document.getElementById('ftStreakContainer');
+            if (!container || !createdAt) return;
+
+            var createdDate = new Date(createdAt);
+            var now = new Date();
+            var elapsed = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
+            var currentDay = Math.min(elapsed + 1, 7);
+
+            // Get or init login days array from localStorage
+            var storageKey = 'ft_login_days_' + userId;
+            var loginDays = [];
+            try {
+                var stored = localStorage.getItem(storageKey);
+                if (stored) {
+                    loginDays = JSON.parse(stored);
+                    if (!Array.isArray(loginDays)) loginDays = [];
+                }
+            } catch (e) {
+                loginDays = [];
+            }
+
+            // Add current day if not already tracked
+            if (loginDays.indexOf(currentDay) === -1) {
+                loginDays.push(currentDay);
+                try {
+                    localStorage.setItem(storageKey, JSON.stringify(loginDays));
+                } catch (e) {
+                    // Storage full or disabled, ignore
+                }
+            }
+
+            // Update the dots
+            var dots = container.querySelectorAll('.ft-streak-dot');
+            dots.forEach(function(dot) {
+                var dayNum = parseInt(dot.getAttribute('data-day'), 10);
+                if (loginDays.indexOf(dayNum) !== -1) {
+                    dot.classList.add('filled');
+                }
+                if (dayNum === currentDay) {
+                    dot.classList.add('today');
+                }
+            });
+        }
+
+        // ── Pulse Stats ──
+        var pulseTimers = [];
+
+        function initPulseStats() {
+            var profitsEl = document.getElementById('ftLiveProfitsVal');
+            var membersEl = document.getElementById('ftActiveMembersVal');
+            var winrateEl = document.getElementById('ftPulseWinrateVal');
+
+            // Win rate — static
+            if (winrateEl) winrateEl.textContent = '79.73%';
+
+            // ── Live Profits: starts ~$7k at midnight, reaches ~$240k by end of day ──
+            if (profitsEl) {
+                var now = new Date();
+                var hourProgress = now.getHours() + (now.getMinutes() / 60);
+                // Curve from $7,000 at 0:00 to $240,000 at 23:59
+                var dayMultiplier = Math.min(hourProgress / 24, 1);
+                var currentProfit = Math.floor(7000 + (240000 - 7000) * dayMultiplier);
+                // Add minute-level variance so it doesn't look perfectly smooth
+                currentProfit += Math.floor((now.getMinutes() * 37 + now.getSeconds() * 11) % 800);
+
+                profitsEl.textContent = '$' + currentProfit.toLocaleString();
+
+                // Increment every 15-40 seconds
+                function tickProfits() {
+                    var delay = Math.floor(Math.random() * 25001) + 15000;
+                    setTimeout(function() {
+                        var bump = Math.floor(Math.random() * 400) + 100; // $100 - $500
+                        currentProfit += bump;
+                        if (profitsEl) profitsEl.textContent = '$' + currentProfit.toLocaleString();
+                        tickProfits();
+                    }, delay);
+                }
+                tickProfits();
+            }
+
+            // ── Active Members: 40-90 range, fluctuates ──
+            if (membersEl) {
+                var activeMembers = Math.floor(Math.random() * 30) + 45; // 45-75
+                membersEl.textContent = activeMembers;
+
+                function tickMembers() {
+                    var delay = Math.floor(Math.random() * 20001) + 10000;
+                    setTimeout(function() {
+                        var change = Math.random() > 0.4 ? 1 : -1;
+                        activeMembers = Math.max(38, Math.min(92, activeMembers + change));
+                        if (membersEl) membersEl.textContent = activeMembers;
+                        tickMembers();
+                    }, delay);
+                }
+                tickMembers();
+            }
+        }
+
+        // ── Social Proof Ticker ──
+        var socialProofTimer = null;
+
+        function initSocialProof(userName) {
+            var textEl = document.getElementById('ftProofText');
+            if (!textEl) return;
+
+            var messages = [
+                (userName || 'You') + ' started their free trial — welcome aboard',
+                'Griffin passed an Apex evaluation account today',
+                'Sarah passed 12 accounts today with QuantBot',
+                'Cody secured an $8k payout with Apex today',
+                '4 trial members unlocked full memberships today',
+                'Marcus from Houston hit +$740 on MNQ this morning',
+                'Jess from Miami locked in +$1,100 before lunch',
+                'Daniel from Chicago passed his first eval in 3 days',
+                'Brianna from Atlanta just unlocked her full membership',
+                'Tyler from Denver pulled +$620 on MES in one session',
+                'Alyssa from Phoenix secured a $1,400 payout this week',
+                'New member from Nashville just got full access',
+                'Cameron from Portland hit +$890 using the algorithm today',
+                'Kayla from Dallas passed her Apex eval on day 2',
+                'Jordan from Charlotte locked in +$1,750 this morning',
+                '6 members unlocked full access this week',
+                'Devin from Tampa just secured a $950 payout',
+                'Mia from San Diego hit +$530 in her first session',
+                'Another trial member just unlocked full access today',
+                'Ethan from Boston passed 3 Apex accounts this week',
+                'Leah from Seattle locked in +$1,320 on MNQ before noon',
+                'Nate from Las Vegas secured a $5k payout today',
+                'Olivia from Detroit just unlocked her full membership',
+                'Brandon from Austin hit +$860 in 2 trades this morning',
+                'Sophia from Minneapolis passed her eval on the first try',
+                'Chris from Jacksonville pulled +$1,480 on MES today',
+                '8 trial members unlocked full access in the last 24 hours',
+                'Dylan from Raleigh secured a $3,200 payout this week',
+                'Haley from San Antonio hit +$670 in her second session',
+                'Jake from Columbus passed 5 accounts with QuantBot today',
+                'Rachel from Indianapolis just got full access',
+                'Travis from Memphis locked in +$990 this morning',
+                'Amber from Kansas City secured a $1,800 payout today',
+                'Ryan from Salt Lake City passed his Apex eval in 48 hours',
+                'Nicole from Orlando pulled +$1,150 on MNQ today',
+                'Mason from Pittsburgh just unlocked his full membership',
+                'Taylor from Virginia Beach hit +$780 before market close',
+                'Luke from Sacramento passed 7 eval accounts this month',
+                'Whitney from Scottsdale secured a $4,500 payout',
+                'Kevin from New Orleans locked in +$560 in one session',
+                'Hannah from Milwaukee just upgraded from free trial',
+                'Andrew from Louisville hit +$1,650 using the algorithm',
+                'Jasmine from Oklahoma City passed her first eval today',
+                'Zach from Cincinnati secured a $2,800 payout this week',
+                'Kelsey from Boise pulled +$430 on MES this morning',
+                '11 new members got full access this week',
+                'Victor from Albuquerque passed 4 accounts today',
+                'Natalie from Omaha locked in +$1,070 before lunch',
+                'Patrick from Cleveland secured a $6k payout with Apex',
+                'Samantha from Tucson just unlocked her full membership',
+                'Andre from Baltimore hit +$920 in his first week'
+            ];
+
+            // Keep personalized message first, shuffle the rest
+            var firstMsg = messages[0];
+            var rest = messages.slice(1);
+            for (var i = rest.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = rest[i]; rest[i] = rest[j]; rest[j] = tmp;
+            }
+            messages = [firstMsg].concat(rest);
+
+            var idx = 0;
+            textEl.textContent = messages[idx];
+            textEl.style.opacity = '1';
+
+            function rotate() {
+                textEl.style.opacity = '0';
+                socialProofTimer = setTimeout(function() {
+                    idx = (idx + 1) % messages.length;
+                    textEl.textContent = messages[idx];
+                    textEl.style.opacity = '1';
+                }, 500);
+            }
+
+            setInterval(rotate, 8000);
+        }
+
+        // ── Load all dashboard data ──
+        async function loadDashboardData(previousLastLogin) {
+            await Promise.all([
+                loadAnnouncements(),
+                loadContent(),
+                updateContentCardDesc(previousLastLogin),
+                updateSupportCardDesc()
+            ]);
+        }
+
+        // ── Dynamic card: new content since last visit ──
+        async function updateContentCardDesc(previousLastLogin) {
+            try {
+                if (!previousLastLogin) return;
+                var el = document.getElementById('cardDescContent');
+                if (!el) return;
+
+                var { count, error } = await window.supabaseClient
+                    .from('content_posts')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('is_published', true)
+                    .gt('created_at', previousLastLogin);
+
+                if (error) throw error;
+                if (count && count > 0) {
+                    el.textContent = count + ' new item' + (count === 1 ? '' : 's') + ' since your last visit';
+                }
+            } catch (e) {
+                console.error('Error updating content card:', e);
+            }
+        }
+
+        // ── Dynamic card: unread support replies ──
+        async function updateSupportCardDesc() {
+            try {
+                var el = document.getElementById('cardDescSupport');
+                if (!el) return;
+
+                var { data, error } = await window.supabaseClient
+                    .from('chat_conversations')
+                    .select('user_unread_count')
+                    .eq('user_id', currentUser.id)
+                    .gt('user_unread_count', 0);
+
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    var totalUnread = data.reduce(function(sum, conv) {
+                        return sum + (conv.user_unread_count || 0);
+                    }, 0);
+                    if (totalUnread > 0) {
+                        el.textContent = 'You have ' + totalUnread + ' unread repl' + (totalUnread === 1 ? 'y' : 'ies');
+                        el.style.color = '#3b6dff';
+                    }
+                }
+            } catch (e) {
+                console.error('Error updating support card:', e);
+            }
+        }
+
+        // ── Announcements ──
+        async function loadAnnouncements() {
+            try {
+                const all = await window.getAnnouncements(true);
+                if (!all || all.length === 0) return;
+
+                // Pinned
+                const pinned = all.filter(a => a.is_pinned);
+                const grid = document.getElementById('pinnedGrid');
+                if (pinned.length > 0) {
+                    grid.innerHTML = '';
+                    pinned.forEach(a => grid.appendChild(createPinnedCard(a)));
+                }
+
+                // Recent non-pinned (limit 5)
+                const recent = all.filter(a => !a.is_pinned).slice(0, 5);
+                const list = document.getElementById('announcementsList');
+
+                if (recent.length > 0) {
+                    list.innerHTML = '';
+                    recent.forEach(a => list.appendChild(createAnnouncementItem(a)));
+                }
+
+            } catch (e) {
+                console.error('Error loading announcements:', e);
+            }
+        }
+
+        function createPinnedCard(a) {
+            const el = document.createElement('a');
+            el.href = '/portal/announcements.html';
+            el.className = 'pinned-card';
+            el.innerHTML = `
+                <span class="pinned-badge">Pinned</span>
+                <div class="pinned-card-title">${escapeHtml(a.title)}</div>
+                <div class="pinned-card-excerpt">${escapeHtml(a.content || '')}</div>
+                <div class="pinned-card-date">${formatDate(a.created_at)}</div>
+            `;
+            return el;
+        }
+
+        function createAnnouncementItem(a) {
+            const el = document.createElement('a');
+            el.href = '/portal/announcements.html';
+            el.className = 'announcement-item';
+            el.innerHTML = `
+                <div class="announcement-dot"></div>
+                <div class="announcement-body">
+                    <div class="announcement-item-title">${escapeHtml(a.title)}</div>
+                    <div class="announcement-item-excerpt">${escapeHtml(a.content || '')}</div>
+                </div>
+                <div class="announcement-item-date">${window.formatRelativeTime(a.created_at)}</div>
+            `;
+            return el;
+        }
+
+        // ── Content ──
+        async function loadContent() {
+            try {
+                const posts = await window.getContentPosts(true);
+                const grid = document.getElementById('contentGrid');
+
+                if (!posts || posts.length === 0) return;
+
+                grid.innerHTML = '';
+                const recent = posts.slice(0, 4);
+                recent.forEach(p => grid.appendChild(createContentCard(p)));
+
+            } catch (e) {
+                console.error('Error loading content:', e);
+            }
+        }
+
+        function createContentCard(p) {
+            const el = document.createElement('a');
+            el.href = '/portal/content.html';
+            el.className = 'content-card';
+
+            const thumbHtml = p.thumbnail_url
+                ? `<img src="${escapeHtml(p.thumbnail_url)}" alt="${escapeHtml(p.title)}">`
+                : '';
+
+            el.innerHTML = `
+                <div class="content-thumb">
+                    ${thumbHtml}
+                    <div class="content-play-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </div>
+                </div>
+                <div class="content-info">
+                    ${p.category ? '<span class="content-category">' + escapeHtml(p.category) + '</span>' : ''}
+                    <div class="content-title">${escapeHtml(p.title)}</div>
+                    <div class="content-desc">${escapeHtml(p.description || '')}</div>
+                </div>
+            `;
+            return el;
+        }
+
+        // ── Inactivity auto-logout (30 min) ──
+        function startInactivityTimer() {
+            resetInactivityTimer();
+            const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+            events.forEach(evt => {
+                document.addEventListener(evt, resetInactivityTimer, { passive: true });
+            });
+        }
+
+        function resetInactivityTimer() {
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                window.signOut();
+            }, INACTIVITY_TIMEOUT);
+        }
+
+        // ── Helpers ──
+        function formatDate(dateStr) {
+            if (!dateStr) return '--';
+            return new Date(dateStr).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
