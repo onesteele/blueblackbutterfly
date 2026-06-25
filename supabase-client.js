@@ -1568,7 +1568,7 @@ window.getFreeTrialConfig = async function() {
         const { data, error } = await window.supabaseClient
             .from('admin_settings')
             .select('value')
-            .eq('key', 'free_trial_config')
+            .eq('key', 'free_trial_config_vq')
             .single();
         if (error) throw error;
         return data?.value || null;
@@ -1721,7 +1721,7 @@ window.getContractConfig = async function() {
         var result = await window.supabaseClient
             .from('admin_settings')
             .select('value')
-            .eq('key', 'contract_config')
+            .eq('key', 'contract_config_vq')
             .single();
         if (result.error) throw result.error;
         return (result.data && result.data.value) || {};
@@ -2546,7 +2546,7 @@ window.getOnboardingConfig = async function() {
         const { data, error } = await window.supabaseClient
             .from('admin_settings')
             .select('value')
-            .eq('key', 'onboarding_config')
+            .eq('key', 'onboarding_config_vq')
             .single();
         if (error) throw error;
         return data?.value || null;

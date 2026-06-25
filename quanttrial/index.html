@@ -571,6 +571,7 @@
             .v-form-row { grid-template-columns: 1fr; gap: 0; }
         }
     </style>
+<style>@media (max-width:520px){.brand-wordmark{max-width:70vw !important;max-height:20px !important}}</style>
 </head>
 <body>
     <div class="orb orb-1"></div>
@@ -584,7 +585,7 @@
         <div class="v-card">
             <div class="v-card-logo">
                 <img src="../logo.png" alt="VantageQuant">
-                <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:26px;width:auto;max-width:100%;object-fit:contain;display:inline-block;vertical-align:middle;">
+                <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:auto;width:auto;max-width:100%;max-height:26px;min-width:0;object-fit:contain;display:block;vertical-align:middle;">
             </div>
             <div class="v-hero-eyebrow-wrap">
                 <span class="v-hero-eyebrow">Free Trial · No Payment Required</span>
@@ -847,7 +848,8 @@
                             last_name: lastName,
                             phone: phone,
                             initial_status: 'pending_verification',
-                            is_free_trial: true
+                            is_free_trial: true,
+                            brand: 'vantagequant'
                         }
                     }
                 });
@@ -920,6 +922,18 @@
                     if (updRes.error) console.warn('Profile update warning:', updRes.error);
                 } catch (updErr) {
                     console.warn('Profile update failed (continuing):', updErr);
+                }
+
+                // Tag this signup as VantageQuant (separate from Profit Insider).
+                // Done as its own update so the flow still works if the `brand`
+                // column hasn't been added yet (see sql/vantagequant-setup.sql).
+                try {
+                    await window.supabaseClient
+                        .from('users')
+                        .update({ brand: 'vantagequant' })
+                        .eq('id', currentUser.id);
+                } catch (brandErr) {
+                    console.warn('Brand tag skipped (run sql/vantagequant-setup.sql):', brandErr);
                 }
 
                 // Move to photo step (with brief loading transition)

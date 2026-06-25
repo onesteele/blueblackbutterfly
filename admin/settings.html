@@ -2524,7 +2524,7 @@
                 const { error } = await window.supabaseClient
                     .from('admin_settings')
                     .upsert({
-                        key: 'contract_config',
+                        key: 'contract_config_vq',
                         value: {
                             contract_url: document.getElementById('contract-url').value.trim(),
                             guarantee_label: document.getElementById('guarantee-label').value.trim() || '90-Day Performance Guarantee'
@@ -3272,7 +3272,7 @@
                 const { data, error } = await window.supabaseClient
                     .from('admin_settings')
                     .select('value')
-                    .eq('key', 'free_trial_config')
+                    .eq('key', 'free_trial_config_vq')
                     .single();
                 if (error && error.code !== 'PGRST116') throw error;
                 if (data && data.value) {
@@ -3345,7 +3345,7 @@
                 const { error } = await window.supabaseClient
                     .from('admin_settings')
                     .upsert(
-                        { key: 'free_trial_config', value: freeTrialConfig, updated_at: new Date().toISOString() },
+                        { key: 'free_trial_config_vq', value: freeTrialConfig, updated_at: new Date().toISOString() },
                         { onConflict: 'key' }
                     );
 
@@ -3369,7 +3369,7 @@
                 const { data, error } = await window.supabaseClient
                     .from('admin_settings')
                     .select('value')
-                    .eq('key', 'onboarding_config')
+                    .eq('key', 'onboarding_config_vq')
                     .single();
                 if (error && error.code !== 'PGRST116') throw error;
                 if (data && data.value) {
@@ -3444,7 +3444,7 @@
                 const { error } = await window.supabaseClient
                     .from('admin_settings')
                     .upsert(
-                        { key: 'onboarding_config', value: onboardingVideosConfig, updated_at: new Date().toISOString() },
+                        { key: 'onboarding_config_vq', value: onboardingVideosConfig, updated_at: new Date().toISOString() },
                         { onConflict: 'key' }
                     );
 

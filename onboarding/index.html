@@ -1288,6 +1288,7 @@
             .booking-btn { width: 100%; justify-content: center; }
         }
     </style>
+<style>@media (max-width:520px){.brand-wordmark{max-width:70vw !important;max-height:20px !important}}</style>
 </head>
 <body>
     <!-- Background Effects -->
@@ -1314,7 +1315,7 @@
             <div class="v-card">
                 <div class="v-card-logo">
                     <img src="../logo.png" alt="VantageQuant">
-                    <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:26px;width:auto;max-width:100%;object-fit:contain;display:inline-block;vertical-align:middle;">
+                    <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:auto;width:auto;max-width:100%;max-height:26px;min-width:0;object-fit:contain;display:block;vertical-align:middle;">
                 </div>
                 <h2>Welcome to VantageQuant</h2>
                 <p class="v-subtitle">Enter your email to get started</p>
@@ -1332,7 +1333,7 @@
             <div class="v-card">
                 <div class="v-card-logo">
                     <img src="../logo.png" alt="VantageQuant">
-                    <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:26px;width:auto;max-width:100%;object-fit:contain;display:inline-block;vertical-align:middle;">
+                    <img src="../logo-wordmark.png" alt="VantageQuant" class="brand-wordmark" style="height:auto;width:auto;max-width:100%;max-height:26px;min-width:0;object-fit:contain;display:block;vertical-align:middle;">
                 </div>
                 <h2>Confirm Your Information</h2>
                 <p class="v-subtitle">Verify your details and set a password</p>
@@ -1681,7 +1682,7 @@
                 var result = await window.supabaseClient
                     .from('admin_settings')
                     .select('value')
-                    .eq('key', 'onboarding_config')
+                    .eq('key', 'onboarding_config_vq')
                     .single();
 
                 if (result.error || !result.data || !result.data.value) return false;
@@ -1818,12 +1819,12 @@
                 var result = await window.supabaseClient
                     .from('admin_settings')
                     .select('*')
-                    .in('key', ['contract_config', 'payment_plans']);
+                    .in('key', ['contract_config_vq', 'payment_plans']);
 
                 if (result.data && result.data.length > 0) {
                     adminSettings = {};
                     result.data.forEach(function(row) {
-                        if (row.key === 'contract_config' && row.value) {
+                        if (row.key === 'contract_config_vq' && row.value) {
                             adminSettings.contract_url = row.value.contract_url || '';
                             adminSettings.guarantee_label = row.value.guarantee_label || '90-Day Refund Protection Guarantee';
                         }
